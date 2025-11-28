@@ -15,8 +15,8 @@ function WorkList() {
     const [workList] = useState([
         {
             id: 1,
-            workName: "Bảo trì điều hòa tại NEXUS HOUSE",
-            title: "Bảo trì điều hòa tại NEXUS HOUSE",
+            workName: "Bảo trì điều hòa",
+            title: "Bảo trì điều hòa",
             date: "17/11/2025",
             scheduledDate: "17/11/2025",
             scheduledTime: "08:00 - 12:00",
@@ -33,12 +33,15 @@ function WorkList() {
             coordinates: { lat: 10.7769, lng: 106.7009 },
             content: "Bảo trì hệ thống điều hòa định kỳ",
             notes: "Cần kiểm tra gas và lọc. Mang theo dụng cụ vệ sinh máy lạnh.",
-            technicians: [{ name: "Nguyễn Văn A", phone: "0901234567", specialization: "Điều hòa" }],
+            technicians: [
+                { name: "Nguyễn Văn A", phone: "0901234567", specialization: "Điều hòa" },
+                { name: "Nguyễn Văn A", phone: "0901234567", specialization: "Điều hòa" },
+            ],
         },
         {
             id: 2,
-            workName: "Sửa chữa hệ thống điện tại VINHOMES",
-            title: "Sửa chữa hệ thống điện tại VINHOMES",
+            workName: "Sửa chữa hệ thống điện",
+            title: "Sửa chữa hệ thống điện",
             date: "17/11/2025",
             scheduledDate: "17/11/2025",
             scheduledTime: "13:00 - 17:00",
@@ -59,8 +62,8 @@ function WorkList() {
         },
         {
             id: 3,
-            workName: "Kiểm tra an ninh tại MASTERI",
-            title: "Kiểm tra an ninh tại MASTERI",
+            workName: "Kiểm tra an ninh",
+            title: "Kiểm tra an ninh",
             date: "16/11/2025",
             scheduledDate: "16/11/2025",
             scheduledTime: "09:30 - 11:30",
@@ -201,7 +204,7 @@ function WorkList() {
                                 variant={selectedPeriod === option.value ? "primary" : "secondary"}
                                 className={`flex-1 rounded-lg text-xs ${
                                     selectedPeriod === option.value
-                                        ? "bg-white text-green-600"
+                                        ? "bg-white text-blue-600"
                                         : "bg-white/20 text-white"
                                 }`}
                                 onClick={() => setSelectedPeriod(option.value)}
@@ -215,7 +218,7 @@ function WorkList() {
 
             <Box className="p-4 pb-20">
                 {/* Work Type Filter */}
-                <Box className="mb-4 mt-4">
+                <Box className="mb-2">
                     <Box className="flex space-x-2 overflow-x-auto pb-2">
                         {workTypeOptions.map((option) => (
                             <button

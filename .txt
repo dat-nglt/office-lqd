@@ -1,0 +1,237 @@
+1. Phân Tích Các Entity Chính
+Từ các pages và components, hệ thống cần quản lý:
+
+Users (Nhân viên kỹ thuật)
+Works/Tasks (Công việc, danh sách công việc)
+Work Reports (Báo cáo tiến độ công việc)
+Check-ins (Chấm công)
+Notifications (Thông báo)
+Employee Profiles (Hồ sơ nhân viên)
+
+2. Schema Database Được Đề Xuất
+-- ============================================
+-- 1. USERS (Người dùng - Nhân viên)
+-- ============================================
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    employee_id VARCHAR(50) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    position VARCHAR(100) NOT NULL,
+    avatar_url TEXT,
+    phone VARCHAR(20),
+    email VARCHAR(255) UNIQUE,
+    status VARCHAR(50) DEFAULT 'active', -- active, inactive, on_leave
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
+-- 2. WORK_CATEGORIES (Danh mục công việc)
+-- ============================================
+CREATE TABLE work_categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    icon VARCHAR(50),
+    color VARCHAR(7),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
+-- 3. WORKS (Công việc/Tasks)
+-- ============================================
+CREATE TABLE works (
+    id SERIAL PRIMARY KEY,
+    work_code VARCHAR(100) UNIQUE NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    category_id INTEGER REFERENCES work_categories(id),
+    assigned_user_id INTEGER REFERENCES users(id) NOT NULL,
+    priority VARCHAR(50), -- low, medium, high, urgent
+    status VARCHAR(50) DEFAULT 'pending', -- pending, in_progress, completed, cancelled
+    due_date DATE,
+    created_date DATE DEFAULT CURRENT_DATE,
+    completed_date DATE,
+    location VARCHAR(255),
+    location_lat DECIMAL(10, 8),
+    location_lng DECIMAL(11, 8),
+    estimated_hours DECIMAL(5, 2),
+    actual_hours DECIMAL(5, 2),
+    created_by INTEGER REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
+-- 4. WORK_HISTORY (Lịch sử thay đổi công việc)
+-- ============================================
+CREATE TABLE work_history (
+    id SERIAL PRIMARY KEY,
+    work_id INTEGER REFERENCES works(id) NOT NULL,
+    old_status VARCHAR(50),
+    new_status VARCHAR(50),
+    changed_by INTEGER REFERENCES users(id),
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    notes TEXT
+);
+
+-- ============================================
+-- 5. WORK_REPORTS (Báo cáo tiến độ)
+-- ============================================
+CREATE TABLE work_reports (
+    id SERIAL PRIMARY KEY,
+    work_id INTEGER REFERENCES works(id) NOT NULL,
+    reported_by INTEGER REFERENCES users(id) NOT NULL,
+    progress_percentage INTEGER CHECK (progress_percentage >= 0 AND progress_percentage <= 100),
+    status VARCHAR(50), -- pending, in_progress, completed
+    description TEXT,
+    notes TEXT,
+    photo_urls TEXT[], -- Array of photo URLs
+    materials_used TEXT,
+    issues_encountered TEXT,
+    solution_applied TEXT,
+    time_spent_hours DECIMAL(5, 2),
+    next_steps TEXT,
+    reported_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
+-- 6. CHECK_INS (Chấm công)
+-- ============================================
+CREATE TABLE check_ins (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) NOT NULL,
+    work_id INTEGER REFERENCES works(id),
+    check_in_time TIMESTAMP NOT NULL,
+    check_out_time TIMESTAMP,
+    latitude DECIMAL(10, 8),
+    longitude DECIMAL(11, 8),
+    photo_url TEXT,
+    status VARCHAR(50) DEFAULT 'checked_in', -- checked_in, checked_out
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
+-- 7. NOTIFICATIONS (Thông báo)
+-- ============================================
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT,
+    type VARCHAR(50), -- work_assigned, work_updated, report_requested, alert
+    related_work_id INTEGER REFERENCES works(id),
+    is_read BOOLEAN DEFAULT FALSE,
+    read_at TIMESTAMP,
+    action_url VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
+-- 8. EMPLOYEE_PROFILES (Hồ sơ chi tiết nhân viên)
+-- ============================================
+CREATE TABLE employee_profiles (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER UNIQUE REFERENCES users(id) NOT NULL,
+    department VARCHAR(100),
+    specialization TEXT[], -- Array of skills
+    certification TEXT[],
+    phone_secondary VARCHAR(20),
+    address TEXT,
+    date_of_birth DATE,
+    gender VARCHAR(10),
+    id_number VARCHAR(50),
+    hire_date DATE,
+    total_experience_years INTEGER,
+    performance_rating DECIMAL(3, 2),
+    manager_id INTEGER REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
+-- 9. PERFORMANCE_METRICS (Chỉ số hiệu suất)
+-- ============================================
+CREATE TABLE performance_metrics (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) NOT NULL,
+    month DATE NOT NULL, -- Store as first day of month
+    works_completed INTEGER DEFAULT 0,
+    works_total INTEGER DEFAULT 0,
+    on_time_percentage DECIMAL(5, 2),
+    quality_score DECIMAL(3, 2), -- 0-10
+    average_completion_time DECIMAL(8, 2), -- hours
+    reports_submitted INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, month)
+);
+
+-- ============================================
+-- 10. ATTACHMENTS (Tệp đính kèm)
+-- ============================================
+CREATE TABLE attachments (
+    id SERIAL PRIMARY KEY,
+    work_id INTEGER REFERENCES works(id),
+    report_id INTEGER REFERENCES work_reports(id),
+    file_name VARCHAR(255) NOT NULL,
+    file_url TEXT NOT NULL,
+    file_type VARCHAR(50),
+    file_size INTEGER,
+    uploaded_by INTEGER REFERENCES users(id),
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+3. Indexes Để Tối Ưu Performance
+
+-- Indexes cho tìm kiếm nhanh
+CREATE INDEX idx_works_assigned_user_id ON works(assigned_user_id);
+CREATE INDEX idx_works_status ON works(status);
+CREATE INDEX idx_works_due_date ON works(due_date);
+CREATE INDEX idx_works_category_id ON works(category_id);
+CREATE INDEX idx_work_reports_work_id ON work_reports(work_id);
+CREATE INDEX idx_work_reports_reported_by ON work_reports(reported_by);
+CREATE INDEX idx_check_ins_user_id ON check_ins(user_id);
+CREATE INDEX idx_check_ins_work_id ON check_ins(work_id);
+CREATE INDEX idx_check_ins_check_in_time ON check_ins(check_in_time);
+CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX idx_notifications_is_read ON notifications(is_read);
+CREATE INDEX idx_performance_metrics_user_id_month ON performance_metrics(user_id, month);
+
+-- Full-text search index
+CREATE INDEX idx_works_search ON works USING GIN (to_tsvector('vietnamese', title || ' ' || description));
+
+4. Views Hữu Ích
+-- View tổng hợp công việc hôm nay
+CREATE VIEW today_works_summary AS
+SELECT 
+    w.id,
+    w.work_code,
+    w.title,
+    u.name,
+    w.priority,
+    w.status,
+    COUNT(r.id) as report_count,
+    MAX(r.progress_percentage) as latest_progress
+FROM works w
+JOIN users u ON w.assigned_user_id = u.id
+LEFT JOIN work_reports r ON w.id = r.work_id
+WHERE w.created_date = CURRENT_DATE
+GROUP BY w.id, u.id;
+
+-- View chấm công hôm nay
+CREATE VIEW today_check_ins AS
+SELECT 
+    u.id,
+    u.employee_id,
+    u.name,
+    MIN(c.check_in_time) as first_check_in,
+    MAX(c.check_out_time) as last_check_out,
+    COUNT(CASE WHEN c.check_out_time IS NOT NULL THEN 1 END) as completed_tasks
+FROM users u
+LEFT JOIN check_ins c ON u.id = c.user_id AND DATE(c.check_in_time) = CURRENT_DATE
+GROUP BY u.id;
+
+5. Mối Quan Hệ Chính

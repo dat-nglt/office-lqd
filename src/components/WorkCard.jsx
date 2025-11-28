@@ -4,15 +4,41 @@ function WorkCard({ work, onViewDetail }) {
     const getStatusColor = (status) => {
         switch (status) {
             case "completed":
-                return "bg-green-100 text-green-800 border-green-300";
+                return "bg-green-100 text-green-700";
             case "in_progress":
-                return "bg-blue-100 text-blue-800 border-blue-300";
+                return "bg-yellow-100 text-yellow-700";
             case "pending":
-                return "bg-yellow-100 text-yellow-800 border-yellow-300";
+                return "bg-red-100 text-red-700";
             case "scheduled":
-                return "bg-purple-100 text-purple-800 border-purple-300";
+                return "bg-blue-100 text-blue-700";
             default:
-                return "bg-gray-100 text-gray-800 border-gray-300";
+                return "bg-gray-100 text-gray-700";
+        }
+    };
+
+    const getPriorityColor = (priority) => {
+        switch (priority) {
+            case "high":
+                return "bg-red-500";
+            case "medium":
+                return "bg-yellow-500";
+            case "low":
+                return "bg-green-500";
+            default:
+                return "bg-gray-500";
+        }
+    };
+
+    const getPriorityLabel = (priority) => {
+        switch (priority) {
+            case "high":
+                return "Cao";
+            case "medium":
+                return "Trung bình";
+            case "low":
+                return "Thấp";
+            default:
+                return "Bình thường";
         }
     };
 
@@ -31,30 +57,14 @@ function WorkCard({ work, onViewDetail }) {
         }
     };
 
-    const getPriorityColor = (priority) => {
-        switch (priority) {
-            case "high":
-                return "bg-red-500 border-red-600";
-            case "medium":
-                return "bg-orange-500 border-orange-600";
-            case "low":
-                return "bg-green-500 border-green-600";
-            default:
-                return "bg-gray-500 border-gray-600";
-        }
-    };
+    // Get technicians - show primary first, then count additional
+    const technicians = work.technicians || [];
+    const primaryTechnician = technicians.length > 0 ? technicians[0] : null;
+    const additionalCount = technicians.length - 1;
 
-    const getPriorityLabel = (priority) => {
-        switch (priority) {
-            case "high":
-                return "Cao";
-            case "medium":
-                return "Trung bình";
-            case "low":
-                return "Thấp";
-            default:
-                return "Bình thường";
-        }
+    const handleCallTechnician = (phone) => {
+        if (!phone) return;
+        window.location.href = `tel:${phone}`;
     };
 
     const handleCallCustomer = (phone) => {
@@ -63,15 +73,15 @@ function WorkCard({ work, onViewDetail }) {
     };
 
     return (
-        <Box className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+        <Box className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md transition-shadow">
             {/* Header */}
-            <Box className="flex justify-between items-start gap-2 p-4 mb-2 border-b border-gray-100">
+            <Box className="flex justify-between items-start mb-3">
                 <Box className="flex-1">
-                    <Text className="font-semibold text-gray-900 line-clamp-2">{work.workName}</Text>
-                    <Text className="text-xs text-gray-600 mt-0.5">{work.company}</Text>
+                    <Text className="font-semibold text-gray-900 line-clamp-2">{work.workName || work.title}</Text>
+                    <Text className="text-sm text-gray-600 mt-0.5">{work.company}</Text>
                 </Box>
                 <Box
-                    className={`px-2.5 py-1 rounded-full text-xs font-semibold border whitespace-nowrap flex-shrink-0 ${getStatusColor(
+                    className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ml-2 flex-shrink-0 ${getStatusColor(
                         work.status
                     )}`}
                 >
@@ -79,156 +89,144 @@ function WorkCard({ work, onViewDetail }) {
                 </Box>
             </Box>
 
-            <Box className="px-4 pb-4 space-y-3">
-                {/* Service & Equipment Tags */}
-                <Box className="flex flex-wrap gap-1.5">
-                    {work.service && (
+            {/* Service & Equipment Tags */}
+            {(work.service || work.serviceType || work.equipment) && (
+                <Box className="flex flex-wrap gap-1 mb-3">
+                    {(work.service || work.serviceType) && (
                         <Box className="text-xs px-2 py-0.5 bg-gray-100 rounded text-gray-700 font-medium">
-                            {work.service}
+                            {work.service || work.serviceType}
                         </Box>
                     )}
-                    {work.serviceType && (
-                        <Box className="text-xs px-2 py-0.5 bg-gray-100 rounded text-gray-700 font-medium">
-                            {work.serviceType}
-                        </Box>
-                    )}
-                    {(work.equipment) && (
+                    {work.equipment && (
                         <Box className="text-xs px-2 py-0.5 bg-gray-100 rounded text-gray-700 font-medium">
                             <Icon icon="zi-tools" size={10} className="mr-0.5 inline" />
                             {work.equipment}
                         </Box>
                     )}
-                    <Box
-                        className={`text-xs px-2 py-0.5 rounded border font-medium border-current ${
-                            work.priority === "high"
-                                ? "bg-red-50 text-red-800 border-red-300"
-                                : work.priority === "medium"
-                                ? "bg-orange-50 text-orange-800 border-orange-300"
-                                : "bg-green-50 text-green-800 border-green-300"
-                        }`}
-                    >
-                        <Box className={`w-2 h-2 rounded-full ${getPriorityColor(work.priority)} inline-block mr-1`}></Box>
-                        {getPriorityLabel(work.priority)}
+                </Box>
+            )}
+
+            {/* Progress Bar */}
+            {work.progress !== undefined && (
+                <Box className="mb-3">
+                    <Box className="flex justify-between items-center mb-1">
+                        <Text className="text-xs text-gray-600">Tiến độ</Text>
+                        <Text className="text-xs font-medium text-gray-700">{work.progress}%</Text>
+                    </Box>
+                    <Box className="w-full bg-gray-200 rounded-full h-2">
+                        <Box
+                            className="bg-blue-600 h-2 rounded-full transition-all"
+                            style={{ width: `${work.progress}%` }}
+                        />
                     </Box>
                 </Box>
+            )}
 
-                {/* Progress Bar */}
-                {work.progress !== undefined && (
-                    <Box className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                        <Box className="flex justify-between items-center mb-1">
-                            <Text className="text-xs text-gray-600 font-medium">Tiến độ</Text>
-                            <Text className="text-xs font-bold text-blue-600">{work.progress}%</Text>
-                        </Box>
-                        <Box className="w-full bg-gray-300 rounded-full h-2">
-                            <Box
-                                className="bg-blue-600 h-2 rounded-full transition-all"
-                                style={{ width: `${work.progress}%` }}
-                            />
-                        </Box>
-                    </Box>
-                )}
-
-                {/* Schedule Info */}
-                <Box className="space-y-1.5 p-2.5 bg-gray-50 rounded-lg border border-gray-200">
-                    {(work.scheduledDate || work.date) && (
-                        <Box className="flex items-center gap-2 text-xs">
-                            <Icon icon="zi-calendar" className="text-gray-400 flex-shrink-0" size={14} />
-                            <Text className="text-gray-700 font-medium">{work.scheduledDate || work.date}</Text>
-                            {work.scheduledTime && (
-                                <>
-                                    <Icon icon="zi-clock-1" className="text-gray-400 flex-shrink-0" size={14} />
-                                    <Text className="text-gray-700 font-medium">{work.scheduledTime}</Text>
-                                </>
+            {/* Technicians - Compact View */}
+            {primaryTechnician && (
+                <Box className="mb-3">
+                    <Box className="flex items-center justify-between mb-1">
+                        <Text className="text-xs text-gray-600 font-medium">
+                            Kỹ thuật viên
+                            {additionalCount > 0 && (
+                                <span className="ml-1 text-blue-600 font-semibold">+{additionalCount}</span>
                             )}
-                        </Box>
-                    )}
-                    {(work.location || work.address) && (
-                        <Box className="flex items-start gap-2">
-                            <Icon icon="zi-location" className="text-red-500 mt-0.5 flex-shrink-0" size={14} />
-                            <Text className="text-xs text-gray-600 flex-1">{work.location || work.address}</Text>
-                        </Box>
-                    )}
-                </Box>
-
-                {/* Technicians */}
-                {work.technicians && work.technicians.length > 0 && (
-                    <Box className="bg-blue-50 rounded-lg p-2 border border-blue-200">
-                        <Text className="text-xs text-blue-700 font-semibold mb-1.5">
-                            Kỹ thuật viên cộng tác ({work.technicians.length})
                         </Text>
-                        <Box className="space-y-1">
-                            {work.technicians.slice(0, 2).map((tech, index) => (
-                                <Box key={index} className="flex items-center justify-between">
-                                    <Box className="flex-1 min-w-0">
-                                        <Text className="text-xs text-gray-800 font-medium">{tech.name}</Text>
-                                        <Text className="text-xs text-gray-600">{tech.specialization}</Text>
-                                    </Box>
-                                    <button
-                                        onClick={() => handleCallCustomer(tech.phone)}
-                                        className="ml-2 p-1 text-blue-600 hover:bg-blue-100 rounded transition-colors flex-shrink-0"
-                                        title={`Gọi ${tech.name}`}
-                                    >
-                                        <Icon icon="zi-call" size={14} />
-                                    </button>
-                                </Box>
-                            ))}
-                            {work.technicians.length > 2 && (
-                                <Text className="text-xs text-gray-600 text-center py-1">
-                                    +{work.technicians.length - 2} KTV khác
-                                </Text>
-                            )}
-                        </Box>
                     </Box>
-                )}
-
-                {/* Customer Info */}
-                {(work.customerName || work.phoneNumber) && (
-                    <Box className="bg-purple-50 rounded-lg p-2.5 border border-purple-200">
+                    <Box className="p-2 bg-blue-50 rounded-lg border border-blue-200">
                         <Box className="flex items-center justify-between">
                             <Box className="flex-1 min-w-0">
-                                {work.customerName && (
-                                    <Box>
-                                        <Text className="text-xs text-purple-700 font-semibold mb-0.5">Khách hàng</Text>
-                                        <Text className="text-xs text-gray-800 font-medium">{work.customerName}</Text>
-                                    </Box>
-                                )}
-                                {work.phoneNumber && (
-                                    <Text className="text-xs text-gray-600 mt-1">{work.phoneNumber}</Text>
-                                )}
+                                <Text className="text-sm text-gray-900 font-semibold line-clamp-1">
+                                    {primaryTechnician.name}
+                                </Text>
+                                <Text className="text-xs text-gray-600 line-clamp-1">
+                                    {primaryTechnician.specialization}
+                                </Text>
                             </Box>
-                            {work.phoneNumber && (
-                                <button
-                                    onClick={() => handleCallCustomer(work.phoneNumber)}
-                                    className="ml-2 p-1.5 text-purple-600 hover:bg-purple-100 rounded transition-colors flex-shrink-0"
-                                    title="Gọi khách hàng"
-                                >
-                                    <Icon icon="zi-call" size={16} />
-                                </button>
-                            )}
+                            <button
+                                onClick={() => handleCallTechnician(primaryTechnician.phone)}
+                                className="ml-2 p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded transition-colors flex-shrink-0"
+                                title={`Gọi ${primaryTechnician.name}`}
+                            >
+                                <Icon icon="zi-call" size={16} />
+                            </button>
                         </Box>
+                    </Box>
+                    {additionalCount > 0 && (
+                        <Text className="text-xs text-gray-600 mt-1.5 px-1">
+                            Và <span className="font-semibold">{additionalCount}</span> kỹ thuật viên khác - Xem chi
+                            tiết để xem đầy đủ
+                        </Text>
+                    )}
+                </Box>
+            )}
+
+            {/* Schedule & Info Section */}
+            <Box className="space-y-2 mb-3 py-2 border-t border-gray-100">
+                {/* Date & Priority */}
+                <Box className="flex items-center justify-between">
+                    <Box className="flex items-center space-x-2 text-sm text-gray-600 flex-1">
+                        <Icon icon="zi-calendar" className="text-gray-400 flex-shrink-0" size={14} />
+                        <Text className="truncate">{work.scheduledDate || work.date || "N/A"}</Text>
+                    </Box>
+                    {work.priority && (
+                        <Box className="flex items-center gap-1.5 ml-2 flex-shrink-0">
+                            <Box className={`w-2 h-2 rounded-full ${getPriorityColor(work.priority)}`}></Box>
+                            <Text className="text-xs font-medium text-gray-700">{getPriorityLabel(work.priority)}</Text>
+                        </Box>
+                    )}
+                </Box>
+
+                {/* Time */}
+                {work.scheduledTime && (
+                    <Box className="flex items-center space-x-2 text-sm text-gray-600">
+                        <Icon icon="zi-clock-1" className="text-gray-400 flex-shrink-0" size={14} />
+                        <Text className="truncate">{work.scheduledTime}</Text>
                     </Box>
                 )}
 
-                {/* Notes */}
-                {work.notes && (
-                    <Box className="bg-yellow-50 rounded-lg p-2 border border-yellow-200">
-                        <Text className="text-xs text-yellow-800">
-                            <span className="font-semibold">Ghi chú:</span> {work.notes}
+                {/* Customer */}
+                {work.customerName && (
+                    <Box className="flex items-center space-x-2 text-sm text-gray-600">
+                        <Icon icon="zi-user" className="text-gray-400 flex-shrink-0" size={14} />
+                        <Text
+                            className="truncate cursor-pointer hover:text-blue-600 font-medium"
+                            onClick={() => handleCallCustomer(work.phoneNumber)}
+                            title={work.phoneNumber}
+                        >
+                            {work.customerName}
                         </Text>
                     </Box>
                 )}
 
-                {/* Action Button */}
-                <Button
-                    size="small"
-                    fullWidth
-                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold"
-                    onClick={() => onViewDetail(work)}
-                >
-                    <Icon icon="zi-info-circle" className="mr-1" size={14} />
-                    Chi tiết
-                </Button>
+                {/* Location */}
+                {(work.location || work.address) && (
+                    <Box className="flex items-start space-x-2 text-sm text-gray-600">
+                        <Icon icon="zi-location" className="text-red-500 flex-shrink-0 mt-0.5" size={14} />
+                        <Text className="truncate text-xs">{work.location || work.address}</Text>
+                    </Box>
+                )}
             </Box>
+
+            {/* Notes */}
+            {work.notes && (
+                <Box className="mb-3 p-2 bg-blue-50 rounded border border-blue-200">
+                    <Text className="text-xs text-blue-800">
+                        <span className="font-semibold">Ghi chú:</span> {work.notes}
+                    </Text>
+                </Box>
+            )}
+
+            {/* Action Button */}
+            <Button
+                size="small"
+                fullWidth
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold"
+                onClick={() => onViewDetail(work)}
+            >
+                <Icon icon="zi-info-circle" className="mr-1" size={14} />
+                Chi tiết
+            </Button>
         </Box>
     );
 }

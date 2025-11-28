@@ -12,6 +12,7 @@ import { useToast } from "../hooks/useToast";
 
 // Create Toast Context
 import React from "react";
+import ProgressReport from "../pages/ProgressReport";
 export const ToastContext = React.createContext();
 
 const Layout = () => {
@@ -24,7 +25,7 @@ const Layout = () => {
                     <ZMPRouter>
                         <AnimationRoutes>
                             <Route path="/" element={<HomePage />}></Route>
-                            <Route path="/report" element={<HomePage />}></Route>
+                            <Route path="/report" element={<ProgressReport />}></Route>
                             <Route path="/worklist" element={<WorkListPage />}></Route>
                             <Route path="/notifications" element={<Notifications />}></Route>
                             <Route path="/work-management" element={<WorkManagement />}></Route>

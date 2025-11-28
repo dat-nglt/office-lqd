@@ -224,50 +224,51 @@ function WorkManagement() {
 
     return (
         <Page className="bg-gray-50 min-h-screen pb-20">
-            {/* Simplified Header */}
-            <Box className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-lg px-4 pt-6 pb-4">
-                <Box className="flex items-center justify-between">
-                    <Text.Title className="text-white font-bold" size="large">
-                        Quản Lý Công Việc Hôm Nay
-                    </Text.Title>
-                    <Text className="text-sm text-blue-100 font-medium">{today}</Text>
+            {/* Enhanced Header */}
+            <Box className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-lg pb-4 relative overflow-hidden">
+                {/* Background Effects */}
+                <Box className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></Box>
+                <Box className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16"></Box>
+
+                <Box className="px-4 pt-10 mt-5 pb-2 relative z-10">
+                    {/* Title */}
+                    <Box className="flex items-center justify-between mb-4">
+                        <Text.Title className="text-white font-bold" size="large">
+                            Quản Lý Công Việc
+                        </Text.Title>
+                        <Box className="flex items-center space-x-2 text-sm text-blue-100">
+                            <Icon icon="zi-clock-1" size={16} />
+                            <Text>{today}</Text>
+                        </Box>
+                    </Box>
+
+                    {/* Quick Stats */}
+                    <Box className="grid grid-cols-3 gap-2 mb-3">
+                        <Box className="bg-white/10 backdrop-blur-md rounded-xl p-2 border border-white/20 text-center">
+                            <Text className="text-sm font-bold text-blue-100">{stats.total}</Text>
+                            <Text className="text-xs text-blue-100/70">Tổng công việc</Text>
+                        </Box>
+                        <Box className="bg-white/10 backdrop-blur-md rounded-xl p-2 border border-white/20 text-center">
+                            <Text className="text-sm font-bold text-blue-100">{stats.inProgress}</Text>
+                            <Text className="text-xs text-blue-100/70">Đang làm</Text>
+                        </Box>
+                        <Box className="bg-white/10 backdrop-blur-md rounded-xl p-2 border border-white/20 text-center">
+                            <Text className="text-sm font-bold text-blue-100">{stats.pending}</Text>
+                            <Text className="text-xs text-blue-100/70">Chờ thực hiện</Text>
+                        </Box>
+                    </Box>
+
+                    {/* Info Message */}
+                    <Box className="bg-white/10 backdrop-blur-md rounded-lg p-2 border border-white/20">
+                        <Text size="small" className="text-blue-100 flex items-center">
+                            <Icon icon="zi-info-circle" className="mr-1" size={14} />
+                            Việc thay đổi sẽ được thông báo đến các quản lý
+                        </Text>
+                    </Box>
                 </Box>
             </Box>
 
             <Box className="px-4 pt-4 pb-28">
-                {/* Statistics Cards */}
-                <Box className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-gray-100">
-                    <Box className="flex items-center justify-between mb-3">
-                        <Text className="font-bold text-gray-900 flex items-center">
-                            <Icon icon="zi-chart" className="mr-2 text-blue-600" size={16} />
-                            Thống Kê Ngày Hôm Nay
-                        </Text>
-                        <Text className="text-xs text-gray-600 font-medium">{today}</Text>
-                    </Box>
-
-                    <Box className="grid grid-cols-2 gap-2 mb-2">
-                        <Box className="bg-blue-50 rounded-lg p-2 border border-blue-200 text-center">
-                            <Text className="text-lg font-bold text-blue-600">{stats.total}</Text>
-                            <Text className="text-xs text-gray-600">Tổng công việc</Text>
-                        </Box>
-                        <Box className="bg-yellow-50 rounded-lg p-2 border border-yellow-200 text-center">
-                            <Text className="text-lg font-bold text-yellow-600">{stats.pending}</Text>
-                            <Text className="text-xs text-gray-600">Chờ thực hiện</Text>
-                        </Box>
-                    </Box>
-
-                    <Box className="grid grid-cols-2 gap-2">
-                        <Box className="bg-blue-100 rounded-lg p-2 border border-blue-300 text-center">
-                            <Text className="text-lg font-bold text-blue-700">{stats.inProgress}</Text>
-                            <Text className="text-xs text-gray-600">Đang làm</Text>
-                        </Box>
-                        <Box className="bg-green-50 rounded-lg p-2 border border-green-200 text-center">
-                            <Text className="text-lg font-bold text-green-600">{stats.completed}</Text>
-                            <Text className="text-xs text-gray-600">Hoàn thành</Text>
-                        </Box>
-                    </Box>
-                </Box>
-
                 {/* Work List */}
                 <Box className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     <Box className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
@@ -289,7 +290,7 @@ function WorkManagement() {
                                                     {work.title}
                                                 </Text>
                                             </Box>
-                                            <Text className="text-xs text-gray-600 ml-8">{work.company}</Text>
+                                            <Text className="text-xs text-gray-600">{work.company}</Text>
                                         </Box>
                                         <Box
                                             className={`px-2.5 py-1 rounded-full text-xs font-semibold border whitespace-nowrap flex-shrink-0 ${getStatusColor(
@@ -357,34 +358,30 @@ function WorkManagement() {
                                                     onClick={() => handleReschedule(work)}
                                                     className="px-3 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-1 flex-1 min-w-fit"
                                                 >
-                                                    <Icon icon="zi-calendar" size={12} />
                                                     Thay đổi lịch
                                                 </button>
                                                 <button
                                                     onClick={() => handleCancel(work)}
                                                     className="px-3 py-2 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-1 flex-1 min-w-fit"
                                                 >
-                                                    <Icon icon="zi-close" size={12} />
                                                     Hủy
                                                 </button>
                                             </>
-                                        )}
-                                        {work.status === "in_progress" && (
-                                            <button
-                                                onClick={() => handleRequestOvertime(work)}
-                                                className="px-3 py-2 bg-orange-600 text-white rounded-lg text-xs font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center gap-1 flex-1 min-w-fit"
-                                            >
-                                                <Icon icon="zi-upload" size={12} />
-                                                Yêu cầu tăng ca
-                                            </button>
                                         )}
                                         <button
                                             onClick={() => handleShowDetail(work)}
                                             className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-300 transition-colors flex items-center justify-center gap-1 flex-1 min-w-fit"
                                         >
-                                            <Icon icon="zi-info-circle" size={12} />
                                             Chi tiết
                                         </button>
+                                        {work.status === "in_progress" && (
+                                            <button
+                                                onClick={() => handleRequestOvertime(work)}
+                                                className="px-3 py-2 bg-green-600 text-white rounded-lg text-xs font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-1 flex-1 min-w-fit"
+                                            >
+                                                Yêu cầu tăng ca
+                                            </button>
+                                        )}
                                     </Box>
                                 </Box>
                             ))

@@ -1,4 +1,5 @@
-import { Box, Text, Icon, Button, Page, useNavigate } from "zmp-ui";
+import { Box, Text, Icon, Button, Page } from "zmp-ui";
+import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getUserInfo } from "zmp-sdk/apis";
 import { AppError } from "zmp-sdk";
@@ -9,7 +10,7 @@ function EmployeeProfile() {
         name: "Nguyễn Lê Tấn Đạt",
         employeeId: "KTV-2024-001",
         position: "Kỹ Thuật Viên",
-        department: "Bộ Phận Dịch Vụ Kỹ Thuật",
+        department: "Bộ phận Kỹ Thuật",
         avatar: null,
         email: "tan.dat@lamquangdai.vn",
         phone: "0977708819",
@@ -26,8 +27,8 @@ function EmployeeProfile() {
         },
         {
             id: "overtime_after",
-            name: "Tăng Ca Chiều",
-            time: "17:00 - 20:00",
+            name: "Tăng Ca Ngoài Giờ",
+            time: "17:00 - 00:00",
         },
         {
             id: "overtime_lunch",
@@ -38,8 +39,8 @@ function EmployeeProfile() {
 
     const [workLocation] = useState({
         name: "Kho Hàng - Lâm Quang Đại",
-        address: "Kho hàng - TP.HCM",
-        coordinates: { lat: 10.7769, lng: 106.7009 }, // Will be updated
+        address: "189A Đ. TX 25, Thạnh Xuân, Quận 12, Thành phố Hồ Chí Minh",
+        coordinates: { lat: 10.87957, lng: 106.663325 },
     });
 
     const [attendanceList, setAttendanceList] = useState([
@@ -191,10 +192,6 @@ function EmployeeProfile() {
                             <Text className="text-sm font-semibold text-gray-900">{userInfo.department}</Text>
                         </Box>
                         <Box className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                            <Text className="text-sm text-gray-600">Chuyên môn:</Text>
-                            <Text className="text-sm font-semibold text-gray-900">{userInfo.specialization}</Text>
-                        </Box>
-                        <Box className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                             <Text className="text-sm text-gray-600">Email:</Text>
                             <Text className="text-sm font-semibold text-gray-900">{userInfo.email}</Text>
                         </Box>
@@ -243,10 +240,6 @@ function EmployeeProfile() {
                     <Box className="p-4 bg-red-50 rounded-lg border border-red-200">
                         <Text className="font-bold text-gray-900 mb-1">{workLocation.name}</Text>
                         <Text className="text-xs text-gray-600 mb-3">{workLocation.address}</Text>
-                        <Text className="text-xs text-red-600 mb-3 flex items-center">
-                            <Icon icon="zi-info-circle" className="mr-1" size={12} />
-                            Tọa độ sẽ được cập nhật
-                        </Text>
                         <Button
                             size="small"
                             className="w-full bg-red-600 hover:bg-red-700 text-white rounded-lg"

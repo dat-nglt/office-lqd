@@ -1,62 +1,121 @@
 import { Box, Text, Icon, Page } from "zmp-ui";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import BottomNavigation from "../components/BottomNavigation";
 
 function Notifications() {
+    const navigate = useNavigate();
+
     const [notificationTypes] = useState([
-        { id: "assignment", label: "Phân bổ công việc", icon: "zi-list-1", color: "bg-blue-100 text-blue-700 border-blue-300" },
-        { id: "change", label: "Thay đổi công việc", icon: "zi-edit", color: "bg-orange-100 text-orange-700 border-orange-300" },
-        { id: "checkin", label: "Đến giờ chấm công", icon: "zi-post", color: "bg-green-100 text-green-700 border-green-300" },
-        { id: "report", label: "Đến giờ báo cáo", icon: "zi-send", color: "bg-purple-100 text-purple-700 border-purple-300" },
-        { id: "announcement", label: "Thông báo chung", icon: "zi-info-circle", color: "bg-gray-100 text-gray-700 border-gray-300" },
+        {
+            id: "assignment",
+            label: "Phân bổ công việc",
+            icon: "zi-list-1",
+            color: "bg-blue-100 text-blue-700 border-blue-300",
+        },
+        {
+            id: "change",
+            label: "Thay đổi công việc",
+            icon: "zi-edit",
+            color: "bg-orange-100 text-orange-700 border-orange-300",
+        },
+        {
+            id: "checkin",
+            label: "Chấm công",
+            icon: "zi-post",
+            color: "bg-green-100 text-green-700 border-green-300",
+        },
+        {
+            id: "report",
+            label: "Báo cáo",
+            icon: "zi-share-external-2",
+            color: "bg-purple-100 text-purple-700 border-purple-300",
+        },
+        {
+            id: "announcement",
+            label: "Thông báo",
+            icon: "zi-info-circle",
+            color: "bg-gray-100 text-gray-700 border-gray-300",
+        },
     ]);
 
     const [notifications, setNotifications] = useState([
         {
             id: 1,
-            type: "assignment",
-            title: "Phân bổ công việc mới",
-            content:
-                "Bạn được phân bổ công việc: Bảo trì điều hòa tại NEXUS HOUSE. Thời gian dự kiến: 08:00 - 12:00. Hãy chuẩn bị đầy đủ dụng cụ.",
-            date: "17/11/2025",
-            time: "07:30",
-            priority: "Cao",
-            read: false,
-            serviceType: "Bảo trì",
-            location: "NEXUS HOUSE - Quận 2",
-        },
-        {
-            id: 2,
             type: "checkin",
-            title: "Đến giờ chấm công",
-            content:
-                "Nhắc nhở: Bạn cần chấm công vào lúc 08:00. Vui lòng thực hiện chấm công tại kho hàng hoặc địa điểm công trình.",
+            title: "Đến giờ chấm vào",
+            content: "Bạn cần chấm vào lúc 08:00 để bắt đầu công việc bảo trì điều hòa",
             date: "17/11/2025",
             time: "07:45",
             priority: "Cao",
             read: false,
-            checkInTime: "08:00",
+            work: {
+                title: "Bảo trì điều hòa tại NEXUS HOUSE",
+                company: "NEXUS HOUSE",
+                location: "05A Quốc Hương, Quận 2",
+                scheduledTime: "08:00 - 12:00",
+                customer: "Nguyễn Văn A",
+                phone: "0901234567",
+                checkInTime: "08:00",
+            },
+        },
+        {
+            id: 2,
+            type: "assignment",
+            title: "Phân bổ công việc mới",
+            content: "Bạn được phân bổ công việc bảo trì mới",
+            date: "17/11/2025",
+            time: "07:30",
+            priority: "Cao",
+            read: false,
+            work: {
+                title: "Bảo trì điều hòa tại NEXUS HOUSE",
+                company: "NEXUS HOUSE",
+                location: "05A Quốc Hương, Quận 2",
+                scheduledTime: "08:00 - 12:00",
+                customer: "Nguyễn Văn A",
+                phone: "0901234567",
+            },
         },
         {
             id: 3,
             type: "change",
             title: "Thay đổi lịch công việc",
-            content:
-                "Công việc sửa chữa hệ thống điện tại VINHOMES được dời từ 14:00 sang 15:30. Vui lòng cập nhật lịch trình của bạn.",
+            content: "Công việc sửa chữa điện được dời từ 14:00 sang 15:30",
             date: "17/11/2025",
             time: "06:15",
             priority: "Trung bình",
             read: true,
-            serviceType: "Sửa chữa",
-            oldTime: "14:00",
-            newTime: "15:30",
+            work: {
+                title: "Sửa chữa hệ thống điện tại VINHOMES",
+                company: "VINHOMES",
+                location: "456 Lê Văn Việt, Quận 9",
+                oldTime: "14:00 - 17:00",
+                newTime: "15:30 - 18:30",
+                customer: "Trần Thị B",
+            },
         },
         {
             id: 4,
+            type: "checkin",
+            title: "Đến giờ chấm ra",
+            content: "Nhắc nhở: Bạn cần chấm ra lúc 17:00 để kết thúc công việc",
+            date: "16/11/2025",
+            time: "16:45",
+            priority: "Cao",
+            read: true,
+            work: {
+                title: "Sửa chữa hệ thống điện tại VINHOMES",
+                company: "VINHOMES",
+                scheduledTime: "13:00 - 17:00",
+                checkOutTime: "17:00",
+            },
+        },
+        {
+            id: 5,
             type: "report",
-            title: "Đến giờ báo cáo tiến độ",
-            content:
-                "Nhắc nhở: Bạn cần báo cáo tiến độ công việc trước 18:00 hôm nay. Vui lòng truy cập ứng dụng để gửi báo cáo.",
+            title: "Hạn báo cáo tiến độ",
+            content: "Bạn cần báo cáo tiến độ công việc trước 18:00 hôm nay",
             date: "16/11/2025",
             time: "17:00",
             priority: "Cao",
@@ -64,28 +123,14 @@ function Notifications() {
             deadline: "18:00",
         },
         {
-            id: 5,
+            id: 6,
             type: "announcement",
-            title: "Cập nhật quy trình bảo an toàn",
-            content:
-                "Tất cả kỹ thuật viên khi đi công tác phải mang theo bộ đồ bảo hộ. Vi phạm sẽ bị phạt theo quy định của công ty.",
+            title: "Cập nhật quy trình an toàn",
+            content: "Mang theo bộ đồ bảo hộ khi đi công tác",
             date: "16/11/2025",
             time: "09:00",
             priority: "Cao",
             read: true,
-        },
-        {
-            id: 6,
-            type: "assignment",
-            title: "Phân bổ công việc - Lắp đặt điều hòa",
-            content:
-                "Bạn được phân bổ công việc mới: Lắp đặt điều hòa tại MASTERI. Đây là công việc ưu tiên cao. Thời gian bắt đầu: 09:00.",
-            date: "15/11/2025",
-            time: "14:30",
-            priority: "Cao",
-            read: true,
-            serviceType: "Lắp đặt",
-            location: "MASTERI - Thủ Đức",
         },
     ]);
 
@@ -120,10 +165,7 @@ function Notifications() {
         return notificationTypes.find((t) => t.id === type);
     };
 
-    const filteredNotifications = selectedType
-        ? notifications.filter((n) => n.type === selectedType)
-        : notifications;
-
+    const filteredNotifications = selectedType ? notifications.filter((n) => n.type === selectedType) : notifications;
     const unreadCount = notifications.filter((n) => !n.read).length;
 
     return (
@@ -133,7 +175,7 @@ function Notifications() {
                 <Box className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></Box>
                 <Box className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16"></Box>
 
-                <Box className="px-4 pt-10 mt-5 pb-2 relative z-10">
+                <Box className="px-4 pt-10 mt-5 pb-4 relative z-10">
                     <Box className="flex items-center justify-between mb-3">
                         <Text.Title className="text-white font-bold" size="large">
                             Thông Báo
@@ -231,15 +273,21 @@ function Notifications() {
                                                 >
                                                     <Icon icon={typeInfo?.icon} size={14} />
                                                 </Box>
-                                                <Text className="font-semibold text-gray-900 line-clamp-2">
+                                                <Text className="font-semibold text-gray-900 line-clamp-1">
                                                     {notif.title}
                                                 </Text>
                                             </Box>
                                         </Box>
+                                        <button
+                                            onClick={() => handleDelete(notif.id)}
+                                            className="text-gray-400 hover:text-red-600 p-1 flex-shrink-0"
+                                        >
+                                            <Icon icon="zi-close" size={14} />
+                                        </button>
                                     </Box>
 
                                     {/* Meta Info */}
-                                    <Box className="flex items-center gap-2 mb-2 ml-8">
+                                    <Box className="flex items-center gap-2 mb-2 ">
                                         <Box
                                             className={`text-xs font-semibold px-2 py-0.5 rounded border ${getPriorityColor(
                                                 notif.priority
@@ -253,62 +301,133 @@ function Notifications() {
                                     </Box>
 
                                     {/* Content */}
-                                    <Text className="text-sm text-gray-700 mb-3 leading-relaxed line-clamp-3 ml-8">
-                                        {notif.content}
-                                    </Text>
+                                    <Text className="text-sm text-gray-700 mb-3  line-clamp-2">{notif.content}</Text>
 
-                                    {/* Notification-specific info */}
-                                    <Box className="ml-8 mb-3">
-                                        {notif.type === "assignment" && (
-                                            <Box className="bg-gradient-to-r from-blue-50 to-blue-100 p-3 rounded-lg border border-blue-200 text-sm">
-                                                <Text className="text-xs text-gray-600 font-semibold mb-1">Thông tin công việc:</Text>
-                                                <Text className="text-xs text-gray-700">
-                                                    <span className="font-semibold">Loại:</span> {notif.serviceType}
-                                                </Text>
-                                                <Text className="text-xs text-gray-700">
-                                                    <span className="font-semibold">Địa điểm:</span> {notif.location}
-                                                </Text>
+                                    {/* Work Info Card */}
+                                    {notif.work && (
+                                        <Box className=" mb-3 p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+                                            <Text className="text-xs text-blue-700 font-bold mb-2">
+                                                Thông Tin Công Việc
+                                            </Text>
+
+                                            {/* Work Title */}
+                                            <Text className="text-xs font-semibold text-gray-900 mb-1">
+                                                {notif.work.title}
+                                            </Text>
+
+                                            {/* Company & Location */}
+                                            <Box className="space-y-1 mb-2 text-xs text-gray-700">
+                                                {notif.work.company && (
+                                                    <Box className="flex items-center gap-1">
+                                                        <Icon icon="zi-home" size={12} className="text-gray-500" />
+                                                        <Text>{notif.work.company}</Text>
+                                                    </Box>
+                                                )}
+                                                {notif.work.location && (
+                                                    <Box className="flex items-center gap-1">
+                                                        <Icon icon="zi-location" size={12} className="text-red-500" />
+                                                        <Text>{notif.work.location}</Text>
+                                                    </Box>
+                                                )}
                                             </Box>
-                                        )}
-                                        {notif.type === "change" && (
-                                            <Box className="bg-gradient-to-r from-orange-50 to-orange-100 p-3 rounded-lg border border-orange-200 text-sm">
-                                                <Text className="text-xs text-gray-600 font-semibold mb-1">Thay đổi thời gian:</Text>
-                                                <Text className="text-xs text-gray-700">
-                                                    <span className="line-through">{notif.oldTime}</span>
-                                                    <span className="ml-2 text-green-700 font-bold">→ {notif.newTime}</span>
-                                                </Text>
+
+                                            {/* Time Info */}
+                                            <Box className="space-y-1 mb-2 text-xs text-gray-700 border-t border-blue-200 pt-2">
+                                                {notif.work.scheduledTime && (
+                                                    <Box className="flex items-center gap-1">
+                                                        <Icon icon="zi-clock-1" size={12} className="text-gray-500" />
+                                                        <Text className="font-medium">{notif.work.scheduledTime}</Text>
+                                                    </Box>
+                                                )}
+                                                {notif.work.checkInTime && (
+                                                    <Box className="flex items-center gap-1 text-green-700 font-semibold">
+                                                        <Icon icon="zi-post" size={12} />
+                                                        <Text>Chấm vào: {notif.work.checkInTime}</Text>
+                                                    </Box>
+                                                )}
+                                                {notif.work.checkOutTime && (
+                                                    <Box className="flex items-center gap-1 text-orange-700 font-semibold">
+                                                        <Icon icon="zi-post" size={12} />
+                                                        <Text>Chấm ra: {notif.work.checkOutTime}</Text>
+                                                    </Box>
+                                                )}
+                                                {notif.work.oldTime && notif.work.newTime && (
+                                                    <Box className="flex items-center gap-1">
+                                                        <Icon icon="zi-edit" size={12} className="text-orange-500" />
+                                                        <Text>
+                                                            <span className="line-through">{notif.work.oldTime}</span>
+                                                            <span className="ml-1 font-semibold text-green-700">
+                                                                → {notif.work.newTime}
+                                                            </span>
+                                                        </Text>
+                                                    </Box>
+                                                )}
                                             </Box>
-                                        )}
+
+                                            {/* Customer Info */}
+                                            {(notif.work.customer || notif.work.phone) && (
+                                                <Box className="border-t border-blue-200 pt-2 flex items-center justify-between">
+                                                    <Box className="text-xs">
+                                                        {notif.work.customer && (
+                                                            <Text className="text-gray-700">
+                                                                <span className="text-gray-500">KH:</span>{" "}
+                                                                <span className="font-semibold">
+                                                                    {notif.work.customer}
+                                                                </span>
+                                                            </Text>
+                                                        )}
+                                                        {notif.work.phone && (
+                                                            <Text className="text-gray-700">
+                                                                <span className="text-gray-500">SDT:</span>{" "}
+                                                                <span className="font-semibold">
+                                                                    {notif.work.phone}
+                                                                </span>
+                                                            </Text>
+                                                        )}
+                                                    </Box>
+                                                    {notif.work.phone && (
+                                                        <button
+                                                            onClick={() => {
+                                                                window.location.href = `tel:${notif.work.phone}`;
+                                                            }}
+                                                            className="text-blue-600 hover:text-blue-800 p-1"
+                                                        >
+                                                            <Icon icon="zi-call" size={16} />
+                                                        </button>
+                                                    )}
+                                                </Box>
+                                            )}
+                                        </Box>
+                                    )}
+
+                                    {/* Quick Action Button */}
+                                    <Box className=" flex gap-2">
                                         {notif.type === "checkin" && (
-                                            <Box className="bg-gradient-to-r from-green-50 to-green-100 p-3 rounded-lg border border-green-200 text-sm">
-                                                <Text className="text-xs text-gray-600 font-semibold mb-1">Thời gian chấm công:</Text>
-                                                <Text className="text-xs text-gray-700 font-semibold">{notif.checkInTime}</Text>
-                                            </Box>
+                                            <button
+                                                onClick={() => navigate("/checkin")}
+                                                className="flex-1 text-xs px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded font-semibold transition-colors flex items-center justify-center gap-1"
+                                            >
+                                                <Icon icon="zi-camera" size={12} />
+                                                Chấm Công Ngay
+                                            </button>
                                         )}
-                                        {notif.type === "report" && (
-                                            <Box className="bg-gradient-to-r from-purple-50 to-purple-100 p-3 rounded-lg border border-purple-200 text-sm">
-                                                <Text className="text-xs text-gray-600 font-semibold mb-1">Hạn cuối:</Text>
-                                                <Text className="text-xs text-gray-700 font-semibold">{notif.deadline}</Text>
-                                            </Box>
+                                        {notif.type === "assignment" && (
+                                            <button
+                                                onClick={() => navigate("/work-management")}
+                                                className="flex-1 text-xs px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold transition-colors flex items-center justify-center gap-1"
+                                            >
+                                                <Icon icon="zi-list-1" size={12} />
+                                                Xem Chi Tiết
+                                            </button>
                                         )}
-                                    </Box>
-
-                                    {/* Actions */}
-                                    <Box className="flex gap-2 ml-8">
                                         {!notif.read && (
                                             <button
                                                 onClick={() => handleMarkAsRead(notif.id)}
-                                                className="text-xs text-blue-600 hover:text-blue-800 font-semibold px-3 py-1.5 rounded hover:bg-blue-100 transition-colors"
+                                                className="text-xs text-blue-600 hover:text-blue-800 font-semibold px-2 py-1.5 rounded hover:bg-blue-100 transition-colors"
                                             >
-                                                Đánh dấu là đã đọc
+                                                Đã đọc
                                             </button>
                                         )}
-                                        <button
-                                            onClick={() => handleDelete(notif.id)}
-                                            className="text-xs text-gray-500 hover:text-red-600 font-semibold px-3 py-1.5 rounded hover:bg-gray-100 transition-colors ml-auto"
-                                        >
-                                            Xóa
-                                        </button>
                                     </Box>
                                 </Box>
                             );

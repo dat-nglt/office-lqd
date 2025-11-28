@@ -49,17 +49,6 @@ function Header({ title, showBack = false, onBack }) {
         return () => clearInterval(timer);
     }, []);
 
-    const getGreeting = () => {
-        const hour = currentTime.getHours();
-        if (hour < 12) {
-            return "Chào buổi sáng";
-        } else if (hour < 18) {
-            return "Chào buổi chiều";
-        } else {
-            return "Chào buổi tối";
-        }
-    };
-
     return (
         <Box className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 dark:from-gray-800 dark:via-gray-900 dark:to-gray-950 rounded-b-3xl shadow-xl pb-6 relative overflow-hidden">
             {/* Background Effects */}
@@ -92,16 +81,6 @@ function Header({ title, showBack = false, onBack }) {
                         >
                             <Icon icon="zi-notif" className="text-white" size={20} />
                             <Box className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full shadow-lg"></Box>
-                        </Box>
-
-                        {/* Profile Avatar */}
-                        <Box
-                            className="w-9 h-9 bg-white rounded-full flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all"
-                            onClick={() => navigate("/profile")}
-                        >
-                            <Text className="text-blue-600 font-bold text-sm">
-                                {userInfo.name.charAt(0).toUpperCase()}
-                            </Text>
                         </Box>
                     </Box>
                 </Box>

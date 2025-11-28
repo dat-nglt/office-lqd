@@ -10,9 +10,9 @@ function BottomNavigation() {
         () => [
             {
                 id: "report",
-                label: "Trang Chủ",
-                icon: "zi-home",
-                path: "/report",
+                label: "Báo Cáo",
+                icon: "zi-share-external-1",
+                path: "/",
                 badge: null,
             },
             {
@@ -71,7 +71,7 @@ function BottomNavigation() {
 
     return (
         <Box className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 safe-area-bottom shadow-lg">
-            <Box className="flex px-1 py-2">
+            <Box className="flex px-2 py-2">
                 {tabs.map((tab) => {
                     const isActive = activeTab === tab.id;
 
@@ -84,9 +84,7 @@ function BottomNavigation() {
                             aria-selected={isActive}
                         >
                             <Box
-                                className={`flex flex-col items-center justify-center py-2.5 px-2 cursor-pointer transition-all duration-200 relative rounded-lg ${
-                                    isActive ? "bg-green-50" : "hover:bg-gray-50"
-                                }`}
+                                className="flex flex-col items-center justify-center py-2 px-1 cursor-pointer transition-all duration-200 relative"
                                 onClick={() => handleTabClick(tab)}
                             >
                                 {/* Icon Container */}
@@ -94,7 +92,7 @@ function BottomNavigation() {
                                     <Icon
                                         icon={tab.icon}
                                         className={`transition-colors duration-200 ${
-                                            isActive ? "text-green-600" : "text-gray-500 hover:text-gray-700"
+                                            isActive ? "text-blue-600" : "text-gray-500"
                                         }`}
                                         size={24}
                                     />
@@ -113,7 +111,7 @@ function BottomNavigation() {
                                 {/* Label */}
                                 <Text
                                     className={`text-xs font-semibold transition-colors duration-200 whitespace-nowrap ${
-                                        isActive ? "text-green-600" : "text-gray-600"
+                                        isActive ? "text-blue-600" : "text-gray-600"
                                     }`}
                                 >
                                     {tab.label}
@@ -122,7 +120,7 @@ function BottomNavigation() {
                                 {/* Active Indicator Line */}
                                 {isActive && (
                                     <Box
-                                        className="absolute bottom-0 w-8 h-1 bg-green-600 rounded-t-full"
+                                        className="absolute bottom-0 w-12 h-0.5 bg-blue-600 rounded-full"
                                         aria-hidden="true"
                                     />
                                 )}
