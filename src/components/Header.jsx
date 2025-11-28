@@ -108,10 +108,10 @@ function Header({ title, showBack = false, onBack }) {
                     {/* Check-in Quick Button */}
                     <Box
                         className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl hover:bg-white/30 transition-all duration-200 cursor-pointer border border-white/30 shadow-lg flex items-center space-x-2 hover:scale-105 transform relative"
-                        onClick={() => navigate("/checkin")}
-                        title="Chấm công nhanh"
+                        onClick={() => navigate("/notifications")}
+                        title="Thông báo hệ thống"
                     >
-                        <Icon icon="zi-camera" className="text-white" size={25} />
+                        <Icon icon="zi-notif" className="text-white" size={25} />
                         <Box className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full shadow-lg"></Box>
                     </Box>
                 </Box>
