@@ -14,6 +14,26 @@ import BottomNavigation from "../components/BottomNavigation";
 import WorkDetailModal from "../components/WorkDetailModal";
 import { ToastContext } from "../components/layout";
 
+/*
+ * Dữ liệu cần thiết cho trang WorkManagement:
+ * - workList: Mảng các đối tượng công việc với các trường id (số), title (chuỗi), serviceType (chuỗi), equipment (chuỗi), company (chuỗi), location (chuỗi), address (chuỗi), coordinates (đối tượng với lat, lng), scheduledDate (chuỗi), scheduledTime (chuỗi), status (chuỗi như "pending"), priority (chuỗi như "high"), customerName (chuỗi), phoneNumber (chuỗi), notes (chuỗi), content (chuỗi). Được sử dụng để hiển thị danh sách công việc hôm nay.
+ * - showRescheduleModal, showCancelModal, showOvertimeModal, showDetailModal: Boolean để hiển thị các modal tương ứng.
+ * - selectedWork: Đối tượng công việc được chọn để xử lý trong modal.
+ * - newDate, newTime, cancelReason, overtimeReason, overtimeHours, overtimeDate, overtimeAddress, overtimeTechnicians, overtimeStartTime, overtimeEndTime, overtimeWork: Các state cho form reschedule, cancel và overtime.
+ * - availableTechnicians: Mảng chuỗi tên kỹ thuật viên có sẵn. Được sử dụng trong modal overtime.
+ * - today: Chuỗi ngày hôm nay. Được sử dụng để lọc workList.
+ * - stats: Đối tượng thống kê với total (số), pending (số), inProgress (số), completed (số).
+ *
+ * API cần thiết (đề xuất thực hiện):
+ * - fetchWorkList(employeeId, date): API để lấy danh sách công việc từ backend dựa trên ID nhân viên và ngày. Ví dụ: GET /api/work/list?employeeId=123&date=2024-11-17. Trả về mảng workList.
+ * - updateWorkSchedule(workId, newDate, newTime): API để cập nhật lịch công việc. Ví dụ: PUT /api/work/update-schedule với body {workId: 1, newDate: "2024-11-18", newTime: "09:00-17:00"}.
+ * - cancelWork(workId, reason): API để hủy công việc. Ví dụ: PUT /api/work/cancel với body {workId: 1, reason: "Lý do hủy"}.
+ * - submitOvertimeRequest(workId, data): API để gửi yêu cầu tăng ca. Ví dụ: POST /api/overtime/submit với body {workId: 1, reason: "Lý do", hours: 2, date: "2024-11-18", address: "Địa chỉ", technicians: ["Tên1"], startTime: "17:00", endTime: "19:00", work: "Nội dung"}.
+ * - fetchAvailableTechnicians(): API để lấy danh sách kỹ thuật viên có sẵn. Ví dụ: GET /api/technicians/available. Trả về mảng availableTechnicians.
+ * - Cải tiến tiềm năng: Tích hợp useEffect để gọi fetchWorkList khi component mount; thêm xử lý lỗi và validation phía server; sử dụng Axios hoặc Fetch cho các API backend.
+ * - Không có lệnh gọi API backend hiện tại; dựa vào dữ liệu local hardcode.
+ */
+
 function WorkManagement() {
   const toast = useContext(ToastContext);
   const today = new Date().toLocaleDateString("vi-VN");

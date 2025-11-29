@@ -1,3 +1,25 @@
+/*
+ * Dữ liệu cần thiết cho trang ProgressReport:
+ * - currentWork: Đối tượng công việc với id (số), title (chuỗi), location (chuỗi), scheduledTime (chuỗi), company (chuỗi), customer (chuỗi), requirements (mảng chuỗi). Được sử dụng để hiển thị thông tin công việc hiện tại.
+ * - progressStages: Mảng các đối tượng giai đoạn với id (chuỗi), name (chuỗi), description (chuỗi), icon (chuỗi), color (chuỗi), bgColor (chuỗi), badgeColor (chuỗi). Được sử dụng để hiển thị các giai đoạn báo cáo.
+ * - selectedStage: Chuỗi ID giai đoạn được chọn. Được sử dụng để xác định giai đoạn chụp ảnh.
+ * - showCamera: Boolean để hiển thị camera. Được sử dụng để chuyển chế độ chụp ảnh.
+ * - capturedPhoto: Chuỗi base64 của ảnh chụp. Được sử dụng để lưu ảnh báo cáo.
+ * - progressNotes: Chuỗi ghi chú cho báo cáo. Được sử dụng để thêm mô tả.
+ * - progressReports: Mảng các đối tượng báo cáo với id, stageId, stageName, photo, notes, timestamp, date, duringCount. Được sử dụng để hiển thị danh sách báo cáo chưa gửi.
+ * - submittedReports: Mảng các đối tượng báo cáo đã gửi với id, workId, workTitle, workCompany, submittedDate, submittedTime, reports, totalPhotos. Được sử dụng để hiển thị lịch sử báo cáo.
+ * - showPreview: Boolean để hiển thị modal xem ảnh. Được sử dụng cho preview.
+ * - previewImage: Chuỗi ảnh để preview. Được sử dụng trong modal.
+ * - previewReport: Đối tượng báo cáo để preview. Được sử dụng trong modal.
+ *
+ * API cần thiết (đề xuất thực hiện):
+ * - fetchCurrentWork(employeeId): API để lấy thông tin công việc hiện tại từ backend dựa trên ID nhân viên. Ví dụ: GET /api/work/current?employeeId=123. Trả về đối tượng currentWork.
+ * - submitProgressReport(employeeId, workId, reports): API để gửi danh sách báo cáo tiến độ lên server. Ví dụ: POST /api/progress/submit với body {employeeId, workId, reports: array}. Trả về trạng thái thành công và cập nhật submittedReports.
+ * - fetchSubmittedReports(employeeId, workId): API để lấy lịch sử báo cáo đã gửi. Ví dụ: GET /api/progress/history?employeeId=123&workId=1. Trả về mảng submittedReports.
+ * - Cải tiến tiềm năng: Tích hợp useEffect để gọi fetchCurrentWork và fetchSubmittedReports khi component mount; thêm xử lý lỗi và loading states; sử dụng Axios hoặc Fetch cho các API backend; hỗ trợ upload ảnh lên server thay vì lưu local.
+ * - Không có lệnh gọi API backend hiện tại; dựa vào dữ liệu local hardcode.
+ */
+
 import { Box, Text, Icon, Button, Page } from "zmp-ui";
 import { useState, useRef, useEffect, useContext } from "react";
 import { ToastContext } from "../components/layout";

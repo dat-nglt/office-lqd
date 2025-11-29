@@ -1,9 +1,22 @@
+/*
+ * Dữ liệu cần thiết cho trang OvertimeRequest:
+ * - existingProjects: Mảng các đối tượng công trình với id, name, company, address, coordinates. Được sử dụng để chọn công trình có sẵn.
+ * - overtimeInfo: Đối tượng với date (Date), company (chuỗi), address (chuỗi), content (chuỗi), customerName (chuỗi), phoneNumber (chuỗi), notes (chuỗi), estimatedStartTime (chuỗi HH:MM), estimatedEndTime (chuỗi HH:MM). Được sử dụng để lưu thông tin yêu cầu ca phát sinh.
+ * - selectedProjectId: Chuỗi ID công trình được chọn. Được sử dụng để tự động điền thông tin.
+ * - showProjectList: Boolean để hiển thị danh sách công trình. Được sử dụng cho dropdown.
+ * - isSubmitting: Boolean cho trạng thái gửi yêu cầu. Được sử dụng để disable nút và hiển thị loading.
+ *
+ * API cần thiết (đề xuất thực hiện):
+ * - fetchExistingProjects(employeeId): API để lấy danh sách công trình có sẵn từ backend dựa trên ID nhân viên. Ví dụ: GET /api/projects?employeeId=123. Trả về mảng existingProjects.
+ * - submitOvertimeRequest(employeeId, data): API để gửi yêu cầu ca phát sinh lên server, bao gồm thông tin overtimeInfo. Ví dụ: POST /api/overtime-request/submit với body {employeeId, date, company, address, content, customerName, phoneNumber, notes, startTime, endTime}. Trả về trạng thái thành công.
+ * - Cải tiến tiềm năng: Tích hợp useEffect để gọi fetchExistingProjects khi component mount; thêm xử lý lỗi và validation phía server; sử dụng Axios hoặc Fetch cho các API backend.
+ * - API hiện tại: POST /api/overtime-request/send để gửi tin nhắn yêu cầu (có thể thay bằng submitOvertimeRequest để lưu vào DB).
+ */
+
 import { Box, Text, Icon, Page, Input, DatePicker, Button } from "zmp-ui";
 import { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
 import BottomNavigation from "../components/BottomNavigation";
 import { ToastContext } from "../components/layout";
-import Header from "../components/Header";
 import {
   calculateWorkHours,
   formatDate,
@@ -11,7 +24,6 @@ import {
 } from "../utils/helpers";
 
 function OvertimeRequest() {
-  const navigate = useNavigate();
   const toast = useContext(ToastContext);
 
   // Existing projects in the system

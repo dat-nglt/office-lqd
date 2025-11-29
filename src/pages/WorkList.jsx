@@ -1,3 +1,23 @@
+/*
+ * Dữ liệu cần thiết cho trang WorkList:
+ * - workList: Mảng các đối tượng công việc với các trường id (số), workName (chuỗi), date (chuỗi), scheduledDate (chuỗi), scheduledTime (chuỗi), company (chuỗi), status (chuỗi như "pending"), priority (chuỗi như "high"), service (chuỗi), workType (chuỗi), progress (số), customerName (chuỗi), phoneNumber (chuỗi), location (chuỗi), address (chuỗi), coordinates (đối tượng với lat, lng), content (chuỗi), notes (chuỗi), technicians (mảng đối tượng với name, phone, specialization). Được sử dụng để hiển thị danh sách công việc.
+ * - selectedPeriod: Chuỗi ('today', 'week', 'month') để lọc công việc theo thời gian.
+ * - selectedWorkType: Chuỗi ('all', 'project', 'service') để lọc loại công việc.
+ * - selectedWork: Đối tượng công việc được chọn để hiển thị trong modal.
+ * - showDetailModal: Boolean để hiển thị modal chi tiết công việc.
+ * - periodOptions: Mảng tùy chọn thời gian lọc.
+ * - workTypeOptions: Mảng tùy chọn loại công việc lọc.
+ * - filteredWorkList: Mảng công việc đã lọc dựa trên selectedPeriod và selectedWorkType.
+ * - stats: Đối tượng thống kê với completed (số), inProgress (số), pending (số), total (số).
+ *
+ * API cần thiết (đề xuất thực hiện):
+ * - fetchWorkList(employeeId, period, workType): API để lấy danh sách công việc từ backend dựa trên ID nhân viên, thời gian và loại. Ví dụ: GET /api/work/list?employeeId=123&period=today&workType=all. Trả về mảng workList.
+ * - fetchWorkStats(employeeId, period): API để lấy thống kê công việc cho nhân viên theo thời gian. Ví dụ: GET /api/work/stats?employeeId=123&period=today. Trả về đối tượng stats.
+ * - updateWorkStatus(workId, status): API để cập nhật trạng thái công việc. Ví dụ: PUT /api/work/update-status với body {workId: 1, status: "in_progress"}.
+ * - Cải tiến tiềm năng: Tích hợp useEffect để gọi fetchWorkList và fetchWorkStats khi component mount hoặc khi selectedPeriod/selectedWorkType thay đổi; thêm xử lý lỗi và loading states; sử dụng Axios hoặc Fetch cho các API backend.
+ * - Không có lệnh gọi API backend hiện tại; dựa vào dữ liệu local hardcode.
+ */
+
 import { Box, Text, Icon, Button, Page } from "zmp-ui";
 import { useState, useMemo, useContext } from "react";
 import BottomNavigation from "../components/BottomNavigation";

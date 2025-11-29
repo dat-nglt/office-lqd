@@ -4,6 +4,23 @@ import { useNavigate } from "react-router-dom";
 // import Header from "../components/Header"; // Removed import
 import BottomNavigation from "../components/BottomNavigation";
 
+/*
+ * Dữ liệu cần thiết cho trang AttendanceHistory:
+ * - attendanceList: Mảng các đối tượng với các trường id (số), date (chuỗi DD/MM/YYYY), checkInTime (chuỗi HH:MM), checkOutTime (chuỗi HH:MM), workingHours (số), status (chuỗi như "Đúng giờ" hoặc "Tăng ca"), type (chuỗi như "Chấm công thường"), serviceType (chuỗi như "Bảo trì điều hòa"). Được sử dụng để hiển thị danh sách chấm công.
+ * - filterDate: Chuỗi ngày (YYYY-MM-DD) để lọc dữ liệu theo ngày, tuần hoặc tháng.
+ * - viewMode: Chuỗi ('day', 'week', 'month') để xác định chế độ xem.
+ * - showDatePicker: Boolean để hiển thị date picker (hiện tại không sử dụng).
+ * - totalWorkingHours: Số tổng giờ làm việc, tính từ attendanceList.
+ * - overtimeCount: Số lượng bản ghi tăng ca, tính từ attendanceList.
+ *
+ * API cần thiết (đề xuất thực hiện):
+ * - fetchAttendanceHistory(employeeId, startDate, endDate): API để lấy danh sách chấm công từ backend, trả về mảng attendanceList dựa trên ID nhân viên và khoảng thời gian. Ví dụ: GET /api/attendance/history?employeeId=123&start=2024-11-01&end=2024-11-30.
+ * - fetchAttendanceStats(employeeId, period): API để lấy thống kê như totalWorkingHours và overtimeCount cho một khoảng thời gian (day/week/month). Ví dụ: GET /api/attendance/stats?employeeId=123&period=month&date=2024-11.
+ * - filterAttendanceByPeriod(employeeId, viewMode, filterDate): API để lọc dữ liệu theo chế độ xem (day/week/month) và ngày lọc. Có thể tích hợp vào fetchAttendanceHistory với tham số bổ sung.
+ * - Cải tiến tiềm năng: Thêm xử lý lỗi, caching dữ liệu, và tích hợp với useEffect để gọi API khi component mount hoặc khi filterDate/viewMode thay đổi. Sử dụng thư viện như Axios hoặc Fetch để gọi API.
+ * - Không có lệnh gọi API backend hiện tại; dựa vào dữ liệu local hardcode.
+ */
+
 function AttendanceHistory() {
   const navigate = useNavigate();
   const [attendanceList] = useState([

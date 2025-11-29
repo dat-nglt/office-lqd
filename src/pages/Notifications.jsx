@@ -1,3 +1,19 @@
+/*
+ * Dữ liệu cần thiết cho trang Notifications:
+ * - notificationTypes: Mảng các đối tượng loại thông báo với id, label, icon, color. Được sử dụng để hiển thị bộ lọc loại.
+ * - notifications: Mảng các đối tượng thông báo với id (số), type (chuỗi), title (chuỗi), content (chuỗi), date (chuỗi), time (chuỗi), priority (chuỗi), read (boolean), work (đối tượng với title, company, location, scheduledTime, customer, phone, checkInTime, checkOutTime, oldTime, newTime), deadline (chuỗi). Được sử dụng để hiển thị danh sách thông báo.
+ * - selectedType: Chuỗi để lọc thông báo theo loại. Được sử dụng cho bộ lọc.
+ * - unreadCount: Số lượng thông báo chưa đọc, tính từ notifications. Được sử dụng để hiển thị thống kê.
+ *
+ * API cần thiết (đề xuất thực hiện):
+ * - fetchNotifications(employeeId): API để lấy danh sách thông báo từ backend dựa trên ID nhân viên. Ví dụ: GET /api/notifications?employeeId=123. Trả về mảng notifications.
+ * - markNotificationAsRead(notificationId): API để đánh dấu thông báo đã đọc. Ví dụ: PUT /api/notifications/mark-read với body {notificationId: 1}.
+ * - deleteNotification(notificationId): API để xóa thông báo. Ví dụ: DELETE /api/notifications/delete?notificationId=1.
+ * - fetchNotificationTypes(): API để lấy danh sách loại thông báo. Ví dụ: GET /api/notifications/types. Trả về mảng notificationTypes.
+ * - Cải tiến tiềm năng: Tích hợp useEffect để gọi fetchNotifications khi component mount; thêm xử lý lỗi và loading states; sử dụng Axios hoặc Fetch cho các API backend; thêm real-time updates qua WebSocket.
+ * - Không có lệnh gọi API backend hiện tại; dựa vào dữ liệu local hardcode.
+ */
+
 import { Box, Text, Icon, Page } from "zmp-ui";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";

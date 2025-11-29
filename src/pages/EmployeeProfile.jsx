@@ -5,6 +5,21 @@ import { getUserInfo } from "zmp-sdk/apis";
 import { AppError } from "zmp-sdk";
 import BottomNavigation from "../components/BottomNavigation";
 
+/*
+ * Dữ liệu cần thiết cho trang EmployeeProfile:
+ * - Thông tin người dùng: Đối tượng với các trường name (chuỗi), employeeId (chuỗi), position (chuỗi), department (chuỗi), avatar (chuỗi hoặc null), email (chuỗi), phone (chuỗi), specialization (chuỗi). Được sử dụng để hiển thị chi tiết hồ sơ nhân viên.
+ * - Địa điểm làm việc: Đối tượng với các trường name (chuỗi), address (chuỗi), coordinates (đối tượng với lat và lng là số). Được sử dụng cho vị trí chấm công mặc định.
+ *
+ * API cần thiết:
+ * - getUserInfo từ zmp-sdk/apis: Được gọi trong getUserInfoMiniApp để lấy thông tin người dùng từ mini app, cập nhật name, employeeId và avatar trong state userInfo. Xử lý quyền và lỗi qua AppError.
+ * - Không có API trực tiếp cho lịch sử chấm công hoặc báo cáo công việc; thay vào đó, sử dụng navigation để chuyển đến "/attendance-history" và "/work-reports", ngụ ý các component/trang riêng biệt xử lý những phần đó.
+ *
+ * Ghi chú bổ sung:
+ * - Hàm getStatusColor được định nghĩa nhưng không sử dụng trong JSX; có thể là phần thừa hoặc dành cho tính năng tương lai như badge trạng thái.
+ * - Cải tiến tiềm năng: Lấy department, email, phone, specialization từ API thay vì hardcode; thêm API cho địa điểm làm việc động hoặc trạng thái thời gian thực.
+ * - Không có lệnh gọi API backend cho việc lưu trữ dữ liệu; dựa vào SDK cho thông tin người dùng.
+ */
+
 function EmployeeProfile() {
   const [userInfo, setUserInfo] = useState({
     name: "Nguyễn Lê Tấn Đạt",
@@ -24,59 +39,6 @@ function EmployeeProfile() {
     address: "189A Đ. TX 25, Thạnh Xuân, Quận 12, Thành phố Hồ Chí Minh",
     coordinates: { lat: 10.87957, lng: 106.663325 },
   });
-
-  const [attendanceList, setAttendanceList] = useState([
-    {
-      id: 1,
-      date: "17/11/2025",
-      checkInTime: "07:55",
-      checkOutTime: "17:30",
-      workingHours: 9.58,
-      status: "Đúng giờ",
-      type: "Chấm công thường",
-      serviceType: "Bảo trì điều hòa",
-    },
-    {
-      id: 2,
-      date: "16/11/2025",
-      checkInTime: "08:05",
-      checkOutTime: "20:15",
-      workingHours: 12.17,
-      status: "Tăng ca",
-      type: "Tăng ca chiều",
-      serviceType: "Sửa chữa hệ thống điện",
-    },
-    {
-      id: 3,
-      date: "15/11/2025",
-      checkInTime: "07:50",
-      checkOutTime: "17:20",
-      workingHours: 9.5,
-      status: "Đúng giờ",
-      type: "Chấm công thường",
-      serviceType: "Lắp đặt điều hòa",
-    },
-    {
-      id: 4,
-      date: "14/11/2025",
-      checkInTime: "11:25",
-      checkOutTime: "13:15",
-      workingHours: 1.83,
-      status: "Tăng ca",
-      type: "Tăng ca trưa",
-      serviceType: "Kiểm tra thiết bị",
-    },
-    {
-      id: 5,
-      date: "13/11/2025",
-      checkInTime: "08:00",
-      checkOutTime: "17:15",
-      workingHours: 9.25,
-      status: "Đúng giờ",
-      type: "Chấm công thường",
-      serviceType: "Bảo trì định kỳ",
-    },
-  ]);
 
   const getUserInfoMiniApp = async () => {
     try {
@@ -102,15 +64,6 @@ function EmployeeProfile() {
   useEffect(() => {
     getUserInfoMiniApp();
   }, []);
-
-  const getStatusColor = (status) => {
-    if (status.includes("Đúng giờ")) {
-      return "bg-green-100 text-green-800 border-green-200";
-    } else if (status.includes("Tăng ca")) {
-      return "bg-orange-100 text-orange-800 border-orange-200";
-    }
-    return "bg-gray-100 text-gray-800 border-gray-200";
-  };
 
   return (
     <Page className="bg-gray-50 min-h-screen pb-20">

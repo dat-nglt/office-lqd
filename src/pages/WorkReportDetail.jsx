@@ -1,3 +1,13 @@
+/*
+ * Dữ liệu cần thiết cho trang WorkReportDetail:
+ * - workReport: Đối tượng với các trường id (số), date (chuỗi), company (chuỗi), address (chuỗi), content (chuỗi), customerName (chuỗi), phoneNumber (chuỗi), notes (chuỗi), estimatedStartTime (chuỗi HH:MM), estimatedEndTime (chuỗi HH:MM), status (chuỗi như "completed"). Được sử dụng để hiển thị chi tiết báo cáo công việc.
+ *
+ * API cần thiết (đề xuất thực hiện):
+ * - fetchWorkReportDetail(workReportId): API để lấy chi tiết báo cáo công việc từ backend dựa trên ID báo cáo. Ví dụ: GET /api/work-reports/detail?workReportId=1. Trả về đối tượng workReport.
+ * - Cải tiến tiềm năng: Tích hợp useEffect để gọi fetchWorkReportDetail khi component mount với workReportId từ useParams; thêm xử lý lỗi và loading states; sử dụng Axios hoặc Fetch cho các API backend.
+ * - Không có lệnh gọi API backend hiện tại; dựa vào dữ liệu local hardcode.
+ */
+
 import { Box, Button, Icon, Page, Text } from "zmp-ui";
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";

@@ -1,3 +1,26 @@
+/*
+ * Dữ liệu cần thiết cho trang CheckIn:
+ * - checkInLocations: Mảng các đối tượng địa điểm chấm công với các trường id, name, type, address, latitude, longitude, radius, icon. Được sử dụng để hiển thị và chọn địa điểm chấm công.
+ * - currentLocation: Đối tượng với latitude, longitude, accuracy, timestamp. Được sử dụng để xác định vị trí người dùng.
+ * - currentPlaceName: Chuỗi tên địa điểm từ tọa độ. Được sử dụng để hiển thị địa chỉ.
+ * - selectedCheckInLocation: Đối tượng địa điểm được chọn. Được sử dụng để xác định vị trí chấm công.
+ * - selectedCheckInMode: Chuỗi ('in' hoặc 'out'). Được sử dụng để xác định chế độ chấm công.
+ * - capturedPhoto: Chuỗi base64 của ảnh chụp. Được sử dụng để lưu ảnh chấm công.
+ * - checkInRecords: Mảng các bản ghi chấm công với id, date, checkInTime, type, location, photo, latitude, longitude, isViolation, violationDistance. Được sử dụng để hiển thị lịch sử chấm công.
+ * - locationViolation: Boolean cho biết có vi phạm vị trí không. Được sử dụng để cảnh báo.
+ * - violationDistance: Số khoảng cách vi phạm. Được sử dụng để hiển thị khoảng cách.
+ * - selectedCheckInType: Đối tượng loại chấm công được chọn (id, name, time). Được sử dụng để chọn loại chấm công.
+ * - checkInTypes: Mảng các loại chấm công. Được sử dụng để hiển thị tùy chọn loại.
+ *
+ * API cần thiết (đề xuất thực hiện):
+ * - fetchCheckInLocations(employeeId): API để lấy danh sách địa điểm chấm công từ backend dựa trên ID nhân viên. Ví dụ: GET /api/checkin/locations?employeeId=123. Trả về mảng checkInLocations.
+ * - submitCheckIn(employeeId, data): API để gửi dữ liệu chấm công lên server, bao gồm vị trí, ảnh, loại, v.v. Ví dụ: POST /api/checkin/submit với body {employeeId, locationId, mode, photo, lat, lng, type, violation}. Trả về trạng thái thành công.
+ * - fetchCheckInHistory(employeeId, date): API để lấy lịch sử chấm công cho một ngày cụ thể. Ví dụ: GET /api/checkin/history?employeeId=123&date=2024-11-17. Trả về mảng checkInRecords.
+ * - validateLocation(employeeId, lat, lng): API để xác thực vị trí chấm công dựa trên tọa độ. Ví dụ: POST /api/checkin/validate với body {employeeId, lat, lng}. Trả về {isValid: boolean, distance: number, nearestLocation: object}.
+ * - Cải tiến tiềm năng: Tích hợp geocoding API (như Google Maps) cho getPlaceNameFromCoordinates; thêm xử lý lỗi và caching cho vị trí; sử dụng Axios hoặc Fetch cho các API backend.
+ * - Không có lệnh gọi API backend hiện tại; dựa vào SDK cho vị trí và dữ liệu local.
+ */
+
 import { Box, Page } from "zmp-ui";
 import { useState, useRef, useEffect, useContext } from "react";
 import { ToastContext } from "../components/layout";
@@ -97,35 +120,6 @@ function CheckIn() {
       time: "11:30 - 13:00",
     },
   ]);
-
-  const fetchLocation = async () => {
-    const { token } = await getLocation();
-    const accessToken = await getAccessToken();
-    console.log(token);
-    console.log("1");
-    console.log(accessToken);
-  };
-
-  useEffect(() => {
-    fetchLocation();
-  }, []);
-
-  // Decode location from token
-  const decodeLocationToken = async (token) => {
-    try {
-      const mockLocationData = {
-        latitude: 10.867905908286646,
-        longitude: 106.65442409580359,
-        accuracy: 65,
-        altitude: 0,
-        timestamp: Date.now(),
-      };
-      return mockLocationData;
-    } catch (error) {
-      console.error("Error decoding location token:", error);
-      throw error;
-    }
-  };
 
   // Get user's current location
   const handleGetLocation = async () => {

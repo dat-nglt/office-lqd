@@ -1,3 +1,19 @@
+/*
+ * Dữ liệu cần thiết cho trang HomePage (index.jsx):
+ * - todayAssignments: Mảng các đối tượng công việc với các trường id (số), title (chuỗi), serviceType (chuỗi), location (chuỗi), coordinates (đối tượng với lat, lng), company (chuỗi), customerName (chuỗi), phoneNumber (chuỗi), scheduledDate (chuỗi), scheduledTime (chuỗi), status (chuỗi như "pending"), priority (chuỗi như "high"), notes (chuỗi), content (chuỗi), workType (chuỗi), technicians (mảng đối tượng với name, phone, specialization). Được sử dụng để hiển thị danh sách công việc hôm nay.
+ * - statistics: Đối tượng với các trường totalAssignedToday (số), completed (số), inProgress (số), pending (số), totalHours (số), averageRating (số). Được sử dụng để hiển thị thống kê công việc.
+ * - showDetailModal: Boolean để hiển thị modal chi tiết công việc.
+ * - selectedWork: Đối tượng công việc được chọn để hiển thị trong modal.
+ *
+ * API cần thiết (đề xuất thực hiện):
+ * - fetchTodayAssignments(employeeId): API để lấy danh sách công việc hôm nay từ backend dựa trên ID nhân viên. Ví dụ: GET /api/work/assignments?employeeId=123&date=today. Trả về mảng todayAssignments.
+ * - fetchWorkStatistics(employeeId): API để lấy thống kê công việc cho nhân viên. Ví dụ: GET /api/work/stats?employeeId=123. Trả về đối tượng statistics.
+ * - updateWorkStatus(workId, status): API để cập nhật trạng thái công việc (e.g., từ pending sang in_progress). Ví dụ: PUT /api/work/update-status với body {workId: 1, status: "in_progress"}.
+ * - fetchWorkDetail(workId): API để lấy chi tiết công việc cho modal. Ví dụ: GET /api/work/detail?workId=1. Trả về đối tượng selectedWork.
+ * - Cải tiến tiềm năng: Tích hợp useEffect để gọi API khi component mount; thêm xử lý lỗi và loading states; sử dụng Axios hoặc Fetch cho các API backend.
+ * - Không có lệnh gọi API backend hiện tại; dựa vào dữ liệu local hardcode.
+ */
+
 import { Box, Button, Icon, Page, Text } from "zmp-ui";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";

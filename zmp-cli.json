@@ -8,7 +8,7 @@
   "stateManagement": "jotai",
   "newProject": true,
   "template": "single-view",
-  "theming": {
+  "theming": {  
     "customColor": false,
     "color": "#007aff",
     "darkTheme": false,
