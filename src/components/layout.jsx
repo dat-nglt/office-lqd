@@ -8,6 +8,7 @@ import {
 } from "zmp-ui";
 
 import HomePage from "../pages/index";
+import Login from "../pages/Login";
 import WorkListPage from "../pages/WorkList";
 import Notifications from "../pages/Notifications";
 import WorkManagement from "../pages/WorkManagement";
@@ -35,6 +36,7 @@ const Layout = () => {
         <ToastContext.Provider value={{ success, error, warn, info }}>
           <ZMPRouter>
             <AnimationRoutes>
+              <Route path="/login" element={<Login />}></Route>
               <Route path="/" element={<HomePage />}></Route>
               <Route path="/report" element={<ProgressReport />}></Route>
               <Route path="/worklist" element={<WorkListPage />}></Route>

@@ -13,6 +13,8 @@ import API_ENDPOINTS from "../config/apiEndpoints";
 export const authService = {
     login: (credentials) => axiosInstance.post(API_ENDPOINTS.AUTH.LOGIN, credentials),
 
+    zaloLogin: (accessToken) => axiosInstance.post(API_ENDPOINTS.AUTH.ZALO_LOGIN, { access_token: accessToken }),
+
     logout: () => axiosInstance.post(API_ENDPOINTS.AUTH.LOGOUT),
 
     refreshToken: (refreshToken) => axiosInstance.post(API_ENDPOINTS.AUTH.REFRESH_TOKEN, { refreshToken }),
