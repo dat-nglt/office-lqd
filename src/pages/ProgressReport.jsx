@@ -22,13 +22,15 @@
 
 import { Box, Text, Icon, Button, Page } from "zmp-ui";
 import { useState, useRef, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { nativeStorage } from "zmp-sdk/apis";
 import { ToastContext } from "../components/layout";
 import BottomNavigation from "../components/BottomNavigation";
-import { useNavigate } from "react-router-dom";
-
+    
 function ProgressReport() {
     const toast = useContext(ToastContext);
     const navigate = useNavigate();
+    const [userInfo, setUserInfo] = useState(null);
 
     // Current work assignment
     const [currentWork] = useState({
@@ -84,6 +86,25 @@ function ProgressReport() {
 
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
+
+    useEffect(() => {
+        const token = nativeStorage.getItem("access_token");
+        const userInfo = nativeStorage.getItem("user_info");
+
+        if (!token || !userInfo) {
+            navigate("/login", { replace: true });
+        } else {
+            try {
+                setUserInfo(JSON.parse(userInfo));
+            } catch (err) {
+                console.error("Error parsing stored user info:", err);
+                // Clear invalid data
+                localStorage.removeItem("access_token");
+                localStorage.removeItem("user_info");
+                navigate("/login", { replace: true });
+            }
+        }
+    }, [navigate]);
 
     const startCamera = async () => {
         try {

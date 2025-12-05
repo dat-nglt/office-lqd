@@ -15,14 +15,16 @@
  */
 
 import { Box, Button, Icon, Page, Text } from "zmp-ui";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { nativeStorage } from "zmp-sdk/apis";
 import Header from "../components/Header";
 import WorkDetailModal from "../components/WorkDetailModal";
 import BottomNavigation from "../components/BottomNavigation";
 
 function HomePage() {
   const navigate = useNavigate();
+  const [userInfo, setUserInfo] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedWork, setSelectedWork] = useState(null);
 
@@ -184,6 +186,25 @@ function HomePage() {
     // Navigate to progress report page
     navigate(`/report`);
   };
+
+  useEffect(() => {
+    const token = nativeStorage.getItem("access_token");
+    const userInfo = nativeStorage.getItem("user_info");
+
+    if (!token || !userInfo) {
+      navigate("/login", { replace: true });
+    } else {
+      try {
+        setUserInfo(JSON.parse(userInfo));
+      } catch (err) {
+        console.error("Error parsing stored user info:", err);
+        // Clear invalid data
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("user_info");
+        navigate("/login", { replace: true });
+      }
+    }
+  }, [navigate]);
 
   return (
     <Page className="bg-gray-50 min-h-screen pb-20">

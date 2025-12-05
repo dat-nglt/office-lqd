@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef, useContext } from "react";
 import { Box, Button, Page, Text, Icon, Spinner } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
 import { getAccessToken } from "zmp-sdk/apis";
-import { authService } from "../services/apiService";
+import { nativeStorage } from "zmp-sdk/apis";
+import { zaloLogin } from "../services/authService";
 import { setTokens, setUserInfo } from "../config/axiosConfig";
 import { ToastContext } from "../components/layout";
-import BottomNavigation from "../components/BottomNavigation";
 
 /**
  * Login Component - Zalo Mini App Authentication
@@ -27,6 +27,7 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [step, setStep] = useState(0); // Track login progress
+    const [pendingApproval, setPendingApproval] = useState(false); // New state for unapproved users
     const isMountedRef = useRef(true);
 
     useEffect(() => {
@@ -39,8 +40,8 @@ const Login = () => {
      * Check if user is already logged in
      */
     useEffect(() => {
-        const token = localStorage.getItem("access_token");
-        const userInfo = localStorage.getItem("user_info");
+        const token = nativeStorage.getItem("access_token");
+        const userInfo = nativeStorage.getItem("user_info");
 
         if (token && userInfo) {
             try {
@@ -57,325 +58,142 @@ const Login = () => {
 
     /**
      * Handle Zalo login flow
-     * Step 1: Get Zalo Access Token
-     * Step 2: Send to backend
-     * Step 3: Save JWT and redirect
      */
     const handleZaloLogin = async () => {
-        // Prevent multiple simultaneous login attempts
         if (loading) return;
 
         setLoading(true);
         setError(null);
         setStep(0);
+        setPendingApproval(false); // Reset pending state
 
         try {
-            // ========================================
-            // Step 1: Get Access Token from Zalo SDK
-            // ========================================
             setStep(1);
-            console.log("[Login] Step 1: Requesting Zalo access token...");
+            const accessToken = await getAccessToken();
 
-            let accessToken;
-            try {
-                accessToken = await getAccessToken();
-            } catch (err) {
-                console.error(
-                    "[Login] Step 1 Failed: Cannot get Zalo access token",
-                    err
-                );
-                const errorMsg =
-                    "Không thể kết nối với Zalo. Vui lòng đảm bảo bạn đang sử dụng Zalo ứng dụng.";
-                setError(errorMsg);
-                toast?.error({
-                    title: "Lỗi kết nối Zalo",
-                    message: errorMsg,
-                    duration: 3000,
-                });
-                return;
-            }
+            if (!accessToken)
+                throw new Error("Không nhận được mã xác thực từ Zalo");
 
-            if (!accessToken) {
-                console.error("[Login] Step 1 Failed: Access token is empty");
-                const errorMsg = "Không nhận được mã xác thực từ Zalo.";
-                setError(errorMsg);
-                toast?.error({
-                    title: "Lỗi xác thực",
-                    message: errorMsg,
-                    duration: 3000,
-                });
-                return;
-            }
-
-            console.log("[Login] Step 1 Success: Received Zalo access token");
-
-            // ========================================
-            // Step 2: Send Access Token to Backend
-            // ========================================
             setStep(2);
-            console.log("[Login] Step 2: Sending access token to backend...");
+            const response = await zaloLogin(accessToken);
+            if (!response || response.status !== "success")
+                throw new Error(response?.message || "Đăng nhập thất bại");
 
-            let response;
-            try {
-                response = await authService.zaloLogin(accessToken);
-            } catch (err) {
-                console.error(
-                    "[Login] Step 2 Failed: Backend authentication error",
-                    err
-                );
-
-                // Handle specific error responses
-                const status = err.response?.status;
-                const message = err.response?.data?.message;
-
-                let errorMsg = "Không thể xác thực. Vui lòng thử lại.";
-
-                if (status === 400) {
-                    errorMsg = "Yêu cầu không hợp lệ. Vui lòng thử lại.";
-                } else if (status === 401) {
-                    errorMsg =
-                        "Mã xác thực đã hết hạn. Vui lòng đăng nhập lại.";
-                } else if (status === 403) {
-                    errorMsg =
-                        message || "Tài khoản đã bị khóa hoặc không hoạt động.";
-                } else if (status === 408) {
-                    errorMsg = "Kết nối đến server quá lâu. Vui lòng thử lại.";
-                } else if (status === 500) {
-                    errorMsg = "Lỗi server. Vui lòng liên hệ quản trị viên.";
-                }
-
-                setError(errorMsg);
-                toast?.error({
-                    title: "Lỗi đăng nhập",
-                    message: errorMsg,
-                    duration: 3000,
-                });
-                return;
-            }
-
-            if (!response || response.status !== "success") {
-                console.error(
-                    "[Login] Step 2 Failed: Invalid response from backend",
-                    response
-                );
-                const errorMsg = response?.message || "Đăng nhập thất bại.";
-                setError(errorMsg);
-                toast?.error({
-                    title: "Lỗi đăng nhập",
-                    message: errorMsg,
-                    duration: 3000,
-                });
-                return;
-            }
-
-            console.log("[Login] Step 2 Success: Backend returned JWT token");
-
-            // ========================================
-            // Step 3: Save JWT and User Info
-            // ========================================
             setStep(3);
-            console.log(
-                "[Login] Step 3: Saving JWT and user info to localStorage..."
-            );
-
             const { access_token, user } = response.data;
 
-            if (!access_token || !user) {
-                console.error(
-                    "[Login] Step 3 Failed: Missing token or user data in response"
-                );
-                const errorMsg = "Dữ liệu đăng nhập không hợp lệ.";
-                setError(errorMsg);
-                toast?.error({
-                    title: "Lỗi dữ liệu",
-                    message: errorMsg,
-                    duration: 3000,
-                });
+            // Kiểm tra trạng thái phê duyệt tài khoản
+            if (!user.approved) {
+                setPendingApproval(true); // Show pending approval UI instead of error
                 return;
             }
 
-            try {
-                // Update Axios instance with new token
-                setTokens(access_token, null);
+            setTokens(access_token, null);
+            nativeStorage.setItem("access_token", access_token);
+            nativeStorage.setItem("user_info", JSON.stringify(user));
+            setUserInfo(user);
 
-                // Save to localStorage
-                localStorage.setItem("access_token", access_token);
-                localStorage.setItem("user_info", JSON.stringify(user));
+            toast?.success({
+                title: "Đăng nhập thành công",
+                message: `Chào mừng ${user.name || "bạn"}!`,
+                duration: 2000,
+            });
 
-                // Update user info in state
-                setUserInfo(user);
-
-                console.log(
-                    "[Login] Step 3 Success: Data saved to localStorage"
-                );
-                console.log("[Login] Logged in user:", user.name || user.id);
-
-                // Show success toast
-                toast?.success({
-                    title: "Đăng nhập thành công",
-                    message: `Chào mừng ${user.name || "bạn"}!`,
-                    duration: 2000,
-                });
-
-                // ========================================
-                // Step 4: Redirect to Home Page
-                // ========================================
-                setStep(4);
-                console.log("[Login] Step 4: Redirecting to home page...");
-
-                // Use replace to prevent going back to login page
-                if (isMountedRef.current) {
-                    navigate("/", { replace: true });
-                }
-            } catch (err) {
-                console.error("[Login] Step 3 Failed: Error saving data", err);
-                const errorMsg = "Không thể lưu thông tin đăng nhập.";
-                setError(errorMsg);
-                toast?.error({
-                    title: "Lỗi lưu dữ liệu",
-                    message: errorMsg,
-                    duration: 3000,
-                });
+            if (isMountedRef.current) {
+                navigate("/", { replace: true });
             }
         } catch (err) {
-            console.error("[Login] Unexpected error:", err);
-            const errorMsg = "Đã xảy ra lỗi. Vui lòng thử lại.";
+            console.error("[Login] Error:", err);
+            const errorMsg = err.message || "Đã xảy ra lỗi. Vui lòng thử lại.";
             setError(errorMsg);
             toast?.error({
-                title: "Lỗi",
+                title: "Lỗi đăng nhập",
                 message: errorMsg,
                 duration: 3000,
             });
         } finally {
             if (isMountedRef.current) {
-                setLoading(false);
+                setTimeout(() => {
+                    setLoading(false);
+                }, 3000);
             }
         }
     };
 
-    /**
-     * Get step description for progress feedback
-     */
-    const getStepDescription = () => {
-        switch (step) {
-            case 1:
-                return "Kết nối với Zalo...";
-            case 2:
-                return "Xác thực tài khoản...";
-            case 3:
-                return "Lưu thông tin...";
-            case 4:
-                return "Chuyển hướng...";
-            default:
-                return "Đang đăng nhập...";
-        }
-    };
-
     return (
-        <Page className="bg-gray-50 min-h-screen pb-20 flex flex-col">
-            {/* Header Section - Optimized for better mobile fit */}
-            <Box className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-lg pb-6 relative overflow-hidden flex-shrink-0">
-                {/* Background Effects */}
-                <Box className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></Box>
-                <Box className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16"></Box>
-
-                <Box className="px-4 pt-12 pb-4 relative z-10">
-                    <Text.Title className="text-white font-bold" size="large">
-                        Hệ Thống IMS
-                    </Text.Title>
-                    <Text className="text-blue-100 text-sm mt-1">
-                        Đăng nhập để tiếp tục
-                    </Text>
-                </Box>
+        <Page className="bg-gray-50 min-h-screen flex flex-col">
+            {/* Header */}
+            <Box className="bg-gradient-to-r from-blue-600 to-blue-800 pb-6 px-4 pt-12">
+                <Text.Title className="text-white font-bold text-xl">
+                    Hệ Thống Chấm Công IMS
+                </Text.Title>
+                <Text className="text-blue-100 text-sm">
+                    Đăng nhập nội bộ cho kỹ thuật viên Lâm Quang Đại
+                </Text>
             </Box>
 
-            {/* Main Content - Streamlined with flex for better flow */}
-            <Box className="flex-1 p-4 pb-20 space-y-6">
-                {/* Info Box - Simplified layout */}
-                <Box className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-                    <Icon
-                        icon="zi-info-circle"
-                        className="text-amber-600 text-lg flex-shrink-0"
-                    />
-                    <Box className="flex-1">
-                        <Text className="text-amber-900 text-xs font-semibold mb-1">
-                            Gợi ý
-                        </Text>
-                        <Text className="text-amber-800 text-xs leading-relaxed">
-                            Đảm bảo bạn đã đăng nhập trong ứng dụng Zalo trước
-                            khi sử dụng Mini App này. Nếu gặp vấn đề, hãy liên
-                            hệ quản trị viên.
-                        </Text>
-                    </Box>
+            {/* Main Content */}
+            <Box className="flex-1 p-6 space-y-6">
+                {/* Info Box */}
+                <Box className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <Text className="text-blue-800 text-sm">
+                        Đảm bảo bạn đã đăng nhập trong ứng dụng Zalo trước khi
+                        sử dụng Mini App này.
+                    </Text>
                 </Box>
 
-                {/* Welcome Card - Consolidated and centered */}
-                <Box className="bg-white rounded-2xl shadow-md p-6 border-t-4 border-blue-500 text-center">
-                    {/* Logo */}
-                    <Box className="flex justify-center mb-6">
-                        <Box className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-full p-4 shadow-lg w-fit">
-                            <Icon
-                                icon="zi-user"
-                                className="text-4xl text-white"
-                            />
-                        </Box>
+                {/* Conditional Rendering: Pending Approval or Welcome Card */}
+                {pendingApproval ? (
+                    <Box className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                        <Text.Title className="text-yellow-800 text-sm font-semibold mb-2">
+                            Tài khoản đang chờ phê duyệt
+                        </Text.Title>
+                        <Text className="text-yellow-700 text-xs mb-4">
+                            Tài khoản của bạn cần được chấp thuận từ phía quản
+                            trị viên. Vui lòng đợi và thử đăng nhập lại sau.
+                        </Text>
+                        <Button
+                            onClick={() => setPendingApproval(false)}
+                            className="bg-yellow-600 hover:bg-yellow-700 w-full py-3 rounded-lg font-semibold text-white"
+                        >
+                            Thử lại
+                        </Button>
                     </Box>
+                ) : (
+                    <Box className="bg-white rounded-lg shadow-md p-6 text-center">
+                        <Text className="text-gray-600 text-xs mb-6">
+                            Đăng nhập bằng tài khoản Zalo nội bộ để truy cập hệ
+                            thống chấm công và quản lý công việc
+                        </Text>
 
-                    {/* Welcome Text */}
-                    <Text.Title className="text-gray-800 mb-2">
-                        Chào mừng
-                    </Text.Title>
-                    <Text className="text-gray-600 text-sm mb-6">
-                        Đăng nhập bằng tài khoản Zalo để sử dụng hệ thống quản
-                        lý công việc
-                    </Text>
-
-                    {/* Loading Progress - Streamlined */}
-                    {loading && (
-                        <Box className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
-                            <Box className="flex items-center gap-2 mb-3">
-                                <Spinner size="small" />
-                                <Text className="text-blue-700 text-sm font-semibold">
-                                    {getStepDescription()}
-                                </Text>
-                            </Box>
-                            <Box className="bg-blue-200 rounded-full h-2 w-full overflow-hidden">
-                                <Box
-                                    className="bg-gradient-to-r from-blue-500 to-blue-600 h-full transition-all duration-500"
-                                    style={{
-                                        width: `${(step / 4) * 100}%`,
-                                    }}
+                        {/* Loading Progress */}
+                        {loading && (
+                            <Box className="bg-blue-50 rounded-lg p-2 py-3">
+                                <Icon
+                                    icon="zi-auto"
+                                    className="animate-spin text-blue-600"
                                 />
                             </Box>
-                        </Box>
-                    )}
-
-                    {/* Login Button - Enhanced with better disabled state */}
-                    <Button
-                        onClick={handleZaloLogin}
-                        disabled={loading}
-                        className={`w-full font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 text-white ${
-                            loading
-                                ? "bg-blue-300 cursor-not-allowed opacity-75"
-                                : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 active:from-blue-800 active:to-blue-900 shadow-md hover:shadow-lg"
-                        }`}
-                    >
-                        {loading ? (
-                            <>
-                                <Spinner size="small" />
-                                <Text>{getStepDescription()}</Text>
-                            </>
-                        ) : (
-                            <>
-                                {/* <Icon icon="zi-user" /> */}
-                                <Text>Đăng nhập bằng Zalo</Text>
-                            </>
                         )}
-                    </Button>
-                </Box>
 
-                {/* Features List - Improved spacing and alignment */}
-                <Box className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+                        {/* Login Button */}
+                        {!loading && (
+                            <Button
+                                onClick={handleZaloLogin}
+                                className={`w-full py-3 rounded-lg font-semibold text-white ${
+                                    loading
+                                        ? "bg-blue-300"
+                                        : "bg-blue-600 hover:bg-blue-700"
+                                }`}
+                            >
+                                Đăng nhập bằng Zalo
+                            </Button>
+                        )}
+                    </Box>
+                )}
+
+                {/* Features List */}
+                <Box className="bg-white rounded-lg shadow-sm p-4">
                     <Text className="text-gray-700 text-sm font-semibold mb-3">
                         Tính năng chính
                     </Text>
@@ -385,11 +203,17 @@ const Login = () => {
                                 icon: "zi-location",
                                 text: "Chấm công theo vị trí",
                             },
-                            { icon: "zi-calendar", text: "Quản lý công việc" },
-                            { icon: "zi-list-2", text: "Báo cáo tiến độ" },
                             {
-                                icon: "zi-check-circle",
-                                text: "Theo dõi thời gian",
+                                icon: "zi-calendar",
+                                text: "Quản lý lịch làm việc",
+                            },
+                            {
+                                icon: "zi-camera",
+                                text: "Báo cáo tiến độ công việc",
+                            },
+                            {
+                                icon: "zi-clock-1",
+                                text: "Theo dõi thời gian làm việc",
                             },
                         ].map((feature, index) => (
                             <Box
@@ -399,20 +223,40 @@ const Login = () => {
                                 <Icon
                                     icon={feature.icon}
                                     className="text-blue-600"
+                                    size={16}
                                 />
-                                <Text className="text-gray-600 text-xs">
+                                <Text className="text-gray-600 text-sm">
                                     {feature.text}
                                 </Text>
                             </Box>
                         ))}
                     </Box>
                 </Box>
+
+                {/* Support */}
+                <Box className="bg-white rounded-lg shadow-sm p-4">
+                    <Text className="text-gray-700 text-sm font-semibold mb-3">
+                        Hỗ trợ
+                    </Text>
+                    <Box className="space-y-2">
+                        <Box className="flex items-center gap-2">
+                            <Icon
+                                icon="zi-call"
+                                className="text-blue-600"
+                                size={16}
+                            />
+                            <Text className="text-gray-600 text-sm">
+                                0397.364.664 - Tấn Đạt
+                            </Text>
+                        </Box>
+                    </Box>
+                </Box>
             </Box>
 
-            {/* Footer - Fixed positioning maintained */}
-            <Box className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-3 px-4 text-center">
-                <Text className="text-gray-500 text-xs">
-                    © 2024 IMS System. All rights reserved.
+            {/* Footer */}
+            <Box className="bg-white border-t border-gray-200 py-3 px-4 text-center">
+                <Text className="text-gray-500 text-xs py-4">
+                    Lam Quang Dai HVAC © 2025 IMS System. All rights reserved.
                 </Text>
             </Box>
         </Page>

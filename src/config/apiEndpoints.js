@@ -8,11 +8,11 @@ const API_ENDPOINTS = {
     // Authentication Endpoints
     // ============================================
     AUTH: {
-        LOGIN: "/api/v1/ims/auth/login",
-        ZALO_LOGIN: "/api/v1/ims/auth/zalo-login",
-        LOGOUT: "/api/v1/ims/auth/logout",
-        REFRESH_TOKEN: "/api/v1/ims/auth/refresh-token",
-        VERIFY_TOKEN: "/api/v1/ims/auth/validate-session",
+        LOGIN: "/auth/login",
+        ZALO_LOGIN: "/auth/zalo-login",
+        LOGOUT: "/auth/logout",
+        REFRESH_TOKEN: "/auth/refresh-token",
+        VERIFY_TOKEN: "/auth/validate-session",
     },
 
     // ============================================

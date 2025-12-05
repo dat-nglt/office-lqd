@@ -14,7 +14,9 @@
  */
 
 import { Box, Text, Icon, Page, Input, DatePicker, Button } from "zmp-ui";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { nativeStorage } from "zmp-sdk/apis";
 import BottomNavigation from "../components/BottomNavigation";
 import { ToastContext } from "../components/layout";
 import {
@@ -24,7 +26,9 @@ import {
 } from "../utils/helpers";
 
 function OvertimeRequest() {
+  const navigate = useNavigate();
   const toast = useContext(ToastContext);
+  const [userInfo, setUserInfo] = useState(null);
 
   // Existing projects in the system
   const [existingProjects] = useState([
@@ -66,6 +70,25 @@ function OvertimeRequest() {
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [showProjectList, setShowProjectList] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const token = nativeStorage.getItem("access_token");
+    const userInfo = nativeStorage.getItem("user_info");
+
+    if (!token || !userInfo) {
+      navigate("/login", { replace: true });
+    } else {
+      try {
+        setUserInfo(JSON.parse(userInfo));
+      } catch (err) {
+        console.error("Error parsing stored user info:", err);
+        // Clear invalid data
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("user_info");
+        navigate("/login", { replace: true });
+      }
+    }
+  }, [navigate]);
 
   const handleSelectProject = (project) => {
     setSelectedProjectId(project.id);

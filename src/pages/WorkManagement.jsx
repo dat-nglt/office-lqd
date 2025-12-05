@@ -9,7 +9,9 @@ import {
   DatePicker,
   Select,
 } from "zmp-ui";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { nativeStorage } from "zmp-sdk/apis";
 import BottomNavigation from "../components/BottomNavigation";
 import WorkDetailModal from "../components/WorkDetailModal";
 import { ToastContext } from "../components/layout";
@@ -35,7 +37,9 @@ import { ToastContext } from "../components/layout";
  */
 
 function WorkManagement() {
+  const navigate = useNavigate();
   const toast = useContext(ToastContext);
+  const [userInfo, setUserInfo] = useState(null);
   const today = new Date().toLocaleDateString("vi-VN");
 
   const [workList, setWorkList] = useState([
@@ -126,6 +130,25 @@ function WorkManagement() {
     "Quang",
     "Thương TT",
   ];
+
+  useEffect(() => {
+    const token = nativeStorage.getItem("access_token");
+    const userInfo = nativeStorage.getItem("user_info");
+
+    if (!token || !userInfo) {
+      navigate("/login", { replace: true });
+    } else {
+      try {
+        setUserInfo(JSON.parse(userInfo));
+      } catch (err) {
+        console.error("Error parsing stored user info:", err);
+        // Clear invalid data
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("user_info");
+        navigate("/login", { replace: true });
+      }
+    }
+  }, [navigate]);
 
   // Filter only today's work
   const todayWorkList = workList.filter((w) => w.scheduledDate === today);

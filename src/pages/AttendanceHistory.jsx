@@ -1,6 +1,7 @@
 import { Box, Icon, Page, Text } from "zmp-ui";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { nativeStorage } from "zmp-sdk/apis";
 // import Header from "../components/Header"; // Removed import
 import BottomNavigation from "../components/BottomNavigation";
 
@@ -23,6 +24,7 @@ import BottomNavigation from "../components/BottomNavigation";
 
 function AttendanceHistory() {
   const navigate = useNavigate();
+  const [userInfo, setUserInfo] = useState(null);
   const [attendanceList] = useState([
     {
       id: 1,
@@ -81,6 +83,25 @@ function AttendanceHistory() {
   );
   const [viewMode, setViewMode] = useState("day"); // 'day', 'week', 'month'
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  useEffect(() => {
+    const token = nativeStorage.getItem("access_token");
+    const userInfo = nativeStorage.getItem("user_info");
+
+    if (!token || !userInfo) {
+      navigate("/login", { replace: true });
+    } else {
+      try {
+        setUserInfo(JSON.parse(userInfo));
+      } catch (err) {
+        console.error("Error parsing stored user info:", err);
+        // Clear invalid data
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("user_info");
+        navigate("/login", { replace: true });
+      }
+    }
+  }, [navigate]);
 
   // Helper functions
   const getWeekStartEnd = (dateString) => {

@@ -19,14 +19,18 @@
  */
 
 import { Box, Text, Icon, Button, Page } from "zmp-ui";
-import { useState, useMemo, useContext } from "react";
+import { useState, useMemo, useContext, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { nativeStorage } from "zmp-sdk/apis";
 import BottomNavigation from "../components/BottomNavigation";
 import WorkCard from "../components/WorkCard";
 import WorkDetailModal from "../components/WorkDetailModal";
 import { ToastContext } from "../components/layout";
 
 function WorkList() {
+    const navigate = useNavigate();
     const toast = useContext(ToastContext);
+    const [userInfo, setUserInfo] = useState(null);
     const [selectedPeriod, setSelectedPeriod] = useState("today");
     const [selectedWorkType, setSelectedWorkType] = useState("all");
     const [selectedWork, setSelectedWork] = useState(null);
@@ -103,6 +107,25 @@ function WorkList() {
             technicians: [{ name: "Lê Văn C", phone: "0903456789", specialization: "An ninh" }],
         },
     ]);
+
+    useEffect(() => {
+        const token = nativeStorage.getItem("access_token");
+        const userInfo = nativeStorage.getItem("user_info");
+
+        if (!token || !userInfo) {
+            navigate("/login", { replace: true });
+        } else {
+            try {
+                setUserInfo(JSON.parse(userInfo));
+            } catch (err) {
+                console.error("Error parsing stored user info:", err);
+                // Clear invalid data
+                localStorage.removeItem("access_token");
+                localStorage.removeItem("user_info");
+                navigate("/login", { replace: true });
+            }
+        }
+    }, [navigate]);
 
     const periodOptions = [
         { value: "today", label: "Hôm nay" },

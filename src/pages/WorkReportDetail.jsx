@@ -10,13 +10,15 @@
 
 import { Box, Button, Icon, Page, Text } from "zmp-ui";
 import { useParams, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { nativeStorage } from "zmp-sdk/apis";
 import Header from "../components/Header";
 import BottomNavigation from "../components/BottomNavigation";
 
 function WorkReportDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [userInfo, setUserInfo] = useState(null);
 
     // Mock data - in real app, fetch from API or context
     const [workReport] = useState({
@@ -32,6 +34,25 @@ function WorkReportDetail() {
         estimatedEndTime: "17:00",
         status: "completed",
     });
+
+    useEffect(() => {
+        const token = nativeStorage.getItem("access_token");
+        const userInfo = nativeStorage.getItem("user_info");
+
+        if (!token || !userInfo) {
+            navigate("/login", { replace: true });
+        } else {
+            try {
+                setUserInfo(JSON.parse(userInfo));
+            } catch (err) {
+                console.error("Error parsing stored user info:", err);
+                // Clear invalid data
+                localStorage.removeItem("access_token");
+                localStorage.removeItem("user_info");
+                navigate("/login", { replace: true });
+            }
+        }
+    }, [navigate]);
 
     const formatDate = (dateString) => {
         const date = new Date(dateString + 'T00:00:00');
