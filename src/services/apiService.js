@@ -1,4 +1,8 @@
-import axiosInstance, { getTokens, setTokens, setUserInfo } from "../config/axiosConfig";
+import axiosInstance, {
+    getTokens,
+    setTokens,
+    setUserInfo,
+} from "../config/axiosConfig";
 import API_ENDPOINTS from "../config/apiEndpoints";
 
 /**
@@ -11,13 +15,18 @@ import API_ENDPOINTS from "../config/apiEndpoints";
 // ============================================
 
 export const authService = {
-    login: (credentials) => axiosInstance.post(API_ENDPOINTS.AUTH.LOGIN, credentials),
+    login: (credentials) =>
+        axiosInstance.post(API_ENDPOINTS.AUTH.LOGIN, credentials),
 
-    zaloLogin: (accessToken) => axiosInstance.post(API_ENDPOINTS.AUTH.ZALO_LOGIN, { access_token: accessToken }),
+    zaloLogin: (accessToken) =>
+        axiosInstance.post(API_ENDPOINTS.AUTH.ZALO_LOGIN, {
+            access_token: accessToken,
+        }),
 
     logout: () => axiosInstance.post(API_ENDPOINTS.AUTH.LOGOUT),
 
-    refreshToken: (refreshToken) => axiosInstance.post(API_ENDPOINTS.AUTH.REFRESH_TOKEN, { refreshToken }),
+    refreshToken: (refreshToken) =>
+        axiosInstance.post(API_ENDPOINTS.AUTH.REFRESH_TOKEN, { refreshToken }),
 
     verifyToken: () => axiosInstance.get(API_ENDPOINTS.AUTH.VERIFY_TOKEN),
 };
@@ -29,13 +38,18 @@ export const authService = {
 export const userService = {
     getProfile: () => axiosInstance.get(API_ENDPOINTS.USERS.GET_PROFILE),
 
-    updateProfile: (data) => axiosInstance.put(API_ENDPOINTS.USERS.UPDATE_PROFILE, data),
+    updateProfile: (data) =>
+        axiosInstance.put(API_ENDPOINTS.USERS.UPDATE_PROFILE, data),
 
-    getUserById: (id) => axiosInstance.get(API_ENDPOINTS.USERS.GET_USER_BY_ID(id)),
+    getUserById: (id) =>
+        axiosInstance.get(API_ENDPOINTS.USERS.GET_USER_BY_ID(id)),
 
     getAttendance: () => axiosInstance.get(API_ENDPOINTS.USERS.GET_ATTENDANCE),
 
-    getAttendanceHistory: (params) => axiosInstance.get(API_ENDPOINTS.USERS.GET_ATTENDANCE_HISTORY, { params }),
+    getAttendanceHistory: (params) =>
+        axiosInstance.get(API_ENDPOINTS.USERS.GET_ATTENDANCE_HISTORY, {
+            params,
+        }),
 };
 
 // ============================================
@@ -43,19 +57,25 @@ export const userService = {
 // ============================================
 
 export const workReportService = {
-    create: (data) => axiosInstance.post(API_ENDPOINTS.WORK_REPORTS.CREATE, data),
+    create: (data) =>
+        axiosInstance.post(API_ENDPOINTS.WORK_REPORTS.CREATE, data),
 
-    getAll: (params) => axiosInstance.get(API_ENDPOINTS.WORK_REPORTS.GET_ALL, { params }),
+    getAll: (params) =>
+        axiosInstance.get(API_ENDPOINTS.WORK_REPORTS.GET_ALL, { params }),
 
-    getById: (id) => axiosInstance.get(API_ENDPOINTS.WORK_REPORTS.GET_BY_ID(id)),
+    getById: (id) =>
+        axiosInstance.get(API_ENDPOINTS.WORK_REPORTS.GET_BY_ID(id)),
 
-    update: (id, data) => axiosInstance.put(API_ENDPOINTS.WORK_REPORTS.UPDATE(id), data),
+    update: (id, data) =>
+        axiosInstance.put(API_ENDPOINTS.WORK_REPORTS.UPDATE(id), data),
 
     delete: (id) => axiosInstance.delete(API_ENDPOINTS.WORK_REPORTS.DELETE(id)),
 
-    getByDate: (date) => axiosInstance.get(API_ENDPOINTS.WORK_REPORTS.GET_BY_DATE(date)),
+    getByDate: (date) =>
+        axiosInstance.get(API_ENDPOINTS.WORK_REPORTS.GET_BY_DATE(date)),
 
-    getByStatus: (status) => axiosInstance.get(API_ENDPOINTS.WORK_REPORTS.GET_BY_STATUS(status)),
+    getByStatus: (status) =>
+        axiosInstance.get(API_ENDPOINTS.WORK_REPORTS.GET_BY_STATUS(status)),
 };
 
 // ============================================
@@ -63,13 +83,20 @@ export const workReportService = {
 // ============================================
 
 export const workManagementService = {
-    getTasks: (params) => axiosInstance.get(API_ENDPOINTS.WORK_MANAGEMENT.GET_TASKS, { params }),
+    getTasks: (params) =>
+        axiosInstance.get(API_ENDPOINTS.WORK_MANAGEMENT.GET_TASKS, { params }),
 
-    getTaskById: (id) => axiosInstance.get(API_ENDPOINTS.WORK_MANAGEMENT.GET_TASK_BY_ID(id)),
+    getTaskById: (id) =>
+        axiosInstance.get(API_ENDPOINTS.WORK_MANAGEMENT.GET_TASK_BY_ID(id)),
 
-    rescheduleTask: (id, data) => axiosInstance.put(API_ENDPOINTS.WORK_MANAGEMENT.RESCHEDULE_TASK(id), data),
+    rescheduleTask: (id, data) =>
+        axiosInstance.put(
+            API_ENDPOINTS.WORK_MANAGEMENT.RESCHEDULE_TASK(id),
+            data
+        ),
 
-    cancelTask: (id, data) => axiosInstance.put(API_ENDPOINTS.WORK_MANAGEMENT.CANCEL_TASK(id), data),
+    cancelTask: (id, data) =>
+        axiosInstance.put(API_ENDPOINTS.WORK_MANAGEMENT.CANCEL_TASK(id), data),
 };
 
 // ============================================
@@ -79,7 +106,8 @@ export const workManagementService = {
 export const checkinService = {
     submit: (data) => axiosInstance.post(API_ENDPOINTS.CHECKIN.SUBMIT, data),
 
-    getHistory: (params) => axiosInstance.get(API_ENDPOINTS.CHECKIN.GET_HISTORY, { params }),
+    getHistory: (params) =>
+        axiosInstance.get(API_ENDPOINTS.CHECKIN.GET_HISTORY, { params }),
 
     getToday: () => axiosInstance.get(API_ENDPOINTS.CHECKIN.GET_TODAY),
 };
@@ -89,15 +117,19 @@ export const checkinService = {
 // ============================================
 
 export const notificationService = {
-    getAll: (params) => axiosInstance.get(API_ENDPOINTS.NOTIFICATIONS.GET_ALL, { params }),
+    getAll: (params) =>
+        axiosInstance.get(API_ENDPOINTS.NOTIFICATIONS.GET_ALL, { params }),
 
     getUnread: () => axiosInstance.get(API_ENDPOINTS.NOTIFICATIONS.GET_UNREAD),
 
-    markAsRead: (id) => axiosInstance.put(API_ENDPOINTS.NOTIFICATIONS.MARK_AS_READ(id)),
+    markAsRead: (id) =>
+        axiosInstance.put(API_ENDPOINTS.NOTIFICATIONS.MARK_AS_READ(id)),
 
-    markAllAsRead: () => axiosInstance.put(API_ENDPOINTS.NOTIFICATIONS.MARK_ALL_AS_READ),
+    markAllAsRead: () =>
+        axiosInstance.put(API_ENDPOINTS.NOTIFICATIONS.MARK_ALL_AS_READ),
 
-    delete: (id) => axiosInstance.delete(API_ENDPOINTS.NOTIFICATIONS.DELETE(id)),
+    delete: (id) =>
+        axiosInstance.delete(API_ENDPOINTS.NOTIFICATIONS.DELETE(id)),
 };
 
 // ============================================
@@ -105,9 +137,11 @@ export const notificationService = {
 // ============================================
 
 export const locationService = {
-    getCheckinLocations: () => axiosInstance.get(API_ENDPOINTS.LOCATION.GET_CHECKIN_LOCATIONS),
+    getCheckinLocations: () =>
+        axiosInstance.get(API_ENDPOINTS.LOCATION.GET_CHECKIN_LOCATIONS),
 
-    verifyLocation: (data) => axiosInstance.post(API_ENDPOINTS.LOCATION.VERIFY_LOCATION, data),
+    verifyLocation: (data) =>
+        axiosInstance.post(API_ENDPOINTS.LOCATION.VERIFY_LOCATION, data),
 };
 
 // ============================================
@@ -115,7 +149,8 @@ export const locationService = {
 // ============================================
 
 export const projectService = {
-    getAll: (params) => axiosInstance.get(API_ENDPOINTS.PROJECTS.GET_ALL, { params }),
+    getAll: (params) =>
+        axiosInstance.get(API_ENDPOINTS.PROJECTS.GET_ALL, { params }),
 
     getById: (id) => axiosInstance.get(API_ENDPOINTS.PROJECTS.GET_BY_ID(id)),
 

@@ -77,7 +77,7 @@ const setUserInfo = (userInfo) => {
 // ============================================
 
 const axiosInstance = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1/ims",
+    baseURL: import.meta.env.IMS_API_URL || "https://videcoder.io.vn/api/v1/ims",
     timeout: 30000,
     headers: {
         "Content-Type": "application/json",
@@ -162,7 +162,10 @@ axiosInstance.interceptors.response.use(
 
                 // Call refresh token endpoint
                 const response = await axios.post(
-                    `${import.meta.env.VITE_API_URL || "https://lamquangdai.vn/api"}/auth/refresh-token`,
+                    `${
+                        import.meta.env.IMS_API_URL ||
+                        "https://videcoder.io.vn"
+                    }/auth/refresh-token`,
                     { refreshToken },
                     {
                         headers: {
@@ -171,7 +174,10 @@ axiosInstance.interceptors.response.use(
                     }
                 );
 
-                const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
+                const {
+                    accessToken: newAccessToken,
+                    refreshToken: newRefreshToken,
+                } = response.data;
 
                 // Save new tokens
                 setTokens({
@@ -195,7 +201,9 @@ axiosInstance.interceptors.response.use(
                 clearTokens();
                 window.location.href = "/";
 
-                return Promise.reject(new Error("Session expired. Please login again."));
+                return Promise.reject(
+                    new Error("Session expired. Please login again.")
+                );
             }
         }
 
