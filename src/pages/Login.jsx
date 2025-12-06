@@ -28,6 +28,7 @@ const Login = () => {
     const [error, setError] = useState(null);
     const [step, setStep] = useState(0); // Track login progress
     const [pendingApproval, setPendingApproval] = useState(false); // New state for unapproved users
+    const [rejectedApproval, setRejectedApproval] = useState(false); // New state for rejected users
     const isMountedRef = useRef(true);
 
     useEffect(() => {
@@ -66,6 +67,7 @@ const Login = () => {
         setError(null);
         setStep(0);
         setPendingApproval(false); // Reset pending state
+        setRejectedApproval(false); // Reset rejected state
 
         try {
             setStep(1);
@@ -76,15 +78,19 @@ const Login = () => {
 
             setStep(2);
             const response = await zaloLogin(accessToken);
-            if (!response || response.status !== "success")
+
+                if (!response || response.status !== "success")
                 throw new Error(response?.message || "Đăng nhập thất bại");
 
             setStep(3);
             const { access_token, user } = response.data;
 
             // Kiểm tra trạng thái phê duyệt tài khoản
-            if (!user.approved) {
-                setPendingApproval(true); // Show pending approval UI instead of error
+            if (user.approved === "rejected") {
+                setRejectedApproval(true); // Show rejected approval UI
+                return;
+            } else if (user.approved !== "approved") {
+                setPendingApproval(true); // Show pending approval UI
                 return;
             }
 
@@ -113,9 +119,7 @@ const Login = () => {
             });
         } finally {
             if (isMountedRef.current) {
-                setTimeout(() => {
-                    setLoading(false);
-                }, 3000);
+                setLoading(false);
             }
         }
     };
@@ -142,8 +146,24 @@ const Login = () => {
                     </Text>
                 </Box>
 
-                {/* Conditional Rendering: Pending Approval or Welcome Card */}
-                {pendingApproval ? (
+                {/* Conditional Rendering: Approval Status or Welcome Card */}
+                {rejectedApproval ? (
+                    <Box className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                        <Text.Title className="text-red-800 text-sm font-semibold mb-2">
+                            Tài khoản đã bị từ chối
+                        </Text.Title>
+                        <Text className="text-red-700 text-xs mb-4">
+                            Tài khoản của bạn đã bị từ chối phê duyệt. Vui lòng
+                            liên hệ quản trị viên để biết thêm chi tiết.
+                        </Text>
+                        <Button
+                            onClick={() => setRejectedApproval(false)}
+                            className="bg-red-600 hover:bg-red-700 w-full py-3 rounded-lg font-semibold text-white"
+                        >
+                            Thử lại
+                        </Button>
+                    </Box>
+                ) : pendingApproval ? (
                     <Box className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
                         <Text.Title className="text-yellow-800 text-sm font-semibold mb-2">
                             Tài khoản đang chờ phê duyệt
