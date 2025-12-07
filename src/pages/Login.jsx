@@ -3,7 +3,7 @@ import { Box, Button, Page, Text, Icon, Spinner } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
 import { getAccessToken } from "zmp-sdk/apis";
 import { nativeStorage } from "zmp-sdk/apis";
-import { zaloLogin } from "../services/authService";
+import { zaloLogin } from "../services/auth.service";
 import { setTokens, setUserInfo } from "../config/axiosConfig";
 import { ToastContext } from "../components/layout";
 

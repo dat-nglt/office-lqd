@@ -1,10 +1,17 @@
 import { Box, Text, Icon } from "zmp-ui";
 import { useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { useRouter } from "../hooks/useRouter";
 
 function BottomNavigation() {
-  const navigate = useNavigate();
   const location = useLocation();
+  const {
+    goHome,
+    goToWorkList,
+    goToCheckIn,
+    goToWorkManagement,
+    goToProfile
+  } = useRouter();
 
   const tabs = useMemo(
     () => [
@@ -66,7 +73,25 @@ function BottomNavigation() {
   const activeTab = getCurrentActiveTab();
 
   const handleTabClick = (tab) => {
-    navigate(tab.path);
+    switch (tab.id) {
+      case 'report':
+        goHome();
+        break;
+      case 'list':
+        goToWorkList();
+        break;
+      case 'management':
+        goToCheckIn();
+        break;
+      case 'notifications':
+        goToWorkManagement();
+        break;
+      case 'profile':
+        goToProfile();
+        break;
+      default:
+        goHome();
+    }
   };
 
   return (

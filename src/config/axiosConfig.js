@@ -1,4 +1,5 @@
 import axios from "axios";
+import { nativeStorage } from 'zmp-sdk/apis';
 
 /**
  * Axios Configuration for Zalo Mini App
@@ -14,13 +15,8 @@ import axios from "axios";
  * @returns {Object} - { accessToken, refreshToken }
  */
 const getTokens = () => {
-    try {
-        const tokensStr = localStorage.getItem("authTokens");
-        return tokensStr ? JSON.parse(tokensStr) : {};
-    } catch (error) {
-        console.error("Error getting tokens:", error);
-        return {};
-    }
+    const tokensStr = nativeStorage.getItem('authTokens');
+    return tokensStr ? JSON.parse(tokensStr) : {};
 };
 
 /**
@@ -28,11 +24,7 @@ const getTokens = () => {
  * @param {Object} tokens - { accessToken, refreshToken }
  */
 const setTokens = (tokens) => {
-    try {
-        localStorage.setItem("authTokens", JSON.stringify(tokens));
-    } catch (error) {
-        console.error("Error setting tokens:", error);
-    }
+  nativeStorage.setItem('authTokens', JSON.stringify(tokens));
 };
 
 /**
