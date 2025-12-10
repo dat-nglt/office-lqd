@@ -69,7 +69,7 @@ const setUserInfo = (userInfo) => {
 // ============================================
 
 const axiosInstance = axios.create({
-    baseURL: import.meta.env.IMS_API_URL || "https://videcoder.io.vn/api/v1/ims",
+    baseURL: import.meta.env.IMS_API_URL || "https://lamquangdai.vn/api/v1/ims",
     timeout: 30000,
     headers: {
         "Content-Type": "application/json",
@@ -156,7 +156,7 @@ axiosInstance.interceptors.response.use(
                 const response = await axios.post(
                     `${
                         import.meta.env.IMS_API_URL ||
-                        "https://videcoder.io.vn"
+                        "https://lamquangdai.vn"
                     }/auth/refresh-token`,
                     { refreshToken },
                     {

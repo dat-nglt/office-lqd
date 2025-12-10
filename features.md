@@ -1,0 +1,87 @@
+# Danh sách chức năng của ứng dụng Kỹ Thuật Viên
+
+### 1. Đăng nhập (Login)
+
+- Đăng nhập vào ứng dụng mini app
+- Xác thực thông tin người dùng
+
+### 2. Trang chủ (Home)
+
+- Xem danh sách công việc được giao hôm nay
+- Hiển thị thống kê công việc (tổng số, đang thực hiện, hoàn thành, chờ xử lý)
+- Xem chi tiết công việc (thông tin khách hàng, địa điểm, thời gian, nội dung)
+- Điều hướng đến các trang khác
+
+### 3. Danh sách công việc (Work List)
+
+- Xem tất cả công việc được giao
+- Lọc công việc theo thời gian (hôm nay, tuần, tháng)
+- Lọc công việc theo loại (tất cả, dự án, dịch vụ)
+- Hiển thị thống kê công việc theo bộ lọc
+- Xem chi tiết công việc
+
+### 4. Quản lý công việc (Work Management)
+
+- Xem danh sách công việc hôm nay
+- Dời lịch công việc (chọn ngày và giờ mới)
+- Hủy công việc (nhập lý do hủy)
+- Yêu cầu tăng ca cho công việc (chọn kỹ thuật viên, thời gian, địa điểm, nội dung)
+- Xem chi tiết công việc
+
+### 5. Chấm công (Check In)
+
+- Chọn chế độ chấm công (vào/ra)
+- Chọn loại chấm công (thường, tăng ca, v.v.)
+- Chọn địa điểm chấm công từ danh sách có sẵn
+- Lấy vị trí hiện tại tự động
+- Chụp ảnh xác nhận chấm công
+- Xem lịch sử chấm công trong ngày
+- Cảnh báo vi phạm vị trí (nếu chấm công ngoài khu vực cho phép)
+
+### 6. Báo cáo tiến độ (Progress Report)
+
+- Xem thông tin công việc hiện tại
+- Chụp ảnh theo các giai đoạn công việc (trước khi thực hiện, trong quá trình, sau khi hoàn thành)
+- Thêm ghi chú cho từng giai đoạn
+- Xem trước ảnh đã chụp
+- Gửi báo cáo tiến độ
+- Xem lịch sử báo cáo đã gửi
+
+### 7. Thông báo (Notifications)
+
+- Xem danh sách thông báo
+- Lọc thông báo theo loại (phân bổ công việc, thay đổi công việc, chấm công, báo cáo)
+- Đánh dấu thông báo đã đọc
+- Xóa thông báo
+- Hiển thị số lượng thông báo chưa đọc
+
+### 8. Yêu cầu tăng ca (Overtime Request)
+
+- Chọn công trình có sẵn hoặc nhập thông tin mới
+- Nhập thông tin yêu cầu tăng ca (ngày, công ty, địa chỉ, nội dung, khách hàng, số điện thoại, ghi chú, thời gian bắt đầu/kết thúc)
+- Tính toán số giờ làm việc
+- Gửi yêu cầu tăng ca
+
+### 9. Hồ sơ nhân viên (Employee Profile)
+
+- Xem thông tin cá nhân (tên, mã nhân viên, chức vụ, bộ phận, email, điện thoại, chuyên môn)
+- Xem địa điểm làm việc mặc định
+- Điều hướng đến lịch sử chấm công
+- Điều hướng đến danh sách báo cáo công việc
+
+### 10. Lịch sử chấm công (Attendance History)
+
+- Xem lịch sử chấm công theo ngày/tuần/tháng
+- Hiển thị thông tin chấm công (giờ vào/ra, số giờ làm, trạng thái, loại)
+- Thống kê tổng giờ làm việc và số lần tăng ca
+
+### 11. Danh sách báo cáo công việc (Work Report List)
+
+- Xem danh sách báo cáo công việc đã gửi
+- Lọc báo cáo theo ngày
+- Xem chi tiết báo cáo
+
+### 12. Chi tiết báo cáo công việc (Work Report Detail)
+
+- Xem chi tiết một báo cáo công việc cụ thể
+- Hiển thị thông tin công việc, khách hàng, thời gian, trạng thái

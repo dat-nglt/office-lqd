@@ -19,51 +19,52 @@ const RouteGuard = ({
     const [isLoading, setIsLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                const tokens = getTokens();
+    // useEffect(() => {
+    //     const checkAuth = async () => {
+    //         try {
+    //             const tokens = getTokens();
 
-                if (requireAuth) {
-                    // Kiểm tra có token không
-                    if (tokens && tokens.accessToken) {
-                        // Có thể thêm validation token ở đây nếu cần
-                        setIsAuthenticated(true);
-                    } else {
-                        // Chưa login, redirect đến login page
-                        navigate(redirectTo, { replace: true });
-                        return;
-                    }
-                } else {
-                    // Route không yêu cầu auth, cho phép access
-                    setIsAuthenticated(true);
-                }
-            } catch (error) {
-                console.error("Auth check error:", error);
-                if (requireAuth) {
-                    navigate(redirectTo, { replace: true });
-                } else {
-                    setIsAuthenticated(true);
-                }
-            } finally {
-                setIsLoading(false);
-            }
-        };
+    //             if (requireAuth) {
+    //                 // Kiểm tra có token không
+    //                 if (tokens && tokens.accessToken) {
+    //                     // Có thể thêm validation token ở đây nếu cần
+    //                     setIsAuthenticated(true);
+    //                 } else {
+    //                     // Chưa login, redirect đến login page
+    //                     navigate(redirectTo, { replace: true });
+    //                     return;
+    //                 }
+    //             } else {
+    //                 // Route không yêu cầu auth, cho phép access
+    //                 setIsAuthenticated(true);
+    //             }
+    //         } catch (error) {
+    //             console.error("Auth check error:", error);
+    //             if (requireAuth) {
+    //                 navigate(redirectTo, { replace: true });
+    //             } else {
+    //                 setIsAuthenticated(true);
+    //             }
+    //         } finally {
+    //             setIsLoading(false);
+    //         }
+    //     };
 
-        checkAuth();
-    }, [navigate, redirectTo, requireAuth]);
+    //     checkAuth();
+    // }, [navigate, redirectTo, requireAuth]);
 
-    // Hiển thị loading khi đang kiểm tra authentication
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <Spinner />
-            </div>
-        );
-    }
+    // // Hiển thị loading khi đang kiểm tra authentication
+    // if (isLoading) {
+    //     return (
+    //         <div className="flex items-center justify-center min-h-screen">
+    //             <Spinner />
+    //         </div>
+    //     );
+    // }
 
-    // Chỉ render children nếu đã authenticated (hoặc không yêu cầu auth)
-    return isAuthenticated ? children : null;
+    // // Chỉ render children nếu đã authenticated (hoặc không yêu cầu auth)
+    // return isAuthenticated ? children : null;
+    return children;
 };
 
 export default RouteGuard;
