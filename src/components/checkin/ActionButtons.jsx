@@ -1,6 +1,6 @@
 import { Box, Button, Icon } from "zmp-ui";
 
-function ActionButtons({ capturedPhoto, onCapturePhoto, onSubmitCheckIn, onRetakePhoto, onCancel }) {
+function ActionButtons({ capturedPhoto, onCapturePhoto, onSubmitCheckIn, onRetakePhoto, onCancel, submitting = false }) {
   return (
     <Box className="space-y-2">
       {!capturedPhoto ? (
@@ -27,10 +27,11 @@ function ActionButtons({ capturedPhoto, onCapturePhoto, onSubmitCheckIn, onRetak
             variant="primary"
             fullWidth
             onClick={onSubmitCheckIn}
+            disabled={submitting}
             className="py-3 rounded-lg font-semibold text-base bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-2"
           >
-            <Icon icon="zi-check-circle" size={16} />
-            Xác Nhận Chấm Công
+            <Icon icon={submitting ? "zi-loading" : "zi-check-circle"} size={16} />
+            {submitting ? "Đang gửi..." : "Xác Nhận Chấm Công"}
           </Button>
           <button
             onClick={onRetakePhoto}

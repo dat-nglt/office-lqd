@@ -363,8 +363,22 @@ function CheckIn() {
         }
     };
 
-    // Submit check-in
-    const handleSubmitCheckIn = () => {
+    // Submit check-in (client uploads image directly to Cloudinary)
+    const [submitting, setSubmitting] = useState(false);
+
+    const dataURItoBlob = (dataURI) => {
+        // convert base64 to raw binary data held in a string
+        const byteString = atob(dataURI.split(',')[1]);
+        const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
+        return new Blob([ab], { type: mimeString });
+    };
+
+    const handleSubmitCheckIn = async () => {
         if (
             !capturedPhoto ||
             !currentLocation ||
@@ -389,47 +403,115 @@ function CheckIn() {
             return;
         }
 
-        const now = new Date();
-        const checkInTypeText = selectedCheckInMode === "in" ? "Vào" : "Ra";
+        setSubmitting(true);
 
-        const newRecord = {
-            id: checkInRecords.length + 1,
-            date: now.toLocaleDateString("vi-VN"),
-            checkInTime: now.toLocaleTimeString("vi-VN", {
-                hour: "2-digit",
-                minute: "2-digit",
-            }),
-            type: checkInTypeText,
-            checkInType: selectedCheckInMode === "in" ? "Vào" : "Ra",
-            location: selectedCheckInLocation.name,
-            locationType: selectedCheckInLocation.type,
-            photo: capturedPhoto,
-            latitude: currentLocation.latitude,
-            longitude: currentLocation.longitude,
-            isViolation: locationViolation,
-            violationDistance: violationDistance || null,
-        };
+        try {
+            // 1) Convert base64 to Blob
+            const blob = dataURItoBlob(capturedPhoto);
 
-        setCheckInRecords([newRecord, ...checkInRecords]);
+            // 2) Get Cloudinary signature from server
+            const token = nativeStorage.getItem('access_token');
+            const signRes = await fetch('/api/v1/ims/uploads/cloudinary/sign', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({ folder: 'attendances' }),
+            });
 
-        const messageText = locationViolation
-            ? `Đã ghi nhận chấm ${checkInTypeText} lúc ${newRecord.checkInTime} (⚠️ Vi phạm vị trí)`
-            : `Đã ghi nhận chấm ${checkInTypeText} lúc ${newRecord.checkInTime}`;
+            const signJson = await signRes.json();
+            if (!signRes.ok || !signJson.success) {
+                throw new Error(signJson.error || 'Không thể lấy signature');
+            }
 
-        toast?.success({
-            title: "Chấm công thành công",
-            message: messageText,
-            duration: 2000,
-        });
+            const { signature, timestamp, api_key, cloud_name, folder } = signJson.data;
 
-        // Reset
-        setCapturedPhoto(null);
-        setShowCamera(false);
-        setCurrentLocation(null);
-        setSelectedCheckInLocation(null);
-        setSelectedCheckInMode(null);
-        setLocationViolation(false);
-        setViolationDistance(null);
+            // 3) Upload to Cloudinary
+            const form = new FormData();
+            form.append('file', blob);
+            form.append('api_key', api_key);
+            form.append('timestamp', timestamp);
+            form.append('signature', signature);
+            form.append('folder', folder);
+
+            const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`, {
+                method: 'POST',
+                body: form,
+            });
+
+            const uploadJson = await uploadRes.json();
+            if (!uploadRes.ok || !uploadJson.secure_url) {
+                throw new Error(uploadJson.error?.message || 'Upload ảnh thất bại');
+            }
+
+            const photoUrl = uploadJson.secure_url;
+            const photoPublicId = uploadJson.public_id;
+
+            // 4) Submit check-in to our server with photo_url & public_id
+            const payload = {
+                latitude: currentLocation.latitude,
+                longitude: currentLocation.longitude,
+                location_name: selectedCheckInLocation.name,
+                address: selectedCheckInLocation.address || null,
+                check_in_type_id: selectedCheckInType?.id || null,
+                violation_distance: violationDistance || null,
+                photo_url: photoUrl,
+                photo_public_id: photoPublicId,
+                mode: selectedCheckInMode,
+            };
+
+            const res = await fetch('/api/v1/ims/attendance/check-in', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || 'Lỗi khi gửi chấm công');
+            }
+
+            const attendance = data.data;
+            const now = new Date(attendance.check_in_time || Date.now());
+            const checkInTypeText = selectedCheckInMode === 'in' ? 'Vào' : 'Ra';
+
+            const newRecord = {
+                id: attendance.id || Date.now(),
+                date: now.toLocaleDateString('vi-VN'),
+                checkInTime: now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+                type: checkInTypeText,
+                checkInType: checkInTypeText,
+                location: attendance.location_name || selectedCheckInLocation.name,
+                locationType: selectedCheckInLocation.type,
+                photo: attendance.photo_url || photoUrl,
+                latitude: attendance.latitude || currentLocation.latitude,
+                longitude: attendance.longitude || currentLocation.longitude,
+                isViolation: locationViolation,
+                violationDistance: violationDistance || null,
+            };
+
+            setCheckInRecords((prev) => [newRecord, ...prev]);
+
+            toast?.success({ title: 'Chấm công thành công', message: `Đã ghi nhận chấm ${checkInTypeText} lúc ${newRecord.checkInTime}`, duration: 2000 });
+
+            // Reset
+            setCapturedPhoto(null);
+            setShowCamera(false);
+            setCurrentLocation(null);
+            setSelectedCheckInLocation(null);
+            setSelectedCheckInMode(null);
+            setLocationViolation(false);
+            setViolationDistance(null);
+        } catch (error) {
+            console.error('Error submitting check-in:', error);
+            toast?.error({ title: 'Lỗi', message: error.message || 'Không thể chấm công', duration: 3000 });
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     // Retake photo
@@ -637,6 +719,7 @@ function CheckIn() {
                                 setCapturedPhoto(null);
                                 setSelectedCheckInMode(null);
                             }}
+                            submitting={submitting}
                         />
                     </>
                 )}
