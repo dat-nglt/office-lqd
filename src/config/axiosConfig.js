@@ -1,75 +1,153 @@
 import axios from "axios";
-import { nativeStorage } from 'zmp-sdk/apis';
+import { nativeStorage } from "zmp-sdk/apis";
 
 /**
  * Axios Configuration for Zalo Mini App
  * Handles authentication, token refresh, and API requests
+ *
+ * STORAGE KEYS:
+ * - authTokens: { accessToken, refreshToken }
+ * - user_info: User profile object
+ *
+ * Storage Type: nativeStorage (for Mini App compatibility)
  */
 
 // ============================================
-// 1. Token Management Functions
+// 1. Storage Constants
+// ============================================
+
+const STORAGE_KEYS = {
+    AUTH_TOKENS: "authTokens",
+    USER_INFO: "user_info",
+    ACCESS_TOKEN: "access_token", // Legacy compatibility
+};
+
+// ============================================
+// 2. Token Management Functions
 // ============================================
 
 /**
- * Get stored tokens from localStorage
+ * Get stored tokens from nativeStorage
+ * Supports both old format (access_token) and new format (authTokens)
  * @returns {Object} - { accessToken, refreshToken }
  */
 const getTokens = () => {
-    const tokensStr = nativeStorage.getItem('authTokens');
-    return tokensStr ? JSON.parse(tokensStr) : {};
-};
-
-/**
- * Save tokens to localStorage
- * @param {Object} tokens - { accessToken, refreshToken }
- */
-const setTokens = (tokens) => {
-  nativeStorage.setItem('authTokens', JSON.stringify(tokens));
-};
-
-/**
- * Clear stored tokens
- */
-const clearTokens = () => {
     try {
-        localStorage.removeItem("authTokens");
+        // Try new format first
+        const tokensStr = nativeStorage.getItem(STORAGE_KEYS.AUTH_TOKENS);
+        if (tokensStr) {
+            return JSON.parse(tokensStr);
+        }
+
+        console.log(tokensStr);
+
+        // Fallback to legacy format for backward compatibility
+        const legacyToken = nativeStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+        if (legacyToken) {
+            return {
+                accessToken: legacyToken,
+                refreshToken: null,
+            };
+        }
+
+        return {};
     } catch (error) {
-        console.error("Error clearing tokens:", error);
+        console.error("[Storage] Error getting tokens:", error);
+        return {};
     }
 };
 
 /**
- * Get user info from localStorage
- * @returns {Object} - User information
+ * Save tokens to nativeStorage
+ * @param {string} accessToken - JWT access token
+ * @param {string|null} refreshToken - Optional refresh token
+ */
+const setTokens = (accessToken, refreshToken = null) => {
+    try {
+        if (!accessToken) {
+            console.warn("[Storage] Attempting to set empty access token");
+            return;
+        }
+
+        const tokens = {
+            accessToken,
+            refreshToken,
+        };
+
+        nativeStorage.setItem(STORAGE_KEYS.AUTH_TOKENS, JSON.stringify(tokens));
+
+        // Keep legacy key for backward compatibility
+        nativeStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
+
+        console.log("[Storage] Tokens saved successfully");
+    } catch (error) {
+        console.error("[Storage] Error setting tokens:", error);
+    }
+};
+
+/**
+ * Clear all stored tokens
+ */
+const clearTokens = () => {
+    try {
+        nativeStorage.removeItem(STORAGE_KEYS.AUTH_TOKENS);
+        nativeStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+        nativeStorage.removeItem(STORAGE_KEYS.USER_INFO);
+
+        // Also clear from localStorage for safety
+        try {
+            localStorage.removeItem("authTokens");
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("userInfo");
+        } catch (e) {
+            // localStorage might not be available in Mini App
+        }
+
+        console.log("[Storage] All tokens cleared");
+    } catch (error) {
+        console.error("[Storage] Error clearing tokens:", error);
+    }
+};
+
+/**
+ * Get user info from nativeStorage
+ * @returns {Object|null} - User information or null
  */
 const getUserInfo = () => {
     try {
-        const userStr = localStorage.getItem("userInfo");
+        const userStr = nativeStorage.getItem(STORAGE_KEYS.USER_INFO);
+        console.log(userStr);
         return userStr ? JSON.parse(userStr) : null;
     } catch (error) {
-        console.error("Error getting user info:", error);
+        console.error("[Storage] Error getting user info:", error);
         return null;
     }
 };
 
 /**
- * Save user info to localStorage
- * @param {Object} userInfo - User information
+ * Save user info to nativeStorage
+ * @param {Object} userInfo - User information object
  */
 const setUserInfo = (userInfo) => {
     try {
-        localStorage.setItem("userInfo", JSON.stringify(userInfo));
+        if (!userInfo || !userInfo.id) {
+            console.warn("[Storage] Attempting to set invalid user info");
+            return;
+        }
+
+        nativeStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(userInfo));
+        console.log("[Storage] User info saved successfully");
     } catch (error) {
-        console.error("Error setting user info:", error);
+        console.error("[Storage] Error setting user info:", error);
     }
 };
 
 // ============================================
-// 2. Axios Instance Creation
+// 3. Axios Instance Creation
 // ============================================
 
 const axiosInstance = axios.create({
-    baseURL: import.meta.env.IMS_API_URL || "https://lamquangdai.vn/api/v1/ims",
+    baseURL: import.meta.env.VITE_IMS_API_URL || import.meta.env.IMS_API_URL || "https://lamquangdai.vn/api/v1/ims",
     timeout: 30000,
     headers: {
         "Content-Type": "application/json",
@@ -77,7 +155,7 @@ const axiosInstance = axios.create({
 });
 
 // ============================================
-// 3. Request Interceptor
+// 4. Request Interceptor - Add Auth Header
 // ============================================
 
 axiosInstance.interceptors.request.use(
@@ -86,18 +164,20 @@ axiosInstance.interceptors.request.use(
 
         if (accessToken) {
             config.headers.Authorization = `Bearer ${accessToken}`;
+        } else {
+            console.warn("[RequestInterceptor] No access token found");
         }
 
         return config;
     },
     (error) => {
-        console.error("Request interceptor error:", error);
+        console.error("[RequestInterceptor] Error:", error);
         return Promise.reject(error);
     }
 );
 
 // ============================================
-// 4. Response Interceptor with Token Refresh
+// 5. Response Interceptor - Token Refresh & Error Handling
 // ============================================
 
 let isRefreshing = false;
@@ -125,13 +205,13 @@ axiosInstance.interceptors.response.use(
         const originalRequest = error.config;
 
         // ============================================
-        // Handle 401 (Unauthorized) - Token Expired
+        // Handle 401 (Unauthorized) - Token Expired/Invalid
         // ============================================
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
 
             if (isRefreshing) {
-                // If already refreshing, queue this request
+                // Queue request while refreshing token
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
                 })
@@ -148,34 +228,36 @@ axiosInstance.interceptors.response.use(
                 const { refreshToken } = getTokens();
 
                 if (!refreshToken) {
-                    // No refresh token available
+                    console.warn("[401Handler] No refresh token available");
                     throw new Error("No refresh token available");
                 }
 
                 // Call refresh token endpoint
+                const baseURL =
+                    import.meta.env.VITE_IMS_API_URL ||
+                    import.meta.env.IMS_API_URL ||
+                    "https://lamquangdai.vn/api/v1/ims";
+
                 const response = await axios.post(
-                    `${
-                        import.meta.env.IMS_API_URL ||
-                        "https://lamquangdai.vn"
-                    }/auth/refresh-token`,
-                    { refreshToken },
+                    `${baseURL}/auth/refresh-token`,
+                    { refresh_token: refreshToken },
                     {
                         headers: {
                             "Content-Type": "application/json",
                         },
+                        timeout: 10000,
                     }
                 );
 
-                const {
-                    accessToken: newAccessToken,
-                    refreshToken: newRefreshToken,
-                } = response.data;
+                const newAccessToken = response.data?.data?.access_token;
+                const newRefreshToken = response.data?.data?.refresh_token;
+
+                if (!newAccessToken) {
+                    throw new Error("No access token in refresh response");
+                }
 
                 // Save new tokens
-                setTokens({
-                    accessToken: newAccessToken,
-                    refreshToken: newRefreshToken,
-                });
+                setTokens(newAccessToken, newRefreshToken || null);
 
                 // Update default headers
                 axiosInstance.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
@@ -189,13 +271,13 @@ axiosInstance.interceptors.response.use(
                 isRefreshing = false;
                 processQueue(refreshError);
 
+                console.error("[401Handler] Token refresh failed:", refreshError.message);
+
                 // Clear tokens and redirect to login
                 clearTokens();
-                window.location.href = "/";
+                window.location.href = "/login";
 
-                return Promise.reject(
-                    new Error("Session expired. Please login again.")
-                );
+                return Promise.reject(new Error("Session expired. Please login again."));
             }
         }
 
@@ -203,22 +285,37 @@ axiosInstance.interceptors.response.use(
         // Handle 403 (Forbidden) - Access Denied
         // ============================================
         if (error.response?.status === 403) {
-            console.error("Access denied (403)");
-            // Could redirect to an error page or show a message
+            console.error("[403Handler] Access denied");
+            return Promise.reject(error);
         }
 
         // ============================================
         // Handle 404 (Not Found)
         // ============================================
         if (error.response?.status === 404) {
-            console.error("Resource not found (404)");
+            console.warn("[404Handler] Resource not found");
+            return Promise.reject(error);
         }
 
         // ============================================
-        // Handle 500 (Server Error)
+        // Handle 500+ (Server Error)
         // ============================================
         if (error.response?.status >= 500) {
-            console.error("Server error:", error.response.status);
+            console.error("[5xxHandler] Server error:", error.response.status);
+            return Promise.reject(error);
+        }
+
+        // ============================================
+        // Handle Network/Timeout Errors
+        // ============================================
+        if (error.code === "ECONNABORTED") {
+            console.error("[TimeoutHandler] Request timeout");
+            return Promise.reject(new Error("Request timeout. Please try again."));
+        }
+
+        if (!error.response) {
+            console.error("[NetworkHandler] Network error:", error.message);
+            return Promise.reject(new Error("Network error. Please check your connection."));
         }
 
         return Promise.reject(error);
@@ -226,16 +323,9 @@ axiosInstance.interceptors.response.use(
 );
 
 // ============================================
-// 5. Export Functions and Instance
+// 6. Export Functions and Instance
 // ============================================
 
-export {
-    axiosInstance,
-    getTokens,
-    setTokens,
-    clearTokens,
-    getUserInfo,
-    setUserInfo,
-};
+export { axiosInstance, getTokens, setTokens, clearTokens, getUserInfo, setUserInfo };
 
 export default axiosInstance;

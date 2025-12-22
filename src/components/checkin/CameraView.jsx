@@ -21,7 +21,7 @@ function CameraView({ capturedPhoto, videoRef, canvasRef }) {
                 <Box className="absolute left-2/3 top-0 bottom-0 border-l border-white/30"></Box>
               </Box>
               {/* Center circle indicator */}
-              <Box className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 border-2 border-blue-400 rounded-full"></Box>
+              <Box className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-60 border-2 border-blue-400 rounded-lg"></Box>
             </Box>
           </>
         ) : (

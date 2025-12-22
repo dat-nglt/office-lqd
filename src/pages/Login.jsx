@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { getAccessToken } from "zmp-sdk/apis";
 import { nativeStorage } from "zmp-sdk/apis";
 import { zaloLogin } from "../services/auth.service";
-import { setTokens, setUserInfo } from "../config/axiosConfig";
+import { clearTokens, getTokens, getUserInfo, setTokens, setUserInfo } from "../config/axiosConfig";
 import { ToastContext } from "../components/layout";
 
 /**
@@ -41,8 +41,11 @@ const Login = () => {
      * Check if user is already logged in
      */
     useEffect(() => {
-        const token = nativeStorage.getItem("access_token");
-        const userInfo = nativeStorage.getItem("user_info");
+        const token = getTokens();
+        const userInfo = getUserInfo();
+
+        console.log("[Login] Existing token:", token);
+        console.log("[Login] Existing user info:", userInfo);
 
         if (token && userInfo) {
             try {
@@ -50,7 +53,6 @@ const Login = () => {
                 navigate("/", { replace: true });
             } catch (err) {
                 console.error("Error parsing stored user info:", err);
-                // Clear invalid data
                 localStorage.removeItem("access_token");
                 localStorage.removeItem("user_info");
             }
@@ -70,23 +72,24 @@ const Login = () => {
         setRejectedApproval(false); // Reset rejected state
 
         try {
-            setStep(1);
-            const accessToken = await getAccessToken();
+            setStep(1); //Bước 1: Lấy access token từ Zalo Mini App
+            const accessToken = await getAccessToken(); // Lấy access token từ Zalo Mini App
 
-            if (!accessToken)
-                throw new Error("Không nhận được mã xác thực từ Zalo");
+            console.log("Zalo Access Token:", accessToken);
 
-            setStep(2);
+            if (!accessToken) throw new Error("Không nhận được mã xác thực từ Zalo");
+
+            setStep(2); //Bước 2: Gửi access token lên server để đăng nhập
             const response = await zaloLogin(accessToken);
 
-                if (!response || response.status !== "success")
-                throw new Error(response?.message || "Đăng nhập thất bại");
+            if (!response || response.status !== "success") throw new Error(response?.message || "Đăng nhập thất bại");
 
-            setStep(3);
+            setStep(3); //Bước 3: Xử lý phản hồi từ server và lưu token + user info
             const { access_token, user } = response.data;
 
             // Kiểm tra trạng thái phê duyệt tài khoản
             if (user.approved === "rejected") {
+                clearTokens();
                 setRejectedApproval(true); // Show rejected approval UI
                 return;
             } else if (user.approved !== "approved") {
@@ -95,9 +98,10 @@ const Login = () => {
             }
 
             setTokens(access_token, null);
-            nativeStorage.setItem("access_token", access_token);
-            nativeStorage.setItem("user_info", JSON.stringify(user));
             setUserInfo(user);
+
+            getUserInfo(); // Đảm bảo user info được lưu đúng
+            getTokens();
 
             toast?.success({
                 title: "Đăng nhập thành công",
@@ -109,6 +113,7 @@ const Login = () => {
                 navigate("/", { replace: true });
             }
         } catch (err) {
+            clearTokens();
             console.error("[Login] Error:", err);
             const errorMsg = err.message || "Đã xảy ra lỗi. Vui lòng thử lại.";
             setError(errorMsg);
@@ -128,12 +133,8 @@ const Login = () => {
         <Page className="bg-gray-50 min-h-screen flex flex-col">
             {/* Header */}
             <Box className="bg-gradient-to-r from-blue-600 to-blue-800 pb-6 px-4 pt-12">
-                <Text.Title className="text-white font-bold text-xl">
-                    Hệ Thống Chấm Công IMS
-                </Text.Title>
-                <Text className="text-blue-100 text-sm">
-                    Đăng nhập nội bộ cho kỹ thuật viên Lâm Quang Đại
-                </Text>
+                <Text.Title className="text-white font-bold text-xl">Hệ Thống Chấm Công IMS</Text.Title>
+                <Text className="text-blue-100 text-sm">Đăng nhập nội bộ cho kỹ thuật viên Lâm Quang Đại</Text>
             </Box>
 
             {/* Main Content */}
@@ -141,8 +142,7 @@ const Login = () => {
                 {/* Info Box */}
                 <Box className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <Text className="text-blue-800 text-sm">
-                        Đảm bảo bạn đã đăng nhập trong ứng dụng Zalo trước khi
-                        sử dụng Mini App này.
+                        Đảm bảo bạn đã đăng nhập trong ứng dụng Zalo trước khi sử dụng Mini App này.
                     </Text>
                 </Box>
 
@@ -153,8 +153,8 @@ const Login = () => {
                             Tài khoản đã bị từ chối
                         </Text.Title>
                         <Text className="text-red-700 text-xs mb-4">
-                            Tài khoản của bạn đã bị từ chối phê duyệt. Vui lòng
-                            liên hệ quản trị viên để biết thêm chi tiết.
+                            Tài khoản của bạn đã bị từ chối phê duyệt. Vui lòng liên hệ quản trị viên để biết thêm chi
+                            tiết.
                         </Text>
                         <Button
                             onClick={() => setRejectedApproval(false)}
@@ -169,8 +169,8 @@ const Login = () => {
                             Tài khoản đang chờ phê duyệt
                         </Text.Title>
                         <Text className="text-yellow-700 text-xs mb-4">
-                            Tài khoản của bạn cần được chấp thuận từ phía quản
-                            trị viên. Vui lòng đợi và thử đăng nhập lại sau.
+                            Tài khoản của bạn cần được chấp thuận từ phía quản trị viên. Vui lòng đợi và thử đăng nhập
+                            lại sau.
                         </Text>
                         <Button
                             onClick={() => setPendingApproval(false)}
@@ -182,17 +182,13 @@ const Login = () => {
                 ) : (
                     <Box className="bg-white rounded-lg shadow-md p-6 text-center">
                         <Text className="text-gray-600 text-xs mb-6">
-                            Đăng nhập bằng tài khoản Zalo nội bộ để truy cập hệ
-                            thống chấm công và quản lý công việc
+                            Đăng nhập bằng tài khoản Zalo nội bộ để truy cập hệ thống chấm công và quản lý công việc
                         </Text>
 
                         {/* Loading Progress */}
                         {loading && (
                             <Box className="bg-blue-50 rounded-lg p-2 py-3">
-                                <Icon
-                                    icon="zi-auto"
-                                    className="animate-spin text-blue-600"
-                                />
+                                <Icon icon="zi-auto" className="animate-spin text-blue-600" />
                             </Box>
                         )}
 
@@ -201,9 +197,7 @@ const Login = () => {
                             <Button
                                 onClick={handleZaloLogin}
                                 className={`w-full py-3 rounded-lg font-semibold text-white ${
-                                    loading
-                                        ? "bg-blue-300"
-                                        : "bg-blue-600 hover:bg-blue-700"
+                                    loading ? "bg-blue-300" : "bg-blue-600 hover:bg-blue-700"
                                 }`}
                             >
                                 Đăng nhập bằng Zalo
@@ -214,9 +208,7 @@ const Login = () => {
 
                 {/* Features List */}
                 <Box className="bg-white rounded-lg shadow-sm p-4">
-                    <Text className="text-gray-700 text-sm font-semibold mb-3">
-                        Tính năng chính
-                    </Text>
+                    <Text className="text-gray-700 text-sm font-semibold mb-3">Tính năng chính</Text>
                     <Box className="space-y-2">
                         {[
                             {
@@ -236,18 +228,9 @@ const Login = () => {
                                 text: "Theo dõi thời gian làm việc",
                             },
                         ].map((feature, index) => (
-                            <Box
-                                key={index}
-                                className="flex items-center gap-2"
-                            >
-                                <Icon
-                                    icon={feature.icon}
-                                    className="text-blue-600"
-                                    size={16}
-                                />
-                                <Text className="text-gray-600 text-sm">
-                                    {feature.text}
-                                </Text>
+                            <Box key={index} className="flex items-center gap-2">
+                                <Icon icon={feature.icon} className="text-blue-600" size={16} />
+                                <Text className="text-gray-600 text-sm">{feature.text}</Text>
                             </Box>
                         ))}
                     </Box>
@@ -255,19 +238,11 @@ const Login = () => {
 
                 {/* Support */}
                 <Box className="bg-white rounded-lg shadow-sm p-4">
-                    <Text className="text-gray-700 text-sm font-semibold mb-3">
-                        Hỗ trợ
-                    </Text>
+                    <Text className="text-gray-700 text-sm font-semibold mb-3">Hỗ trợ</Text>
                     <Box className="space-y-2">
                         <Box className="flex items-center gap-2">
-                            <Icon
-                                icon="zi-call"
-                                className="text-blue-600"
-                                size={16}
-                            />
-                            <Text className="text-gray-600 text-sm">
-                                0397.364.664 - Tấn Đạt
-                            </Text>
+                            <Icon icon="zi-call" className="text-blue-600" size={16} />
+                            <Text className="text-gray-600 text-sm">0397.364.664 - Tấn Đạt</Text>
                         </Box>
                     </Box>
                 </Box>

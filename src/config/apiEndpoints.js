@@ -53,9 +53,16 @@ const API_ENDPOINTS = {
     // Check-in Endpoints
     // ============================================
     CHECKIN: {
-        SUBMIT: "/checkin/submit",
-        GET_HISTORY: "/checkin/history",
-        GET_TODAY: "/checkin/today",
+        SUBMIT: "/attendance/check-in",
+        GET_HISTORY: "/attendance/check-in/history",
+        GET_TODAY: "/attendance/check-in/today",
+    },
+
+    // ============================================
+    // Upload Endpoints
+    // ============================================
+    UPLOADS: {
+        CLOUDINARY_SIGN: "/uploads/cloudinary/sign",
     },
 
     // ============================================
