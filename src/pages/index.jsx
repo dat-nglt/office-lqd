@@ -21,6 +21,7 @@ import { nativeStorage } from "zmp-sdk/apis";
 import Header from "../components/Header";
 import WorkDetailModal from "../components/WorkDetailModal";
 import BottomNavigation from "../components/BottomNavigation";
+import { getPriorityColor, getPriorityLabel, getStatusColor, getStatusLabel } from "../hooks/useLabelColor";
 
 function HomePage() {
   const navigate = useNavigate();
@@ -105,9 +106,7 @@ function HomePage() {
       notes: "Kiểm tra định kỳ hàng quý",
       content: "Kiểm tra hệ thống camera an ninh",
       workType: "project",
-      technicians: [
-        { name: "Lê Văn C", phone: "0903456789", specialization: "An ninh" },
-      ],
+      technicians: [{ name: "Lê Văn C", phone: "0903456789", specialization: "An ninh" }],
     },
   ]);
 
@@ -119,58 +118,6 @@ function HomePage() {
     totalHours: 8.5,
     averageRating: 4.8,
   });
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-300";
-      case "in_progress":
-        return "bg-blue-100 text-blue-800 border-blue-300";
-      case "completed":
-        return "bg-blue-100 text-blue-800 border-blue-300";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-300";
-    }
-  };
-
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case "pending":
-        return "Chờ thực hiện";
-      case "in_progress":
-        return "Đang thực hiện";
-      case "completed":
-        return "Hoàn thành";
-      default:
-        return "Không xác định";
-    }
-  };
-
-  const getPriorityLabel = (priority) => {
-    switch (priority) {
-      case "high":
-        return "Cao";
-      case "medium":
-        return "Trung bình";
-      case "low":
-        return "Thấp";
-      default:
-        return "Bình thường";
-    }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "high":
-        return "text-red-600 bg-red-50";
-      case "medium":
-        return "text-orange-600 bg-orange-50";
-      case "low":
-        return "text-blue-600 bg-blue-50";
-      default:
-        return "text-gray-600 bg-gray-50";
-    }
-  };
 
   const handleShowDetail = (job) => {
     setSelectedWork(job);
@@ -214,52 +161,32 @@ function HomePage() {
         {/* Statistics Cards */}
         <Box className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-gray-100">
           <Text className="font-bold text-gray-900 mb-3 flex items-center">
-            <Icon
-              icon="zi-reorder-solid"
-              className="mr-2 text-blue-600"
-              size={16}
-            />
+            <Icon icon="zi-reorder-solid" className="mr-2 text-blue-600" size={16} />
             Thống Kê Hôm Nay
           </Text>
 
           <Box className="grid grid-cols-2 gap-3 mb-3">
             <Box className="bg-blue-50 rounded-lg p-3 border border-blue-200 text-center">
-              <Text className="text-2xl font-bold text-blue-600">
-                {statistics.totalAssignedToday}
-              </Text>
-              <Text className="text-xs text-gray-600 mt-1">
-                Công việc được phân bổ
-              </Text>
+              <Text className="text-2xl font-bold text-blue-600">{statistics.totalAssignedToday}</Text>
+              <Text className="text-xs text-gray-600 mt-1">Công việc được phân bổ</Text>
             </Box>
             <Box className="bg-yellow-50 rounded-lg p-3 border border-yellow-200 text-center">
-              <Text className="text-2xl font-bold text-yellow-600">
-                {statistics.pending}
-              </Text>
-              <Text className="text-xs text-gray-600 mt-1">
-                Công việc chờ thực hiện
-              </Text>
+              <Text className="text-2xl font-bold text-yellow-600">{statistics.pending}</Text>
+              <Text className="text-xs text-gray-600 mt-1">Công việc chờ thực hiện</Text>
             </Box>
           </Box>
 
           <Box className="grid grid-cols-2 gap-3">
             <Box className="bg-blue-50 rounded-lg p-3 border border-blue-200 text-center">
-              <Text className="text-2xl font-bold text-blue-600">
-                {statistics.completed}
-              </Text>
-              <Text className="text-xs text-gray-600 mt-1">
-                Công việc hoàn thành
-              </Text>
+              <Text className="text-2xl font-bold text-blue-600">{statistics.completed}</Text>
+              <Text className="text-xs text-gray-600 mt-1">Công việc hoàn thành</Text>
             </Box>
             <Box
               className="bg-purple-50 rounded-lg p-3 border border-purple-200 text-center cursor-pointer hover:bg-purple-100 transition-colors"
               onClick={() => navigate("/overtime-request")}
             >
-              <Text className="text-lg font-bold text-purple-600">
-                Ca phát sinh
-              </Text>
-              <Text className="text-xs text-gray-600 mt-1">
-                Báo công việc phát sinh
-              </Text>
+              <Text className="text-lg font-bold text-purple-600">Ca phát sinh</Text>
+              <Text className="text-xs text-gray-600 mt-1">Báo công việc phát sinh</Text>
             </Box>
           </Box>
         </Box>
@@ -275,24 +202,17 @@ function HomePage() {
 
           <Box className="divide-y divide-gray-200">
             {todayAssignments.map((job, index) => (
-              <Box
-                key={job.id}
-                className="p-4 hover:bg-gray-50 transition-colors"
-              >
+              <Box key={job.id} className="p-4 hover:bg-gray-50 transition-colors">
                 {/* Job Header */}
                 <Box className="flex items-start justify-between gap-2 mb-2">
                   <Box className="flex-1">
                     <Box className="flex items-center gap-2 mb-1">
-                      <Text className="font-semibold text-gray-900 line-clamp-2">
-                        {job.title}
-                      </Text>
+                      <Text className="font-semibold text-gray-900 line-clamp-2">{job.title}</Text>
                     </Box>
                     <Text className="text-xs text-gray-600">{job.company}</Text>
                   </Box>
                   <Box
-                    className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusColor(
-                      job.status
-                    )}`}
+                    className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusColor(job.status)}`}
                   >
                     {getStatusLabel(job.status)}
                   </Box>
@@ -302,26 +222,14 @@ function HomePage() {
                 <Box className="mb-2">
                   <Box className="flex flex-wrap gap-2 mb-2">
                     <Box className="text-xs px-2 py-1 bg-gray-100 rounded text-gray-700 font-medium">
-                      <Icon
-                        icon="zi-tools"
-                        size={10}
-                        className="mr-0.5 inline"
-                      />
+                      <Icon icon="zi-tools" size={10} className="mr-0.5 inline" />
                       {job.serviceType}
                     </Box>
                     <Box className="text-xs px-2 py-1 bg-gray-100 rounded text-gray-700 font-medium">
-                      <Icon
-                        icon="zi-setting"
-                        size={10}
-                        className="mr-0.5 inline"
-                      />
+                      <Icon icon="zi-setting" size={10} className="mr-0.5 inline" />
                       {job.equipment}
                     </Box>
-                    <Box
-                      className={`text-xs px-2 py-1 rounded font-medium ${getPriorityColor(
-                        job.priority
-                      )}`}
-                    >
+                    <Box className={`text-xs px-2 py-1 rounded font-medium ${getPriorityColor(job.priority)}`}>
                       Ưu tiên: {getPriorityLabel(job.priority)}
                     </Box>
                   </Box>
@@ -330,18 +238,12 @@ function HomePage() {
                 {/* Scheduled Time */}
                 <Box className="mb-2 flex items-center gap-2">
                   <Icon icon="zi-clock-1" className="text-gray-400" size={14} />
-                  <Text className="text-sm font-semibold text-gray-700">
-                    {job.scheduledTime}
-                  </Text>
+                  <Text className="text-sm font-semibold text-gray-700">{job.scheduledTime}</Text>
                 </Box>
 
                 {/* Location */}
                 <Box className="mb-2 flex items-start gap-2">
-                  <Icon
-                    icon="zi-location"
-                    className="text-red-500 mt-0.5 flex-shrink-0"
-                    size={14}
-                  />
+                  <Icon icon="zi-location" className="text-red-500 mt-0.5 flex-shrink-0" size={14} />
                   <Text className="text-xs text-gray-600">{job.location}</Text>
                 </Box>
 
@@ -349,8 +251,7 @@ function HomePage() {
                 <Box className="mb-2 flex items-center gap-2">
                   <Icon icon="zi-user" className="text-gray-400" size={14} />
                   <Text className="text-xs text-gray-600">
-                    <span className="font-semibold">{job.customerName}</span> •{" "}
-                    {job.phoneNumber}
+                    <span className="font-semibold">{job.customerName}</span> • {job.phoneNumber}
                   </Text>
                 </Box>
 
@@ -358,8 +259,7 @@ function HomePage() {
                 {job.notes && (
                   <Box className="p-2 bg-blue-50 rounded border border-blue-200 mb-2">
                     <Text className="text-xs text-blue-800">
-                      <span className="font-semibold">Ghi chú:</span>{" "}
-                      {job.notes}
+                      <span className="font-semibold">Ghi chú:</span> {job.notes}
                     </Text>
                   </Box>
                 )}
@@ -425,11 +325,7 @@ function HomePage() {
       </Box>
 
       {/* Work Detail Modal */}
-      <WorkDetailModal
-        visible={showDetailModal}
-        onClose={() => setShowDetailModal(false)}
-        work={selectedWork}
-      />
+      <WorkDetailModal visible={showDetailModal} onClose={() => setShowDetailModal(false)} work={selectedWork} />
 
       <BottomNavigation />
     </Page>

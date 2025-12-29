@@ -1,39 +1,29 @@
 import { Box, Text, Icon, Button, Page } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { getUserInfo } from "zmp-sdk/apis";
 import { AppError } from "zmp-sdk";
-import { nativeStorage } from "zmp-sdk/apis";
+import { getUserInfo, nativeStorage } from "zmp-sdk/apis";
 import BottomNavigation from "../components/BottomNavigation";
-
-/*
- * Dữ liệu cần thiết cho trang EmployeeProfile:
- * - Thông tin người dùng: Đối tượng với các trường name (chuỗi), employeeId (chuỗi), position (chuỗi), department (chuỗi), avatar (chuỗi hoặc null), email (chuỗi), phone (chuỗi), specialization (chuỗi). Được sử dụng để hiển thị chi tiết hồ sơ nhân viên.
- * - Địa điểm làm việc: Đối tượng với các trường name (chuỗi), address (chuỗi), coordinates (đối tượng với lat và lng là số). Được sử dụng cho vị trí chấm công mặc định.
- *
- * API cần thiết:
- * - getUserInfo từ zmp-sdk/apis: Được gọi trong getUserInfoMiniApp để lấy thông tin người dùng từ mini app, cập nhật name, employeeId và avatar trong state userInfo. Xử lý quyền và lỗi qua AppError.
- * - Không có API trực tiếp cho lịch sử chấm công hoặc báo cáo công việc; thay vào đó, sử dụng navigation để chuyển đến "/attendance-history" và "/work-reports", ngụ ý các component/trang riêng biệt xử lý những phần đó.
- *
- * Ghi chú bổ sung:
- * - Hàm getStatusColor được định nghĩa nhưng không sử dụng trong JSX; có thể là phần thừa hoặc dành cho tính năng tương lai như badge trạng thái.
- * - Cải tiến tiềm năng: Lấy department, email, phone, specialization từ API thay vì hardcode; thêm API cho địa điểm làm việc động hoặc trạng thái thời gian thực.
- * - Không có lệnh gọi API backend cho việc lưu trữ dữ liệu; dựa vào SDK cho thông tin người dùng.
- */
+import { miniAppGetProfileInfoByID } from "../services/user.service";
 
 function EmployeeProfile() {
-  const [userInfo, setUserInfo] = useState({
-    name: "Nguyễn Lê Tấn Đạt",
-    employeeId: "KTV-2024-001",
-    position: "Kỹ Thuật Viên",
-    department: "Bộ phận Kỹ Thuật",
-    avatar: null,
-    email: "tan.dat@lamquangdai.vn",
-    phone: "0977708819",
-    specialization: "Điều hòa & Hệ thống điện",
-  });
-
   const navigate = useNavigate();
+  const [userInfo, setUserInfo] = useState({
+    name: "",
+    employee_id: "",
+    position: null,
+    avatar_url: null,
+    email: null,
+    phone: null,
+    zalo_id: "",
+    profile: {
+      departmentInfo: null,
+      specialization: [],
+      dailySalary: "0",
+    },
+    assignments: [],
+    reports: [],
+  });
 
   const [workLocation] = useState({
     name: "Kho Hàng - Lâm Quang Đại",
@@ -42,23 +32,13 @@ function EmployeeProfile() {
   });
 
   const getUserInfoMiniApp = async () => {
-    try {
-      const { userInfo } = await getUserInfo({
-        autoRequestPermission: true,
-      });
-
-      if (userInfo) {
-        setUserInfo((prev) => ({
-          ...prev,
-          name: userInfo.name || prev.name,
-          employeeId: userInfo.idByOA || prev.employeeId,
-          avatar: userInfo.avatar || null,
-        }));
-      }
-    } catch (error) {
-      if (error instanceof AppError) {
-        console.error("Error getting user info:", error);
-      }
+    const { userInfo } = await getUserInfo();
+    const userInfoResp = await miniAppGetProfileInfoByID(userInfo.id);
+    console.log("Fetched user info:", userInfoResp);
+    if (userInfoResp.success) {
+      setUserInfo(userInfoResp.data);
+    } else {
+      clearTokens();
     }
   };
 
@@ -106,9 +86,9 @@ function EmployeeProfile() {
         <Box className="bg-white rounded-2xl shadow-md p-6 mb-4 border border-gray-100 -mt-12 relative z-10">
           <Box className="flex items-center space-x-4 mb-4">
             <Box className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-              {userInfo.avatar ? (
+              {userInfo.avatar_url ? (
                 <img
-                  src={userInfo.avatar}
+                  src={userInfo.avatar_url}
                   alt={userInfo.name}
                   className="w-full h-full rounded-full object-cover"
                 />
@@ -117,15 +97,8 @@ function EmployeeProfile() {
               )}
             </Box>
             <Box className="flex-1">
-              <Text className="font-bold text-lg text-gray-900">
-                {userInfo.name}
-              </Text>
-              <Text className="text-sm text-blue-600 font-semibold">
-                {userInfo.position}
-              </Text>
-              <Text className="text-xs text-gray-500 mt-1">
-                ID: {userInfo.employeeId}
-              </Text>
+              <Text className="font-bold text-lg text-gray-900">{userInfo.name}</Text>
+              <Text className="text-xs text-gray-500 mt-1">Zalo ID: {userInfo.zalo_id}</Text>
             </Box>
           </Box>
 
@@ -139,11 +112,7 @@ function EmployeeProfile() {
         {/* Employee Details */}
         <Box className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-gray-100">
           <Text className="font-bold text-gray-900 mb-3 flex items-center">
-            <Icon
-              icon="zi-info-circle"
-              className="mr-2 text-blue-600"
-              size={16}
-            />
+            <Icon icon="zi-info-circle" className="mr-2 text-blue-600" size={16} />
             Thông Tin Chi Tiết
           </Text>
 
@@ -151,19 +120,17 @@ function EmployeeProfile() {
             <Box className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
               <Text className="text-sm text-gray-600">Bộ phận:</Text>
               <Text className="text-sm font-semibold text-gray-900">
-                {userInfo.department}
+                {userInfo.profile?.departmentInfo?.name || "Chưa cập nhật"}
               </Text>
             </Box>
             <Box className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <Text className="text-sm text-gray-600">Email:</Text>
-              <Text className="text-sm font-semibold text-gray-900">
-                {userInfo.email}
-              </Text>
+              <Text className="text-sm text-gray-600">Chức vụ:</Text>
+              <Text className="text-sm font-semibold text-gray-900">{userInfo.position?.name || "Chưa cập nhật"}</Text>
             </Box>
             <Box className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
               <Text className="text-sm text-gray-600">Điện thoại:</Text>
               <Text className="text-sm font-semibold text-gray-900">
-                {userInfo.phone}
+                {userInfo.phone || userInfo.profile?.phone_secondary || "Chưa cập nhật"}
               </Text>
             </Box>
           </Box>
@@ -177,12 +144,8 @@ function EmployeeProfile() {
           </Text>
 
           <Box className="p-4 bg-red-50 rounded-lg border border-red-200">
-            <Text className="font-bold text-gray-900 mb-1">
-              {workLocation.name}
-            </Text>
-            <Text className="text-xs text-gray-600 mb-3">
-              {workLocation.address}
-            </Text>
+            <Text className="font-bold text-gray-900 mb-1">{workLocation.name}</Text>
+            <Text className="text-xs text-gray-600 mb-3">{workLocation.address}</Text>
             <Button
               size="small"
               className="w-full bg-red-600 hover:bg-red-700 text-white rounded-lg"
@@ -200,18 +163,12 @@ function EmployeeProfile() {
 
         <Box className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-gray-100">
           <Text className="font-bold text-gray-900 mb-3 flex items-center">
-            <Icon
-              icon="zi-share-external-2"
-              className="mr-2 text-blue-600"
-              size={16}
-            />
+            <Icon icon="zi-share-external-2" className="mr-2 text-blue-600" size={16} />
             Lịch sử chấm công
           </Text>
 
           <Box className="text-center">
-            <Text className="text-sm text-gray-600 mb-3">
-              Truy cập danh sách báo cáo công việc cá nhân
-            </Text>
+            <Text className="text-sm text-gray-600 mb-3">Truy cập danh sách chấm công cá nhân</Text>
             <Button
               variant="primary"
               onClick={() => navigate("/attendance-history")}
@@ -226,18 +183,12 @@ function EmployeeProfile() {
         {/* Work Reports Section */}
         <Box className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-gray-100">
           <Text className="font-bold text-gray-900 mb-3 flex items-center">
-            <Icon
-              icon="zi-share-external-2"
-              className="mr-2 text-blue-600"
-              size={16}
-            />
+            <Icon icon="zi-share-external-2" className="mr-2 text-blue-600" size={16} />
             Báo Cáo Công Việc
           </Text>
 
           <Box className="text-center">
-            <Text className="text-sm text-gray-600 mb-3">
-              Truy cập danh sách báo cáo công việc cá nhân
-            </Text>
+            <Text className="text-sm text-gray-600 mb-3">Truy cập danh sách báo cáo công việc cá nhân</Text>
             <Button
               variant="primary"
               onClick={() => navigate("/work-reports")}
