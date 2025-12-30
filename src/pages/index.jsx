@@ -17,106 +17,37 @@
 import { Box, Button, Icon, Page, Text } from "zmp-ui";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { nativeStorage } from "zmp-sdk/apis";
+import { getUserInfo } from "zmp-sdk/apis";
 import Header from "../components/Header";
 import WorkDetailModal from "../components/WorkDetailModal";
 import BottomNavigation from "../components/BottomNavigation";
-import { getPriorityColor, getPriorityLabel, getStatusColor, getStatusLabel } from "../hooks/useLabelColor";
+import JobListItem from "../components/JobListItem";
+import { miniAppGetListOfWorkAssignmentsInCurrentDayByZAID, miniAppGetProfileInfoByID } from "../services/user.service";
 
 function HomePage() {
-  const navigate = useNavigate();
-  const [userInfo, setUserInfo] = useState(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedWork, setSelectedWork] = useState(null);
-
-  const [todayAssignments] = useState([
-    {
-      id: 1,
-      title: "Bảo trì điều hòa",
-      workName: "Bảo trì điều hòa",
-      serviceType: "Bảo trì định kỳ",
-      service: "Bảo trì",
-      equipment: "Điều hòa",
-      location: "05A Quốc Hương, Phường An Khánh, Quận 2, TP.HCM",
-      address: "05A Quốc Hương, Phường An Khánh, Quận 2, TP.HCM",
-      coordinates: { lat: 10.7769, lng: 106.7009 },
-      company: "NEXUS HOUSE",
-      customerName: "Nguyễn Văn A",
-      phoneNumber: "0901234567",
-      scheduledDate: new Date().toLocaleDateString("vi-VN"),
-      scheduledTime: "08:00 - 12:00",
-      status: "in_progress",
-      priority: "high",
-      notes: "Cần kiểm tra gas và lọc. Mang theo dụng cụ vệ sinh máy lạnh.",
-      content: "Bảo trì hệ thống điều hòa định kỳ",
-      workType: "service",
-      technicians: [
-        {
-          name: "Nguyễn Văn A",
-          phone: "0901234567",
-          specialization: "Điều hòa",
-        },
-      ],
+  const [totalAssignedToday, setTotalAssignedToday] = useState(0);
+  const [totalAssignedCompletedToday, setTotalAssignedCompletedToday] = useState(0);
+  const [totalAssignedPendingToday, setTotalAssignedPendingToday] = useState(0);
+  const [todayAssignments, setTodayAssignments] = useState([]);
+  const navigate = useNavigate();
+  const [userInfo, setUserInfo] = useState({
+    name: "",
+    employee_id: "",
+    position: {},
+    avatar_url: null,
+    email: null,
+    phone: null,
+    zalo_id: "",
+    profile: {
+      departmentInfo: null,
+      specialization: [],
+      dailySalary: "0",
     },
-    {
-      id: 2,
-      title: "Sửa chữa hệ thống điện",
-      workName: "Sửa chữa hệ thống điện",
-      serviceType: "Sửa chữa",
-      service: "Sửa chữa",
-      equipment: "Hệ thống điện",
-      location: "456 Lê Văn Việt, Quận 9, TP.HCM",
-      address: "456 Lê Văn Việt, Quận 9, TP.HCM",
-      coordinates: { lat: 10.8411, lng: 106.8097 },
-      company: "VINHOMES",
-      customerName: "Trần Thị B",
-      phoneNumber: "0902345678",
-      scheduledDate: new Date().toLocaleDateString("vi-VN"),
-      scheduledTime: "13:00 - 17:00",
-      status: "pending",
-      priority: "high",
-      notes: "Có bảng mạch bị lỗi. Cần kiểm tra và thay thế nếu cần.",
-      content: "Sửa chữa hệ thống điện và kiểm tra bảng mạch",
-      workType: "project",
-      technicians: [
-        {
-          name: "Trần Văn B",
-          phone: "0907654321",
-          specialization: "Điện công nghiệp",
-        },
-      ],
-    },
-    {
-      id: 3,
-      title: "Kiểm tra thiết bị",
-      workName: "Kiểm tra thiết bị",
-      serviceType: "Kiểm tra",
-      service: "Kiểm tra",
-      equipment: "Điều hòa",
-      location: "789 Võ Văn Ngân, Thủ Đức, TP.HCM",
-      address: "789 Võ Văn Ngân, Thủ Đức, TP.HCM",
-      coordinates: { lat: 10.8505, lng: 106.7717 },
-      company: "MASTERI",
-      customerName: "Lê Văn C",
-      phoneNumber: "0903456789",
-      scheduledDate: new Date().toLocaleDateString("vi-VN"),
-      scheduledTime: "17:30 - 18:30",
-      status: "pending",
-      priority: "medium",
-      notes: "Kiểm tra định kỳ hàng quý",
-      content: "Kiểm tra hệ thống camera an ninh",
-      workType: "project",
-      technicians: [{ name: "Lê Văn C", phone: "0903456789", specialization: "An ninh" }],
-    },
-  ]);
-
-  const [statistics] = useState({
-    totalAssignedToday: 3,
-    completed: 0,
-    inProgress: 0,
-    pending: 3,
-    totalHours: 8.5,
-    averageRating: 4.8,
+    assignments: [],
+    reports: [],
   });
 
   const handleShowDetail = (job) => {
@@ -125,37 +56,105 @@ function HomePage() {
   };
 
   const handleStartWork = (job) => {
-    // Navigate to work start page or perform action
-    navigate(`/work/${job.id}/start`);
+    navigate(`/checkin?work_code=${job.workCode}`);
   };
 
   const handleProgressReport = (job) => {
-    // Navigate to progress report page
     navigate(`/report`);
   };
 
-  useEffect(() => {
-    const token = nativeStorage.getItem("access_token");
-    const userInfo = nativeStorage.getItem("user_info");
+  const getUserInfoMiniApp = async () => {
+    const { userInfo } = await getUserInfo();
+    const ZAID = userInfo.id;
 
-    if (!token || !userInfo) {
-      navigate("/login", { replace: true });
+    const userInfoResp = await miniAppGetProfileInfoByID(ZAID);
+    const listOfWorkAssignmentsResp = await miniAppGetListOfWorkAssignmentsInCurrentDayByZAID(ZAID);
+    console.log("listOfWorkAssignmentsResp", listOfWorkAssignmentsResp);
+
+    if (userInfoResp.success) {
+      setUserInfo(userInfoResp.data);
+
+      const today = new Date().toISOString().split("T")[0];
+
+      // Map assignments từ listOfWorkAssignmentsResp sang todayAssignments
+      const mappedAssignments = (listOfWorkAssignmentsResp?.data || []).map((assign) => ({
+        id: assign.work.id,
+        assignmentId: assign.id,
+        title: assign.work.title,
+        workName: assign.work.title,
+        serviceType: assign.work.service_type,
+        service: assign.work.service_type,
+        equipment: assign.work.category?.name || "",
+        location: assign.work.location,
+        address: assign.work.customer_address,
+        coordinates: {
+          lat: parseFloat(assign.work.location_lat),
+          lng: parseFloat(assign.work.location_lng),
+        },
+        company: assign.work.customer_name,
+        customerName: assign.work.customer_name,
+        phoneNumber: assign.work.customer_phone,
+        scheduledDate: new Date(assign.work.required_date).toLocaleDateString("vi-VN"),
+        scheduledTime: `${assign.work.required_time_hour}:${String(assign.work.required_time_minute).padStart(2, "0")}`,
+        status: assign.work.status,
+        priority: assign.work.priority,
+        notes: assign.work.notes || assign.work.description,
+        content: assign.work.description,
+        workType: "service",
+        technicians:
+          assign.work.assignments?.map((tech) => ({
+            id: tech.technician?.id,
+            name: tech.technician?.name,
+            email: tech.technician?.email,
+            phone: tech.technician?.phone,
+            avatar_url: tech.technician?.avatar_url,
+            position_id: tech.technician?.position_id,
+          })) || [],
+        workCode: assign.work.work_code,
+        estimatedHours: assign.work.estimated_hours,
+        requiredDate: assign.work.required_date,
+        assignedStatus: assign.assigned_status,
+        assignedBy: assign.assignedByUser,
+      }));
+
+      // Filter assignments for today
+      const todayAssignmentsList = mappedAssignments.filter(
+        (assign) => assign.scheduledDate === new Date().toLocaleDateString("vi-VN")
+      );
+
+      setTodayAssignments(todayAssignmentsList);
+      setTotalAssignedToday(todayAssignmentsList.length);
+
+      const completedToday = (listOfWorkAssignmentsResp?.data || []).filter(
+        (assign) =>
+          assign.work.status === "completed" &&
+          new Date(assign.work.required_date).toISOString().split("T")[0] === today
+      ).length;
+
+      const pendingToday = (listOfWorkAssignmentsResp?.data || []).filter(
+        (assign) =>
+          assign.work.status === "pending" && new Date(assign.work.required_date).toISOString().split("T")[0] === today
+      ).length;
+
+      setTotalAssignedCompletedToday(completedToday);
+      setTotalAssignedPendingToday(pendingToday);
     } else {
-      try {
-        setUserInfo(JSON.parse(userInfo));
-      } catch (err) {
-        console.error("Error parsing stored user info:", err);
-        // Clear invalid data
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("user_info");
-        navigate("/login", { replace: true });
-      }
+      clearTokens();
     }
-  }, [navigate]);
+  };
+
+  useEffect(() => {
+    getUserInfoMiniApp();
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <Page className="bg-gray-50 min-h-screen pb-20">
-      <Header title="Theo Dõi Tiến Độ Công Việc" />
+      <Header title="Theo Dõi Tiến Độ Công Việc" currentTime={currentTime} userInfo={userInfo} />
 
       <Box className="px-4 pt-4 pb-28">
         {/* Statistics Cards */}
@@ -167,18 +166,18 @@ function HomePage() {
 
           <Box className="grid grid-cols-2 gap-3 mb-3">
             <Box className="bg-blue-50 rounded-lg p-3 border border-blue-200 text-center">
-              <Text className="text-2xl font-bold text-blue-600">{statistics.totalAssignedToday}</Text>
+              <Text className="text-2xl font-bold text-blue-600">{totalAssignedToday}</Text>
               <Text className="text-xs text-gray-600 mt-1">Công việc được phân bổ</Text>
             </Box>
             <Box className="bg-yellow-50 rounded-lg p-3 border border-yellow-200 text-center">
-              <Text className="text-2xl font-bold text-yellow-600">{statistics.pending}</Text>
+              <Text className="text-2xl font-bold text-yellow-600">{totalAssignedPendingToday}</Text>
               <Text className="text-xs text-gray-600 mt-1">Công việc chờ thực hiện</Text>
             </Box>
           </Box>
 
           <Box className="grid grid-cols-2 gap-3">
-            <Box className="bg-blue-50 rounded-lg p-3 border border-blue-200 text-center">
-              <Text className="text-2xl font-bold text-blue-600">{statistics.completed}</Text>
+            <Box className="bg-green-50 rounded-lg p-3 border border-green-200 text-center">
+              <Text className="text-2xl font-bold text-blue-600">{totalAssignedCompletedToday}</Text>
               <Text className="text-xs text-gray-600 mt-1">Công việc hoàn thành</Text>
             </Box>
             <Box
@@ -201,111 +200,14 @@ function HomePage() {
           </Box>
 
           <Box className="divide-y divide-gray-200">
-            {todayAssignments.map((job, index) => (
-              <Box key={job.id} className="p-4 hover:bg-gray-50 transition-colors">
-                {/* Job Header */}
-                <Box className="flex items-start justify-between gap-2 mb-2">
-                  <Box className="flex-1">
-                    <Box className="flex items-center gap-2 mb-1">
-                      <Text className="font-semibold text-gray-900 line-clamp-2">{job.title}</Text>
-                    </Box>
-                    <Text className="text-xs text-gray-600">{job.company}</Text>
-                  </Box>
-                  <Box
-                    className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusColor(job.status)}`}
-                  >
-                    {getStatusLabel(job.status)}
-                  </Box>
-                </Box>
-
-                {/* Service & Equipment Info */}
-                <Box className="mb-2">
-                  <Box className="flex flex-wrap gap-2 mb-2">
-                    <Box className="text-xs px-2 py-1 bg-gray-100 rounded text-gray-700 font-medium">
-                      <Icon icon="zi-tools" size={10} className="mr-0.5 inline" />
-                      {job.serviceType}
-                    </Box>
-                    <Box className="text-xs px-2 py-1 bg-gray-100 rounded text-gray-700 font-medium">
-                      <Icon icon="zi-setting" size={10} className="mr-0.5 inline" />
-                      {job.equipment}
-                    </Box>
-                    <Box className={`text-xs px-2 py-1 rounded font-medium ${getPriorityColor(job.priority)}`}>
-                      Ưu tiên: {getPriorityLabel(job.priority)}
-                    </Box>
-                  </Box>
-                </Box>
-
-                {/* Scheduled Time */}
-                <Box className="mb-2 flex items-center gap-2">
-                  <Icon icon="zi-clock-1" className="text-gray-400" size={14} />
-                  <Text className="text-sm font-semibold text-gray-700">{job.scheduledTime}</Text>
-                </Box>
-
-                {/* Location */}
-                <Box className="mb-2 flex items-start gap-2">
-                  <Icon icon="zi-location" className="text-red-500 mt-0.5 flex-shrink-0" size={14} />
-                  <Text className="text-xs text-gray-600">{job.location}</Text>
-                </Box>
-
-                {/* Customer Info */}
-                <Box className="mb-2 flex items-center gap-2">
-                  <Icon icon="zi-user" className="text-gray-400" size={14} />
-                  <Text className="text-xs text-gray-600">
-                    <span className="font-semibold">{job.customerName}</span> • {job.phoneNumber}
-                  </Text>
-                </Box>
-
-                {/* Notes */}
-                {job.notes && (
-                  <Box className="p-2 bg-blue-50 rounded border border-blue-200 mb-2">
-                    <Text className="text-xs text-blue-800">
-                      <span className="font-semibold">Ghi chú:</span> {job.notes}
-                    </Text>
-                  </Box>
-                )}
-
-                {/* Action Buttons */}
-                <Box className="flex gap-2 mt-3">
-                  {job.status === "pending" && (
-                    <Button
-                      size="small"
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs"
-                      onClick={() => handleStartWork(job)}
-                    >
-                      <Icon icon="zi-play-circle" size={12} className="mr-1" />
-                      Bắt đầu
-                    </Button>
-                  )}
-                  {job.status === "in_progress" && (
-                    <Button
-                      size="small"
-                      className="flex-1 bg-orange-600 hover:bg-orange-700 text-white rounded text-xs"
-                      onClick={() => handleProgressReport(job)}
-                    >
-                      <Icon icon="zi-camera" size={12} className="mr-1" />
-                      Báo cáo tiến độ
-                    </Button>
-                  )}
-                  {job.status === "completed" && (
-                    <Button
-                      size="small"
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs"
-                      disabled
-                    >
-                      <Icon icon="zi-check-circle" size={12} className="mr-1" />
-                      Hoàn thành
-                    </Button>
-                  )}
-                  <Button
-                    size="small"
-                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-xs"
-                    onClick={() => handleShowDetail(job)}
-                  >
-                    <Icon icon="zi-info-circle" size={12} className="mr-1" />
-                    Chi tiết
-                  </Button>
-                </Box>
-              </Box>
+            {todayAssignments.map((job) => (
+              <JobListItem
+                key={job.id}
+                job={job}
+                onStartWork={handleStartWork}
+                onProgressReport={handleProgressReport}
+                onShowDetail={handleShowDetail}
+              />
             ))}
           </Box>
         </Box>

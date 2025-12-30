@@ -52,40 +52,11 @@ function WorkReportList() {
     },
   ]);
 
-  const [filterDate, setFilterDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
-
-  useEffect(() => {
-    const token = nativeStorage.getItem("access_token");
-    const userInfo = nativeStorage.getItem("user_info");
-
-    if (!token || !userInfo) {
-      navigate("/login", { replace: true });
-    } else {
-      try {
-        setUserInfo(JSON.parse(userInfo));
-      } catch (err) {
-        console.error("Error parsing stored user info:", err);
-        // Clear invalid data
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("user_info");
-        navigate("/login", { replace: true });
-      }
-    }
-  }, [navigate]);
+  const [filterDate, setFilterDate] = useState(new Date().toISOString().split("T")[0]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString + "T00:00:00");
-    const days = [
-      "Chủ nhật",
-      "Thứ hai",
-      "Thứ ba",
-      "Thứ tư",
-      "Thứ năm",
-      "Thứ sáu",
-      "Thứ bảy",
-    ];
+    const days = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
     const dayName = days[date.getDay()];
     const formattedDate = date.toLocaleDateString("vi-VN");
     return `${formattedDate} - ${dayName}`;
@@ -128,27 +99,17 @@ function WorkReportList() {
     }
   };
 
-  const filteredReports = workReports.filter(
-    (report) => report.date === filterDate
-  );
+  const filteredReports = workReports.filter((report) => report.date === filterDate);
 
   return (
     <Page className="bg-gray-50 min-h-screen">
-      <Header
-        title="Danh Sách Báo Cáo"
-        showBack={true}
-        onBack={() => navigate("/")}
-      />
+      <Header title="Danh Sách Báo Cáo" showBack={true} onBack={() => navigate("/")} />
 
       <Box className="px-4 pt-4 pb-28">
         {/* Filter Section */}
         <Box className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 mb-4">
           <Text className="font-semibold text-gray-800 mb-3 text-sm flex items-center">
-            <Icon
-              icon="zi-calendar"
-              className="mr-2 text-green-600"
-              size={16}
-            />
+            <Icon icon="zi-calendar" className="mr-2 text-green-600" size={16} />
             Lọc theo ngày
           </Text>
           <input
@@ -157,9 +118,7 @@ function WorkReportList() {
             onChange={(e) => setFilterDate(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-600"
           />
-          <Text className="text-xs text-gray-500 mt-2">
-            {formatDate(filterDate)}
-          </Text>
+          <Text className="text-xs text-gray-500 mt-2">{formatDate(filterDate)}</Text>
         </Box>
 
         {/* Work Reports List */}
@@ -173,18 +132,10 @@ function WorkReportList() {
               >
                 <Box className="flex items-start justify-between mb-3">
                   <Box className="flex-1">
-                    <Text className="font-semibold text-gray-900">
-                      {report.company}
-                    </Text>
-                    <Text className="text-sm text-gray-600 mt-1">
-                      {report.content}
-                    </Text>
+                    <Text className="font-semibold text-gray-900">{report.company}</Text>
+                    <Text className="text-sm text-gray-600 mt-1">{report.content}</Text>
                   </Box>
-                  <Box
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                      report.status
-                    )}`}
-                  >
+                  <Box className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(report.status)}`}>
                     {getStatusText(report.status)}
                   </Box>
                 </Box>
@@ -193,76 +144,40 @@ function WorkReportList() {
                 <Box className="bg-gray-50 rounded-lg p-3 mb-3 space-y-2">
                   <Box className="flex items-center justify-between">
                     <Box className="flex items-center space-x-2">
-                      <Icon
-                        icon="zi-time"
-                        className="text-blue-600"
-                        size={14}
-                      />
-                      <Text className="text-xs text-gray-600">
-                        Giờ bắt đầu dự kiến:
-                      </Text>
+                      <Icon icon="zi-time" className="text-blue-600" size={14} />
+                      <Text className="text-xs text-gray-600">Giờ bắt đầu dự kiến:</Text>
                     </Box>
-                    <Text className="text-xs font-semibold text-gray-900">
-                      {report.estimatedStartTime}
-                    </Text>
+                    <Text className="text-xs font-semibold text-gray-900">{report.estimatedStartTime}</Text>
                   </Box>
                   <Box className="flex items-center justify-between">
                     <Box className="flex items-center space-x-2">
-                      <Icon
-                        icon="zi-time"
-                        className="text-blue-600"
-                        size={14}
-                      />
-                      <Text className="text-xs text-gray-600">
-                        Giờ kết thúc dự kiến:
-                      </Text>
+                      <Icon icon="zi-time" className="text-blue-600" size={14} />
+                      <Text className="text-xs text-gray-600">Giờ kết thúc dự kiến:</Text>
                     </Box>
-                    <Text className="text-xs font-semibold text-gray-900">
-                      {report.estimatedEndTime}
-                    </Text>
+                    <Text className="text-xs font-semibold text-gray-900">{report.estimatedEndTime}</Text>
                   </Box>
                   <Box className="flex items-center justify-between pt-2 border-t border-gray-200">
-                    <Text className="text-xs text-gray-600 font-semibold">
-                      Thời gian dự kiến:
-                    </Text>
+                    <Text className="text-xs text-gray-600 font-semibold">Thời gian dự kiến:</Text>
                     <Text className="text-xs font-bold text-blue-600">
-                      {calculateWorkHours(
-                        report.estimatedStartTime,
-                        report.estimatedEndTime
-                      )}
+                      {calculateWorkHours(report.estimatedStartTime, report.estimatedEndTime)}
                     </Text>
                   </Box>
                 </Box>
 
                 <Box className="flex items-center justify-between">
                   <Text className="text-xs text-gray-600">
-                    Khách hàng:{" "}
-                    <span className="font-semibold text-gray-900">
-                      {report.customerName}
-                    </span>
+                    Khách hàng: <span className="font-semibold text-gray-900">{report.customerName}</span>
                   </Text>
-                  <Icon
-                    icon="zi-chevron-right"
-                    className="text-gray-400"
-                    size={16}
-                  />
+                  <Icon icon="zi-chevron-right" className="text-gray-400" size={16} />
                 </Box>
               </Box>
             ))
           ) : (
             <Box className="text-center py-12">
               <Icon icon="zi-inbox" className="text-gray-400 text-4xl mb-3" />
-              <Text className="text-gray-600 font-semibold">
-                Không có báo cáo nào
-              </Text>
-              <Text className="text-gray-500 text-sm mt-1">
-                Chưa có báo cáo công việc cho ngày này
-              </Text>
-              <Button
-                variant="primary"
-                onClick={() => navigate("/")}
-                className="mt-4 bg-green-600 hover:bg-green-700"
-              >
+              <Text className="text-gray-600 font-semibold">Không có báo cáo nào</Text>
+              <Text className="text-gray-500 text-sm mt-1">Chưa có báo cáo công việc cho ngày này</Text>
+              <Button variant="primary" onClick={() => navigate("/")} className="mt-4 bg-green-600 hover:bg-green-700">
                 Tạo báo cáo mới
               </Button>
             </Box>

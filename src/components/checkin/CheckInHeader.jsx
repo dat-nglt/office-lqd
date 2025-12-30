@@ -8,7 +8,7 @@ function CheckInHeader() {
 
       <Box className="px-4 pt-10 pb-4 relative z-10">
         <Text.Title className="text-white font-bold" size="large">
-          Chấm Công
+          Chấm Công Công Việc
         </Text.Title>
         <Text className="text-blue-100 text-sm mt-1">
           {new Date().toLocaleDateString("vi-VN")} -{" "}

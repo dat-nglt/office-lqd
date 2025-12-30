@@ -25,7 +25,6 @@ export const zaloLogin = async (accessToken) => {
       access_token: accessToken,
     });
 
-    console.log("Zalo login response data:", response);
     return response.data;
   } catch (error) {
     throw error.response?.data || error;

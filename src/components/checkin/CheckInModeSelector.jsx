@@ -28,7 +28,7 @@ function CheckInModeSelector({
                         <Box>
                             <Text className="font-semibold text-gray-900">Chấm Vào</Text>
                             <Text className="text-xs text-gray-600">
-                                Bắt đầu công việc tại {selectedCheckInLocation.name}
+                                Bắt đầu công việc tại {selectedCheckInLocation.address}
                             </Text>
                         </Box>
                     </Box>

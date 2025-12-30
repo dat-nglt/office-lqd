@@ -4,10 +4,10 @@
  * @returns {string}
  */
 export const formatDate = (date) => {
-    const days = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
-    const dayName = days[date.getDay()];
-    const formattedDate = date.toLocaleDateString("vi-VN");
-    return `${formattedDate} - ${dayName}`;
+  const days = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
+  const dayName = days[date.getDay()];
+  const formattedDate = date.toLocaleDateString("vi-VN");
+  return `${formattedDate} - ${dayName}`;
 };
 
 /**
@@ -17,18 +17,18 @@ export const formatDate = (date) => {
  * @returns {Object} {hours, mins, total}
  */
 export const calculateWorkHours = (startTime, endTime) => {
-    if (!startTime || !endTime) {
-        return { hours: 0, mins: 0, total: 0 };
-    }
-    
-    const [startHour, startMin] = startTime.split(':').map(Number);
-    const [endHour, endMin] = endTime.split(':').map(Number);
-    const start = startHour * 60 + startMin;
-    const end = endHour * 60 + endMin;
-    const minutes = Math.max(0, end - start);
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return { hours, mins, total: minutes };
+  if (!startTime || !endTime) {
+    return { hours: 0, mins: 0, total: 0 };
+  }
+
+  const [startHour, startMin] = startTime.split(":").map(Number);
+  const [endHour, endMin] = endTime.split(":").map(Number);
+  const start = startHour * 60 + startMin;
+  const end = endHour * 60 + endMin;
+  const minutes = Math.max(0, end - start);
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return { hours, mins, total: minutes };
 };
 
 /**
@@ -38,10 +38,10 @@ export const calculateWorkHours = (startTime, endTime) => {
  * @returns {boolean}
  */
 export const validateFormFields = (formData, requiredFields) => {
-    return requiredFields.every((field) => {
-        const value = formData[field];
-        return typeof value === 'string' ? value.trim() !== "" : value !== "" && value !== null;
-    });
+  return requiredFields.every((field) => {
+    const value = formData[field];
+    return typeof value === "string" ? value.trim() !== "" : value !== "" && value !== null;
+  });
 };
 
 /**
@@ -50,12 +50,12 @@ export const validateFormFields = (formData, requiredFields) => {
  * @returns {Object} {color, text}
  */
 export const getStatusStyle = (status) => {
-    const statusMap = {
-        completed: { color: 'bg-green-100 text-green-800 border-green-300', text: 'Hoàn thành' },
-        in_progress: { color: 'bg-blue-100 text-blue-800 border-blue-300', text: 'Đang thực hiện' },
-        pending: { color: 'bg-yellow-100 text-yellow-800 border-yellow-300', text: 'Chờ xử lý' },
-    };
-    return statusMap[status] || { color: 'bg-gray-100 text-gray-800 border-gray-300', text: 'Không xác định' };
+  const statusMap = {
+    completed: { color: "bg-green-100 text-green-800 border-green-300", text: "Hoàn thành" },
+    in_progress: { color: "bg-blue-100 text-blue-800 border-blue-300", text: "Đang thực hiện" },
+    pending: { color: "bg-yellow-100 text-yellow-800 border-yellow-300", text: "Chờ xử lý" },
+  };
+  return statusMap[status] || { color: "bg-gray-100 text-gray-800 border-gray-300", text: "Không xác định" };
 };
 
 /**
@@ -64,8 +64,8 @@ export const getStatusStyle = (status) => {
  * @returns {string}
  */
 export const formatDateString = (dateString) => {
-    const date = new Date(dateString + 'T00:00:00');
-    return formatDate(date);
+  const date = new Date(dateString + "T00:00:00");
+  return formatDate(date);
 };
 
 /**
@@ -74,9 +74,18 @@ export const formatDateString = (dateString) => {
  * @returns {string}
  */
 export const formatPhoneNumber = (phone) => {
-    const cleaned = phone.replace(/\D/g, '');
-    if (cleaned.length === 10) {
-        return `0${cleaned}`;
-    }
-    return cleaned;
+  const cleaned = phone.replace(/\D/g, "");
+  if (cleaned.length === 10) {
+    return `0${cleaned}`;
+  }
+  return cleaned;
+};
+
+// Helper function để format khoảng cách
+export const formatDistance = (distance) => {
+  if (!distance) return "0m";
+  if (distance > 1000) {
+    return `${(distance / 1000).toFixed(1)}km`;
+  }
+  return `${distance.toFixed(0)}m`;
 };

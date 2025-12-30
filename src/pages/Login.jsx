@@ -39,12 +39,7 @@ const Login = () => {
     const token = getTokens();
 
     if (token) {
-      try {
-        navigate("/", { replace: true });
-      } catch (err) {
-        console.error("Error parsing stored user info:", err);
-        clearTokens();
-      }
+      navigate("/", { replace: true });
     }
   }, [navigate]);
 

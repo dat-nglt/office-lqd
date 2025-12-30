@@ -5,6 +5,7 @@ import { AppError } from "zmp-sdk";
 import { getUserInfo, nativeStorage } from "zmp-sdk/apis";
 import BottomNavigation from "../components/BottomNavigation";
 import { miniAppGetProfileInfoByID } from "../services/user.service";
+import { clearTokens } from "../config/axiosConfig";
 
 function EmployeeProfile() {
   const navigate = useNavigate();
@@ -45,25 +46,6 @@ function EmployeeProfile() {
   useEffect(() => {
     getUserInfoMiniApp();
   }, []);
-
-  useEffect(() => {
-    const token = nativeStorage.getItem("access_token");
-    const userInfo = nativeStorage.getItem("user_info");
-
-    if (!token || !userInfo) {
-      navigate("/login", { replace: true });
-    } else {
-      try {
-        setUserInfo(JSON.parse(userInfo));
-      } catch (err) {
-        console.error("Error parsing stored user info:", err);
-        // Clear invalid data
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("user_info");
-        navigate("/login", { replace: true });
-      }
-    }
-  }, [navigate]);
 
   return (
     <Page className="bg-gray-50 min-h-screen pb-20">

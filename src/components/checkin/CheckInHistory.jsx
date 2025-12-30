@@ -31,7 +31,7 @@ function CheckInHistory({ checkInRecords }) {
                                     </Text>
                                     <Text className="text-xs text-gray-500 mt-1">
                                         {record.checkInType} -{" "}
-                                        {record.locationType === "warehouse" ? "Kho vật tư" : "Công trình"}
+                                        {record.locationType === "warehouse" ? "Văn Phòng" : "Công Trình"}
                                     </Text>
                                     <Box className="flex items-center justify-between mt-2">
                                         <Text className="text-xs text-gray-500 font-mono">

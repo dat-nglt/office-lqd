@@ -1,14 +1,4 @@
-import {
-  Box,
-  Text,
-  Icon,
-  Button,
-  Page,
-  Modal,
-  Input,
-  DatePicker,
-  Select,
-} from "zmp-ui";
+import { Box, Text, Icon, Button, Page, Modal, Input, DatePicker, Select } from "zmp-ui";
 import { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { nativeStorage } from "zmp-sdk/apis";
@@ -16,30 +6,9 @@ import BottomNavigation from "../components/BottomNavigation";
 import WorkDetailModal from "../components/WorkDetailModal";
 import { ToastContext } from "../components/layout";
 
-/*
- * Dữ liệu cần thiết cho trang WorkManagement:
- * - workList: Mảng các đối tượng công việc với các trường id (số), title (chuỗi), serviceType (chuỗi), equipment (chuỗi), company (chuỗi), location (chuỗi), address (chuỗi), coordinates (đối tượng với lat, lng), scheduledDate (chuỗi), scheduledTime (chuỗi), status (chuỗi như "pending"), priority (chuỗi như "high"), customerName (chuỗi), phoneNumber (chuỗi), notes (chuỗi), content (chuỗi). Được sử dụng để hiển thị danh sách công việc hôm nay.
- * - showRescheduleModal, showCancelModal, showOvertimeModal, showDetailModal: Boolean để hiển thị các modal tương ứng.
- * - selectedWork: Đối tượng công việc được chọn để xử lý trong modal.
- * - newDate, newTime, cancelReason, overtimeReason, overtimeHours, overtimeDate, overtimeAddress, overtimeTechnicians, overtimeStartTime, overtimeEndTime, overtimeWork: Các state cho form reschedule, cancel và overtime.
- * - availableTechnicians: Mảng chuỗi tên kỹ thuật viên có sẵn. Được sử dụng trong modal overtime.
- * - today: Chuỗi ngày hôm nay. Được sử dụng để lọc workList.
- * - stats: Đối tượng thống kê với total (số), pending (số), inProgress (số), completed (số).
- *
- * API cần thiết (đề xuất thực hiện):
- * - fetchWorkList(employeeId, date): API để lấy danh sách công việc từ backend dựa trên ID nhân viên và ngày. Ví dụ: GET /api/work/list?employeeId=123&date=2024-11-17. Trả về mảng workList.
- * - updateWorkSchedule(workId, newDate, newTime): API để cập nhật lịch công việc. Ví dụ: PUT /api/work/update-schedule với body {workId: 1, newDate: "2024-11-18", newTime: "09:00-17:00"}.
- * - cancelWork(workId, reason): API để hủy công việc. Ví dụ: PUT /api/work/cancel với body {workId: 1, reason: "Lý do hủy"}.
- * - submitOvertimeRequest(workId, data): API để gửi yêu cầu tăng ca. Ví dụ: POST /api/overtime/submit với body {workId: 1, reason: "Lý do", hours: 2, date: "2024-11-18", address: "Địa chỉ", technicians: ["Tên1"], startTime: "17:00", endTime: "19:00", work: "Nội dung"}.
- * - fetchAvailableTechnicians(): API để lấy danh sách kỹ thuật viên có sẵn. Ví dụ: GET /api/technicians/available. Trả về mảng availableTechnicians.
- * - Cải tiến tiềm năng: Tích hợp useEffect để gọi fetchWorkList khi component mount; thêm xử lý lỗi và validation phía server; sử dụng Axios hoặc Fetch cho các API backend.
- * - Không có lệnh gọi API backend hiện tại; dựa vào dữ liệu local hardcode.
- */
-
 function WorkManagement() {
   const navigate = useNavigate();
   const toast = useContext(ToastContext);
-  const [userInfo, setUserInfo] = useState(null);
   const today = new Date().toLocaleDateString("vi-VN");
 
   const [workList, setWorkList] = useState([
@@ -117,38 +86,10 @@ function WorkManagement() {
   const [overtimeTechnicians, setOvertimeTechnicians] = useState([]);
   const [overtimeStartTime, setOvertimeStartTime] = useState("17:00");
   const [overtimeEndTime, setOvertimeEndTime] = useState("21:00");
-  const [overtimeWork, setOvertimeWork] = useState(
-    "lắp các dàn nóng treo tường Sumikura 2,5hp"
-  );
+  const [overtimeWork, setOvertimeWork] = useState("lắp các dàn nóng treo tường Sumikura 2,5hp");
 
   // Available technicians
-  const availableTechnicians = [
-    "Sơn",
-    "Lâm",
-    "Sỹ",
-    "Huy",
-    "Quang",
-    "Thương TT",
-  ];
-
-  useEffect(() => {
-    const token = nativeStorage.getItem("access_token");
-    const userInfo = nativeStorage.getItem("user_info");
-
-    if (!token || !userInfo) {
-      navigate("/login", { replace: true });
-    } else {
-      try {
-        setUserInfo(JSON.parse(userInfo));
-      } catch (err) {
-        console.error("Error parsing stored user info:", err);
-        // Clear invalid data
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("user_info");
-        navigate("/login", { replace: true });
-      }
-    }
-  }, [navigate]);
+  const availableTechnicians = ["Sơn", "Lâm", "Sỹ", "Huy", "Quang", "Thương TT"];
 
   // Filter only today's work
   const todayWorkList = workList.filter((w) => w.scheduledDate === today);
@@ -156,9 +97,7 @@ function WorkManagement() {
   const handleReschedule = (work) => {
     setSelectedWork(work);
     const dateParts = work.scheduledDate.split("/");
-    setNewDate(
-      new Date(dateParts[2], parseInt(dateParts[1]) - 1, dateParts[0])
-    );
+    setNewDate(new Date(dateParts[2], parseInt(dateParts[1]) - 1, dateParts[0]));
     setNewTime(work.scheduledTime.split(" - ")[0]);
     setShowRescheduleModal(true);
   };
@@ -175,9 +114,7 @@ function WorkManagement() {
     setOvertimeHours("1");
     // Reset new fields
     setOvertimeDate(new Date("2025-11-26"));
-    setOvertimeAddress(
-      "Karaoke The King, 69 Đ. Nguyễn Ảnh Thủ, Hiệp Thành, Quận 12, Thành phố Hồ Chí Minh"
-    );
+    setOvertimeAddress("Karaoke The King, 69 Đ. Nguyễn Ảnh Thủ, Hiệp Thành, Quận 12, Thành phố Hồ Chí Minh");
     setOvertimeTechnicians([]);
     setOvertimeStartTime("17:00");
     setOvertimeEndTime("21:00");
@@ -242,17 +179,10 @@ function WorkManagement() {
 
   const confirmOvertimeRequest = () => {
     const hours = calculateOvertimeHours();
-    if (
-      selectedWork &&
-      overtimeReason.trim() &&
-      hours > 0 &&
-      overtimeTechnicians.length > 0
-    ) {
+    if (selectedWork && overtimeReason.trim() && hours > 0 && overtimeTechnicians.length > 0) {
       toast?.success({
         title: "Yêu cầu thành công",
-        message: `Yêu cầu tăng ca ${hours} giờ cho ${overtimeTechnicians.join(
-          ", "
-        )} đã được gửi!`,
+        message: `Yêu cầu tăng ca ${hours} giờ cho ${overtimeTechnicians.join(", ")} đã được gửi!`,
         duration: 2500,
       });
       setShowOvertimeModal(false);
@@ -347,21 +277,15 @@ function WorkManagement() {
           {/* Quick Stats */}
           <Box className="grid grid-cols-3 gap-2 mb-3">
             <Box className="bg-white/10 backdrop-blur-md rounded-xl p-2 border border-white/20 text-center">
-              <Text className="text-sm font-bold text-blue-100">
-                {stats.total}
-              </Text>
+              <Text className="text-sm font-bold text-blue-100">{stats.total}</Text>
               <Text className="text-xs text-blue-100/70">Tổng công việc</Text>
             </Box>
             <Box className="bg-white/10 backdrop-blur-md rounded-xl p-2 border border-white/20 text-center">
-              <Text className="text-sm font-bold text-blue-100">
-                {stats.inProgress}
-              </Text>
+              <Text className="text-sm font-bold text-blue-100">{stats.inProgress}</Text>
               <Text className="text-xs text-blue-100/70">Đang làm</Text>
             </Box>
             <Box className="bg-white/10 backdrop-blur-md rounded-xl p-2 border border-white/20 text-center">
-              <Text className="text-sm font-bold text-blue-100">
-                {stats.pending}
-              </Text>
+              <Text className="text-sm font-bold text-blue-100">{stats.pending}</Text>
               <Text className="text-xs text-blue-100/70">Chờ thực hiện</Text>
             </Box>
           </Box>
@@ -389,21 +313,14 @@ function WorkManagement() {
           <Box className="divide-y divide-gray-200">
             {todayWorkList.length > 0 ? (
               todayWorkList.map((work, index) => (
-                <Box
-                  key={work.id}
-                  className="p-4 hover:bg-gray-50 transition-colors"
-                >
+                <Box key={work.id} className="p-4 hover:bg-gray-50 transition-colors">
                   {/* Work Header */}
                   <Box className="flex items-start justify-between gap-2 mb-2">
                     <Box className="flex-1">
                       <Box className="flex items-center gap-2 mb-1">
-                        <Text className="font-semibold text-gray-900 line-clamp-2">
-                          {work.title}
-                        </Text>
+                        <Text className="font-semibold text-gray-900 line-clamp-2">{work.title}</Text>
                       </Box>
-                      <Text className="text-xs text-gray-600">
-                        {work.company}
-                      </Text>
+                      <Text className="text-xs text-gray-600">{work.company}</Text>
                     </Box>
                     <Box
                       className={`px-2.5 py-1 rounded-full text-xs font-semibold border whitespace-nowrap flex-shrink-0 ${getStatusColor(
@@ -434,34 +351,17 @@ function WorkManagement() {
                   {/* Time & Location */}
                   <Box className="space-y-1 mb-2 text-sm text-gray-600">
                     <Box className="flex items-center gap-2">
-                      <Icon
-                        icon="zi-clock-1"
-                        size={14}
-                        className="text-gray-400 flex-shrink-0"
-                      />
-                      <Text className="text-xs font-medium">
-                        {work.scheduledTime}
-                      </Text>
+                      <Icon icon="zi-clock-1" size={14} className="text-gray-400 flex-shrink-0" />
+                      <Text className="text-xs font-medium">{work.scheduledTime}</Text>
                     </Box>
                     <Box className="flex items-start gap-2">
-                      <Icon
-                        icon="zi-location"
-                        size={14}
-                        className="text-red-500 flex-shrink-0 mt-0.5"
-                      />
+                      <Icon icon="zi-location" size={14} className="text-red-500 flex-shrink-0 mt-0.5" />
                       <Text className="text-xs">{work.location}</Text>
                     </Box>
                     <Box className="flex items-center gap-2">
-                      <Icon
-                        icon="zi-user"
-                        size={14}
-                        className="text-gray-400 flex-shrink-0"
-                      />
+                      <Icon icon="zi-user" size={14} className="text-gray-400 flex-shrink-0" />
                       <Text className="text-xs">
-                        <span className="font-semibold">
-                          {work.customerName}
-                        </span>{" "}
-                        • {work.phoneNumber}
+                        <span className="font-semibold">{work.customerName}</span> • {work.phoneNumber}
                       </Text>
                     </Box>
                   </Box>
@@ -470,8 +370,7 @@ function WorkManagement() {
                   {work.notes && (
                     <Box className="p-2 bg-blue-50 rounded border border-blue-200 mb-3">
                       <Text className="text-xs text-blue-800">
-                        <span className="font-semibold">Ghi chú:</span>{" "}
-                        {work.notes}
+                        <span className="font-semibold">Ghi chú:</span> {work.notes}
                       </Text>
                     </Box>
                   )}
@@ -513,16 +412,9 @@ function WorkManagement() {
               ))
             ) : (
               <Box className="text-center py-12 p-4">
-                <Icon
-                  icon="zi-check-circle"
-                  className="text-gray-400 text-5xl mb-4"
-                />
-                <Text className="text-gray-600 font-semibold">
-                  Không có công việc hôm nay
-                </Text>
-                <Text className="text-gray-500 text-xs mt-1">
-                  Tất cả công việc đã hoàn thành hoặc được dời lịch
-                </Text>
+                <Icon icon="zi-check-circle" className="text-gray-400 text-5xl mb-4" />
+                <Text className="text-gray-600 font-semibold">Không có công việc hôm nay</Text>
+                <Text className="text-gray-500 text-xs mt-1">Tất cả công việc đã hoàn thành hoặc được dời lịch</Text>
               </Box>
             )}
           </Box>
@@ -539,30 +431,17 @@ function WorkManagement() {
           {selectedWork && (
             <>
               <Box className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                <Text className="text-xs text-blue-700 mb-1 font-semibold">
-                  Công việc:
-                </Text>
-                <Text className="font-semibold text-gray-900 text-sm">
-                  {selectedWork.title}
-                </Text>
+                <Text className="text-xs text-blue-700 mb-1 font-semibold">Công việc:</Text>
+                <Text className="font-semibold text-gray-900 text-sm">{selectedWork.title}</Text>
               </Box>
 
               <Box>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">
-                  Chọn ngày mới:
-                </Text>
-                <DatePicker
-                  value={newDate}
-                  onChange={setNewDate}
-                  className="w-full"
-                  dateFormat="dd/mm/yyyy"
-                />
+                <Text className="text-sm font-semibold text-gray-700 mb-2">Chọn ngày mới:</Text>
+                <DatePicker value={newDate} onChange={setNewDate} className="w-full" dateFormat="dd/mm/yyyy" />
               </Box>
 
               <Box>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">
-                  Chọn giờ bắt đầu:
-                </Text>
+                <Text className="text-sm font-semibold text-gray-700 mb-2">Chọn giờ bắt đầu:</Text>
                 <Input
                   type="time"
                   value={newTime}
@@ -591,27 +470,17 @@ function WorkManagement() {
       </Modal>
 
       {/* Cancel Modal */}
-      <Modal
-        visible={showCancelModal}
-        onClose={() => setShowCancelModal(false)}
-        title="Hủy công việc"
-      >
+      <Modal visible={showCancelModal} onClose={() => setShowCancelModal(false)} title="Hủy công việc">
         <Box className="p-0 space-y-4">
           {selectedWork && (
             <>
               <Box className="bg-red-50 rounded-lg p-3 border border-red-200">
-                <Text className="text-xs text-red-900 font-semibold mb-1">
-                  Xác nhận hủy công việc
-                </Text>
-                <Text className="font-semibold text-gray-900 text-sm">
-                  {selectedWork.title}
-                </Text>
+                <Text className="text-xs text-red-900 font-semibold mb-1">Xác nhận hủy công việc</Text>
+                <Text className="font-semibold text-gray-900 text-sm">{selectedWork.title}</Text>
               </Box>
 
               <Box>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">
-                  Lý do hủy công việc:
-                </Text>
+                <Text className="text-sm font-semibold text-gray-700 mb-2">Lý do hủy công việc:</Text>
                 <Input
                   placeholder="Nhập lý do hủy..."
                   value={cancelReason}
@@ -641,30 +510,18 @@ function WorkManagement() {
       </Modal>
 
       {/* Overtime Request Modal */}
-      <Modal
-        visible={showOvertimeModal}
-        onClose={() => setShowOvertimeModal(false)}
-        title="Yêu cầu tăng ca"
-      >
+      <Modal visible={showOvertimeModal} onClose={() => setShowOvertimeModal(false)} title="Yêu cầu tăng ca">
         <Box className="p-0 space-y-4">
           {selectedWork && (
             <>
               <Box className="bg-orange-50 rounded-lg p-3 border border-orange-200">
-                <Text className="text-xs text-orange-700 font-semibold mb-1">
-                  Công việc gốc:
-                </Text>
-                <Text className="font-semibold text-gray-900 text-sm">
-                  {selectedWork.title}
-                </Text>
-                <Text className="text-xs text-gray-600 mt-1">
-                  Thời gian: {selectedWork.scheduledTime}
-                </Text>
+                <Text className="text-xs text-orange-700 font-semibold mb-1">Công việc gốc:</Text>
+                <Text className="font-semibold text-gray-900 text-sm">{selectedWork.title}</Text>
+                <Text className="text-xs text-gray-600 mt-1">Thời gian: {selectedWork.scheduledTime}</Text>
               </Box>
 
               <Box>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">
-                  Ngày tăng ca:
-                </Text>
+                <Text className="text-sm font-semibold text-gray-700 mb-2">Ngày tăng ca:</Text>
                 <DatePicker
                   value={overtimeDate}
                   onChange={setOvertimeDate}
@@ -674,9 +531,7 @@ function WorkManagement() {
               </Box>
 
               <Box>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">
-                  Địa chỉ:
-                </Text>
+                <Text className="text-sm font-semibold text-gray-700 mb-2">Địa chỉ:</Text>
                 <Input
                   value={overtimeAddress}
                   onChange={(e) => setOvertimeAddress(e.target.value)}
@@ -686,9 +541,7 @@ function WorkManagement() {
               </Box>
 
               <Box>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">
-                  Kỹ thuật viên công tác
-                </Text>
+                <Text className="text-sm font-semibold text-gray-700 mb-2">Kỹ thuật viên công tác</Text>
                 <Box className="max-h-32 overflow-y-auto border rounded-lg p-2 bg-gray-50">
                   {availableTechnicians.map((tech) => (
                     <Box key={tech} className="flex items-center mb-1">
@@ -698,22 +551,14 @@ function WorkManagement() {
                         checked={overtimeTechnicians.includes(tech)}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setOvertimeTechnicians([
-                              ...overtimeTechnicians,
-                              tech,
-                            ]);
+                            setOvertimeTechnicians([...overtimeTechnicians, tech]);
                           } else {
-                            setOvertimeTechnicians(
-                              overtimeTechnicians.filter((t) => t !== tech)
-                            );
+                            setOvertimeTechnicians(overtimeTechnicians.filter((t) => t !== tech));
                           }
                         }}
                         className="mr-2"
                       />
-                      <label
-                        htmlFor={`tech-${tech}`}
-                        className="text-sm cursor-pointer"
-                      >
+                      <label htmlFor={`tech-${tech}`} className="text-sm cursor-pointer">
                         {tech}
                       </label>
                     </Box>
@@ -723,9 +568,7 @@ function WorkManagement() {
 
               <Box className="grid grid-cols-2 gap-4">
                 <Box>
-                  <Text className="text-sm font-semibold text-gray-700 mb-2">
-                    Thời gian bắt đầu:
-                  </Text>
+                  <Text className="text-sm font-semibold text-gray-700 mb-2">Thời gian bắt đầu:</Text>
                   <Input
                     type="time"
                     value={overtimeStartTime}
@@ -734,9 +577,7 @@ function WorkManagement() {
                   />
                 </Box>
                 <Box>
-                  <Text className="text-sm font-semibold text-gray-700 mb-2">
-                    Thời gian kết thúc:
-                  </Text>
+                  <Text className="text-sm font-semibold text-gray-700 mb-2">Thời gian kết thúc:</Text>
                   <Input
                     type="time"
                     value={overtimeEndTime}
@@ -747,20 +588,12 @@ function WorkManagement() {
               </Box>
 
               <Box>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">
-                  Số giờ tăng ca (tự động):
-                </Text>
-                <Input
-                  value={`${calculateOvertimeHours()} giờ`}
-                  readOnly
-                  className="w-full rounded-lg bg-gray-100"
-                />
+                <Text className="text-sm font-semibold text-gray-700 mb-2">Số giờ tăng ca (tự động):</Text>
+                <Input value={`${calculateOvertimeHours()} giờ`} readOnly className="w-full rounded-lg bg-gray-100" />
               </Box>
 
               <Box>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">
-                  Công việc:
-                </Text>
+                <Text className="text-sm font-semibold text-gray-700 mb-2">Công việc:</Text>
                 <Input
                   value={overtimeWork}
                   onChange={(e) => setOvertimeWork(e.target.value)}
@@ -770,9 +603,7 @@ function WorkManagement() {
               </Box>
 
               <Box>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">
-                  Lý do yêu cầu tăng ca:
-                </Text>
+                <Text className="text-sm font-semibold text-gray-700 mb-2">Lý do yêu cầu tăng ca:</Text>
                 <Input
                   placeholder="Nhập lý do tăng ca..."
                   value={overtimeReason}
@@ -802,11 +633,7 @@ function WorkManagement() {
       </Modal>
 
       {/* Work Detail Modal - Use Component */}
-      <WorkDetailModal
-        visible={showDetailModal}
-        onClose={() => setShowDetailModal(false)}
-        work={selectedWork}
-      />
+      <WorkDetailModal visible={showDetailModal} onClose={() => setShowDetailModal(false)} work={selectedWork} />
 
       <BottomNavigation />
     </Page>

@@ -78,30 +78,9 @@ function AttendanceHistory() {
     },
   ]);
 
-  const [filterDate, setFilterDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [filterDate, setFilterDate] = useState(new Date().toISOString().split("T")[0]);
   const [viewMode, setViewMode] = useState("day"); // 'day', 'week', 'month'
   const [showDatePicker, setShowDatePicker] = useState(false);
-
-  useEffect(() => {
-    const token = nativeStorage.getItem("access_token");
-    const userInfo = nativeStorage.getItem("user_info");
-
-    if (!token || !userInfo) {
-      navigate("/login", { replace: true });
-    } else {
-      try {
-        setUserInfo(JSON.parse(userInfo));
-      } catch (err) {
-        console.error("Error parsing stored user info:", err);
-        // Clear invalid data
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("user_info");
-        navigate("/login", { replace: true });
-      }
-    }
-  }, [navigate]);
 
   // Helper functions
   const getWeekStartEnd = (dateString) => {
@@ -127,25 +106,12 @@ function AttendanceHistory() {
   };
 
   // Add calculations for statistics
-  const totalWorkingHours = attendanceList.reduce(
-    (sum, item) => sum + item.workingHours,
-    0
-  );
-  const overtimeCount = attendanceList.filter((a) =>
-    a.status.includes("Tăng ca")
-  ).length;
+  const totalWorkingHours = attendanceList.reduce((sum, item) => sum + item.workingHours, 0);
+  const overtimeCount = attendanceList.filter((a) => a.status.includes("Tăng ca")).length;
 
   const formatDate = (dateString) => {
     const date = new Date(dateString + "T00:00:00");
-    const days = [
-      "Chủ nhật",
-      "Thứ hai",
-      "Thứ ba",
-      "Thứ tư",
-      "Thứ năm",
-      "Thứ sáu",
-      "Thứ bảy",
-    ];
+    const days = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
     const dayName = days[date.getDay()];
     const formattedDate = date.toLocaleDateString("vi-VN");
     return `${formattedDate} - ${dayName}`;
@@ -170,10 +136,7 @@ function AttendanceHistory() {
     const recordDate = parseDate(record.date);
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
-    return (
-      recordDate.getMonth() === currentMonth &&
-      recordDate.getFullYear() === currentYear
-    );
+    return recordDate.getMonth() === currentMonth && recordDate.getFullYear() === currentYear;
   });
 
   // Navigation functions
@@ -184,11 +147,7 @@ function AttendanceHistory() {
       newDate = new Date(currentDate);
       newDate.setDate(currentDate.getDate() + (direction === "next" ? 7 : -7));
     } else if (viewMode === "month") {
-      newDate = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() + (direction === "next" ? 1 : -1),
-        1
-      );
+      newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + (direction === "next" ? 1 : -1), 1);
     } else {
       // For day mode
       newDate = new Date(currentDate);
@@ -231,21 +190,15 @@ function AttendanceHistory() {
           {/* Stats Bar */}
           <Box className="flex gap-2">
             <Box className="flex-1 bg-white/15 rounded-lg px-3 py-2 text-center border border-white/20">
-              <Text className="text-white font-bold text-sm">
-                {attendanceList.length}
-              </Text>
+              <Text className="text-white font-bold text-sm">{attendanceList.length}</Text>
               <Text className="text-blue-100 text-xs">Tổng ngày</Text>
             </Box>
             <Box className="flex-1 bg-white/15 rounded-lg px-3 py-2 text-center border border-white/20">
-              <Text className="text-white font-bold text-sm">
-                {overtimeCount}
-              </Text>
+              <Text className="text-white font-bold text-sm">{overtimeCount}</Text>
               <Text className="text-blue-100 text-xs">Tăng ca</Text>
             </Box>
             <Box className="flex-1 bg-white/15 rounded-lg px-3 py-2 text-center border border-white/20">
-              <Text className="text-white font-bold text-sm">
-                {totalWorkingHours.toFixed(1)}
-              </Text>
+              <Text className="text-white font-bold text-sm">{totalWorkingHours.toFixed(1)}</Text>
               <Text className="text-blue-100 text-xs">Tổng giờ</Text>
             </Box>
           </Box>
@@ -263,20 +216,14 @@ function AttendanceHistory() {
               >
                 <Box className="flex justify-between items-start mb-2">
                   <Box className="flex-1">
-                    <Text className="font-semibold text-gray-900">
-                      {record.date}
-                    </Text>
+                    <Text className="font-semibold text-gray-900">{record.date}</Text>
                     <Text className="text-sm text-gray-600 mt-1">
                       {record.checkInTime} - {record.checkOutTime}
                     </Text>
-                    <Text className="text-xs text-gray-500 mt-1">
-                      {record.serviceType}
-                    </Text>
+                    <Text className="text-xs text-gray-500 mt-1">{record.serviceType}</Text>
                   </Box>
                   <Box
-                    className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(
-                      record.status
-                    )}`}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(record.status)}`}
                   >
                     {record.status}
                   </Box>
@@ -284,23 +231,14 @@ function AttendanceHistory() {
 
                 <Box className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
                   <Box className="flex items-center space-x-2">
-                    <Icon
-                      icon="zi-clock-1"
-                      className="text-gray-400"
-                      size={14}
-                    />
+                    <Icon icon="zi-clock-1" className="text-gray-400" size={14} />
                     <Text className="text-sm text-gray-600">
-                      Giờ làm:{" "}
-                      <span className="font-semibold">
-                        {record.workingHours.toFixed(2)}h
-                      </span>
+                      Giờ làm: <span className="font-semibold">{record.workingHours.toFixed(2)}h</span>
                     </Text>
                   </Box>
                   <Box className="flex items-center space-x-1 px-2 py-1 bg-blue-50 rounded">
                     <Icon icon="zi-post" className="text-blue-600" size={12} />
-                    <Text className="text-xs text-blue-600 font-medium">
-                      {record.type}
-                    </Text>
+                    <Text className="text-xs text-blue-600 font-medium">{record.type}</Text>
                   </Box>
                 </Box>
               </Box>
@@ -308,12 +246,8 @@ function AttendanceHistory() {
           ) : (
             <Box className="text-center py-12">
               <Icon icon="zi-inbox" className="text-gray-400 text-4xl mb-3" />
-              <Text className="text-gray-600 font-semibold">
-                Không có dữ liệu chấm công
-              </Text>
-              <Text className="text-gray-500 text-sm mt-1">
-                Chưa có dữ liệu chấm công cho ngày này
-              </Text>
+              <Text className="text-gray-600 font-semibold">Không có dữ liệu chấm công</Text>
+              <Text className="text-gray-500 text-sm mt-1">Chưa có dữ liệu chấm công cho ngày này</Text>
             </Box>
           )}
         </Box>

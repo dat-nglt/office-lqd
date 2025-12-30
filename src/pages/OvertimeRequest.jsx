@@ -19,11 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { nativeStorage } from "zmp-sdk/apis";
 import BottomNavigation from "../components/BottomNavigation";
 import { ToastContext } from "../components/layout";
-import {
-  calculateWorkHours,
-  formatDate,
-  validateFormFields,
-} from "../utils/helpers";
+import { calculateWorkHours, formatDate, validateFormFields } from "../utils/helpers";
 
 function OvertimeRequest() {
   const navigate = useNavigate();
@@ -71,25 +67,6 @@ function OvertimeRequest() {
   const [showProjectList, setShowProjectList] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    const token = nativeStorage.getItem("access_token");
-    const userInfo = nativeStorage.getItem("user_info");
-
-    if (!token || !userInfo) {
-      navigate("/login", { replace: true });
-    } else {
-      try {
-        setUserInfo(JSON.parse(userInfo));
-      } catch (err) {
-        console.error("Error parsing stored user info:", err);
-        // Clear invalid data
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("user_info");
-        navigate("/login", { replace: true });
-      }
-    }
-  }, [navigate]);
-
   const handleSelectProject = (project) => {
     setSelectedProjectId(project.id);
     setOvertimeInfo((prev) => ({
@@ -122,13 +99,7 @@ function OvertimeRequest() {
   };
 
   const validateForm = () => {
-    return validateFormFields(overtimeInfo, [
-      "company",
-      "address",
-      "content",
-      "customerName",
-      "phoneNumber",
-    ]);
+    return validateFormFields(overtimeInfo, ["company", "address", "content", "customerName", "phoneNumber"]);
   };
 
   const handleSubmit = async () => {
@@ -159,18 +130,15 @@ YÊU CẦU CA PHÁT SINH:
 - Ghi chú: ${overtimeInfo.notes || "Không có"}
       `;
 
-      const response = await fetch(
-        "https://lamquangdai.vn/api/overtime-request/send",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message: messageText.trim(),
-          }),
-        }
-      );
+      const response = await fetch("https://lamquangdai.vn/api/overtime-request/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: messageText.trim(),
+        }),
+      });
 
       if (response.ok) {
         toast?.success({
@@ -207,10 +175,7 @@ YÊU CẦU CA PHÁT SINH:
   };
 
   // Memoize work hours calculation
-  const workHoursInfo = calculateWorkHours(
-    overtimeInfo.estimatedStartTime,
-    overtimeInfo.estimatedEndTime
-  );
+  const workHoursInfo = calculateWorkHours(overtimeInfo.estimatedStartTime, overtimeInfo.estimatedEndTime);
 
   return (
     <Page className="bg-gray-50 min-h-screen">
@@ -242,11 +207,7 @@ YÊU CẦU CA PHÁT SINH:
           {/* Date Field */}
           <Box className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
             <Text className="font-semibold text-gray-800 mb-2 text-sm flex items-center">
-              <Icon
-                icon="zi-calendar"
-                className="mr-2 text-blue-600"
-                size={16}
-              />
+              <Icon icon="zi-calendar" className="mr-2 text-blue-600" size={16} />
               Ngày ca phát sinh
             </Text>
             <DatePicker
@@ -256,19 +217,13 @@ YÊU CẦU CA PHÁT SINH:
               className="w-full"
               dateFormat="dd/mm/yyyy"
             />
-            <Text className="text-xs text-gray-500 mt-2">
-              {formatDate(overtimeInfo.date)}
-            </Text>
+            <Text className="text-xs text-gray-500 mt-2">{formatDate(overtimeInfo.date)}</Text>
           </Box>
 
           {/* Time Fields - Optimized */}
           <Box className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
             <Text className="font-semibold text-gray-800 mb-3 text-sm flex items-center">
-              <Icon
-                icon="zi-clock-1"
-                className="mr-2 text-blue-600"
-                size={16}
-              />
+              <Icon icon="zi-clock-1" className="mr-2 text-blue-600" size={16} />
               Thời Gian Ca Phát Sinh
             </Text>
             <Box className="grid grid-cols-2 gap-3 mb-3">
@@ -277,9 +232,7 @@ YÊU CẦU CA PHÁT SINH:
                 <Input
                   type="time"
                   value={overtimeInfo.estimatedStartTime}
-                  onChange={(e) =>
-                    handleInputChange("estimatedStartTime", e.target.value)
-                  }
+                  onChange={(e) => handleInputChange("estimatedStartTime", e.target.value)}
                   className="w-full rounded-lg"
                 />
               </Box>
@@ -288,9 +241,7 @@ YÊU CẦU CA PHÁT SINH:
                 <Input
                   type="time"
                   value={overtimeInfo.estimatedEndTime}
-                  onChange={(e) =>
-                    handleInputChange("estimatedEndTime", e.target.value)
-                  }
+                  onChange={(e) => handleInputChange("estimatedEndTime", e.target.value)}
                   className="w-full rounded-lg"
                 />
               </Box>
@@ -317,16 +268,10 @@ YÊU CẦU CA PHÁT SINH:
                 <Box className="flex items-start justify-between">
                   <Box className="flex-1">
                     <Text className="font-semibold text-blue-900 text-sm">
-                      {
-                        existingProjects.find((p) => p.id === selectedProjectId)
-                          ?.name
-                      }
+                      {existingProjects.find((p) => p.id === selectedProjectId)?.name}
                     </Text>
                     <Text className="text-xs text-blue-700 mt-1">
-                      {
-                        existingProjects.find((p) => p.id === selectedProjectId)
-                          ?.address
-                      }
+                      {existingProjects.find((p) => p.id === selectedProjectId)?.address}
                     </Text>
                   </Box>
                   <button
@@ -361,15 +306,9 @@ YÊU CẦU CA PHÁT SINH:
                         : "border-gray-200 bg-white hover:border-blue-300"
                     }`}
                   >
-                    <Text className="font-semibold text-gray-900 text-sm">
-                      {project.company}
-                    </Text>
-                    <Text className="text-xs text-gray-600 mt-0.5">
-                      {project.name}
-                    </Text>
-                    <Text className="text-xs text-gray-500 mt-1">
-                      {project.address}
-                    </Text>
+                    <Text className="font-semibold text-gray-900 text-sm">{project.company}</Text>
+                    <Text className="text-xs text-gray-600 mt-0.5">{project.name}</Text>
+                    <Text className="text-xs text-gray-500 mt-1">{project.address}</Text>
                   </button>
                 ))}
               </Box>
@@ -378,9 +317,7 @@ YÊU CẦU CA PHÁT SINH:
             {/* Or Manual Entry */}
             {!selectedProjectId && (
               <>
-                <Text className="text-xs text-gray-500 text-center my-3">
-                  Hoặc nhập thủ công
-                </Text>
+                <Text className="text-xs text-gray-500 text-center my-3">Hoặc nhập thủ công</Text>
                 <Input
                   placeholder="Nhập tên công ty"
                   value={overtimeInfo.company}
@@ -403,11 +340,7 @@ YÊU CẦU CA PHÁT SINH:
           {/* Address Field */}
           <Box className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
             <Text className="font-semibold text-gray-800 mb-2 text-sm flex items-center">
-              <Icon
-                icon="zi-location"
-                className="mr-2 text-blue-600"
-                size={16}
-              />
+              <Icon icon="zi-location" className="mr-2 text-blue-600" size={16} />
               Địa chỉ
             </Text>
             <Input
@@ -419,9 +352,7 @@ YÊU CẦU CA PHÁT SINH:
               disabled={selectedProjectId !== null}
             />
             {selectedProjectId && (
-              <Text className="text-xs text-gray-500 mt-2">
-                Được tự động điền từ công trình đã chọn
-              </Text>
+              <Text className="text-xs text-gray-500 mt-2">Được tự động điền từ công trình đã chọn</Text>
             )}
           </Box>
 
@@ -449,9 +380,7 @@ YÊU CẦU CA PHÁT SINH:
             <Input
               placeholder="Nhập tên khách hàng"
               value={overtimeInfo.customerName}
-              onChange={(e) =>
-                handleInputChange("customerName", e.target.value)
-              }
+              onChange={(e) => handleInputChange("customerName", e.target.value)}
               className="w-full rounded-lg"
             />
           </Box>

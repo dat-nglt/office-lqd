@@ -1,36 +1,12 @@
 import axios from "axios";
 import { nativeStorage } from "zmp-sdk/apis";
 
-/**
- * Axios Configuration for Zalo Mini App
- * Handles authentication, token refresh, and API requests
- *
- * STORAGE KEYS:
- * - authTokens: { accessToken, refreshToken }
- * - user_info: User profile object
- *
- * Storage Type: nativeStorage (for Mini App compatibility)
- */
-
-// ============================================
-// 1. Storage Constants
-// ============================================
-
 const STORAGE_KEYS = {
   AUTH_TOKENS: "authTokens",
   USER_INFO: "user_info",
   ACCESS_TOKEN: "access_token", // Legacy compatibility
 };
 
-// ============================================
-// 2. Token Management Functions
-// ============================================
-
-/**
- * Get stored tokens from nativeStorage
- * Supports both old format (access_token) and new format (authTokens)
- * @returns {Object} - { accessToken, refreshToken }
- */
 const getTokens = () => {
   try {
     // Try new format first
@@ -38,8 +14,7 @@ const getTokens = () => {
     if (tokensStr) {
       return JSON.parse(tokensStr);
     }
-
-    console.log(tokensStr);
+    console.log("tokensStr:", tokensStr);
 
     // Fallback to legacy format for backward compatibility
     const legacyToken = nativeStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
@@ -50,7 +25,7 @@ const getTokens = () => {
       };
     }
 
-    return {};
+    return null;
   } catch (error) {
     console.error("[Storage] Error getting tokens:", error);
     return {};
@@ -99,10 +74,7 @@ const clearTokens = () => {
       localStorage.removeItem("authTokens");
       localStorage.removeItem("access_token");
       localStorage.removeItem("userInfo");
-    } catch (e) {
-      // localStorage might not be available in Mini App
-    }
-
+    } catch (e) {}
     console.log("[Storage] All tokens cleared");
   } catch (error) {
     console.error("[Storage] Error clearing tokens:", error);
@@ -163,7 +135,7 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    const { accessToken } = getTokens();
+    const { accessToken } = getTokens() || {};
 
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
@@ -228,7 +200,7 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { refreshToken } = getTokens();
+        const { refreshToken } = getTokens() || {};
 
         if (!refreshToken) {
           console.warn("[401Handler] No refresh token available");
