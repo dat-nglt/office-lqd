@@ -69,7 +69,6 @@ function HomePage() {
 
     const userInfoResp = await miniAppGetProfileInfoByID(ZAID);
     const listOfWorkAssignmentsResp = await miniAppGetListOfWorkAssignmentsInCurrentDayByZAID(ZAID);
-    console.log("listOfWorkAssignmentsResp", listOfWorkAssignmentsResp);
 
     if (userInfoResp.success) {
       setUserInfo(userInfoResp.data);

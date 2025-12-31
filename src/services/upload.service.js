@@ -12,26 +12,26 @@ import API_ENDPOINTS from "../config/apiEndpoints";
  * @returns {Promise<Object>} - { signature, timestamp, api_key, cloud_name, folder }
  */
 export const getCloudinarySignature = async (folder) => {
-    try {
-        const response = await axiosInstance.post(
-            API_ENDPOINTS.UPLOADS.CLOUDINARY_SIGN,
-            { folder },
-            {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            }
-        );
+  try {
+    const response = await axiosInstance.post(
+      API_ENDPOINTS.UPLOADS.CLOUDINARY_SIGN,
+      { folder },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-        if (!response.data.success) {
-            throw new Error(response.data.error || "Không thể lấy signature");
-        }
-
-        return response.data.data;
-    } catch (error) {
-        console.error("Error getting Cloudinary signature:", error);
-        throw error.response?.data || error;
+    if (!response.data.success) {
+      throw new Error(response.data.error || "Không thể lấy signature");
     }
+
+    return response.data.data;
+  } catch (error) {
+    console.error("Error getting Cloudinary signature:", error);
+    throw error.response?.data || error;
+  }
 };
 
 /**
@@ -45,39 +45,39 @@ export const getCloudinarySignature = async (folder) => {
  * @returns {Promise<Object>} - { secure_url, public_id, ...otherCloudinaryData }
  */
 export const uploadToCloudinary = async (blob, signature, timestamp, apiKey, cloudName, folder) => {
-    try {
-        const form = new FormData();
-        form.append("file", blob);
-        form.append("api_key", apiKey);
-        form.append("timestamp", timestamp);
-        form.append("signature", signature);
-        form.append("folder", folder);
+  try {
+    const form = new FormData();
+    form.append("file", blob);
+    form.append("api_key", apiKey);
+    form.append("timestamp", timestamp);
+    form.append("signature", signature);
+    form.append("folder", folder);
 
-        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-            method: "POST",
-            body: form,
-        });
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+      method: "POST",
+      body: form,
+    });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error?.message || "Upload ảnh thất bại");
-        }
-
-        const uploadData = await response.json();
-
-        if (!uploadData.secure_url) {
-            throw new Error("Upload ảnh thất bại - không nhận được URL");
-        }
-
-        return {
-            photoUrl: uploadData.secure_url,
-            photoPublicId: uploadData.public_id,
-            uploadData: uploadData,
-        };
-    } catch (error) {
-        console.error("Error uploading to Cloudinary:", error);
-        throw error;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || "Upload ảnh thất bại");
     }
+
+    const uploadData = await response.json();
+
+    if (!uploadData.secure_url) {
+      throw new Error("Upload ảnh thất bại - không nhận được URL");
+    }
+
+    return {
+      photoUrl: uploadData.secure_url,
+      photoPublicId: uploadData.public_id,
+      uploadData: uploadData,
+    };
+  } catch (error) {
+    console.error("Error uploading to Cloudinary:", error);
+    throw error;
+  }
 };
 
 /**
@@ -95,22 +95,18 @@ export const uploadToCloudinary = async (blob, signature, timestamp, apiKey, clo
  * @returns {Promise<Object>} - Attendance record from server
  */
 export const submitCheckIn = async (checkInData) => {
-    try {
-        const response = await axiosInstance.post(API_ENDPOINTS.CHECKIN.SUBMIT, checkInData, {
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
+  try {
+    const response = await axiosInstance.post(API_ENDPOINTS.CHECKIN.SUBMIT, checkInData);
 
-        if (!response.data) {
-            throw new Error(response.data?.error || "Lỗi khi gửi chấm công");
-        }
-
-        return response.data;
-    } catch (error) {
-        console.error("Error submitting check-in:", error);
-        throw error.response?.data || error;
+    if (!response.data) {
+      throw new Error(response.data?.error || "Lỗi khi gửi chấm công");
     }
+
+    return response.data;
+  } catch (error) {
+    console.error("Error submitting check-in:", error);
+    throw error.response?.data || error;
+  }
 };
 
 /**
@@ -120,46 +116,36 @@ export const submitCheckIn = async (checkInData) => {
  *   - latitude, longitude, location_name, address, check_in_type_id, violation_distance, mode
  * @returns {Promise<Object>} - Complete attendance record from server
  */
-export const uploadCheckInPhoto = async (blob, checkInData, userNameForFolder) => {
-    try {
-        // Step 1: Get Cloudinary signature
-        const folderByUser = `chamCong/${userNameForFolder || "chamCong"}`;
+export const uploadCheckInPhoto = async (blob, userNameForFolder) => {
+  try {
+    // Step 1: Get Cloudinary signature
+    const folderByUser = `chamCong/${userNameForFolder || "chamCong"}`;
 
-        const signatureData = await getCloudinarySignature(folderByUser);
+    const signatureData = await getCloudinarySignature(folderByUser);
 
-        console.log(signatureData);
+    const { signature, timestamp, api_key, cloud_name, folder } = signatureData;
 
-        const { signature, timestamp, api_key, cloud_name, folder } = signatureData;
+    // Step 2: Upload to Cloudinary
+    const { photoUrl, photoPublicId } = await uploadToCloudinary(
+      blob,
+      signature,
+      timestamp,
+      api_key,
+      cloud_name,
+      folder
+    );
 
-        // Step 2: Upload to Cloudinary
-        const { photoUrl, photoPublicId } = await uploadToCloudinary(
-            blob,
-            signature,
-            timestamp,
-            api_key,
-            cloud_name,
-            folder
-        );
+    // Step 3: Submit check-in with photo info
+    const payload = {
+      photo_url: photoUrl,
+      photo_public_id: photoPublicId,
+    };
 
-        // Step 3: Submit check-in with photo info
-        const payload = {
-            ...checkInData,
-            photo_url: photoUrl,
-            photo_public_id: photoPublicId,
-        };
-
-        const attendance = await submitCheckIn(payload);
-
-        return {
-            success: true,
-            attendance,
-            photoUrl,
-            photoPublicId,
-        };
-    } catch (error) {
-        console.error("Error in uploadCheckInPhoto:", error);
-        throw error;
-    }
+    return payload;
+  } catch (error) {
+    console.error("Error in uploadCheckInPhoto:", error);
+    throw error;
+  }
 };
 
 /**
@@ -168,17 +154,17 @@ export const uploadCheckInPhoto = async (blob, checkInData, userNameForFolder) =
  * @returns {Blob} - Blob object
  */
 export const dataURItoBlob = (dataURI) => {
-    try {
-        const byteString = atob(dataURI.split(",")[1]);
-        const mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
-        const ab = new ArrayBuffer(byteString.length);
-        const ia = new Uint8Array(ab);
-        for (let i = 0; i < byteString.length; i++) {
-            ia[i] = byteString.charCodeAt(i);
-        }
-        return new Blob([ab], { type: mimeString });
-    } catch (error) {
-        console.error("Error converting data URI to blob:", error);
-        throw new Error("Không thể xử lý ảnh");
+  try {
+    const byteString = atob(dataURI.split(",")[1]);
+    const mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
     }
+    return new Blob([ab], { type: mimeString });
+  } catch (error) {
+    console.error("Error converting data URI to blob:", error);
+    throw new Error("Không thể xử lý ảnh");
+  }
 };

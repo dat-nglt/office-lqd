@@ -4,7 +4,7 @@ import { formatDistance } from "../../utils/helpers";
 function LocationSelector({
   currentLocation,
   checkInLocations,
-  selectedCheckInLocation,
+  selectedCheckInLocation: selectedAttendanceLocation,
   onSelectLocation,
   isWithinLocation,
   getDistanceToLocation,
@@ -19,7 +19,7 @@ function LocationSelector({
         {checkInLocations.map((location) => {
           const isWithin = isWithinLocation(location);
           const distance = getDistanceToLocation(location);
-          const isSelected = selectedCheckInLocation?.id === location.id;
+          const isSelected = selectedAttendanceLocation?.id === location.id;
 
           return (
             <button

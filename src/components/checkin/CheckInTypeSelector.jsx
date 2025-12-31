@@ -1,7 +1,7 @@
 import { Box, Text, Icon } from "zmp-ui";
 
-function CheckInTypeSelector({ checkInTypes, selectedCheckInType, onSelectType }) {
-  if (selectedCheckInType) return null;
+function CheckInTypeSelector({ checkInTypes, selectedAttendanceType, onSelectType }) {
+  if (selectedAttendanceType) return null;
 
   return (
     <Box className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">
@@ -20,17 +20,11 @@ function CheckInTypeSelector({ checkInTypes, selectedCheckInType, onSelectType }
             <Box className="flex items-center justify-between">
               <Box className="flex items-center space-x-3">
                 <Box>
-                  <Text className="font-bold text-gray-900">
-                    {type.name}
-                  </Text>
+                  <Text className="font-bold text-gray-900">{type.name}</Text>
                   <Text className="text-sm text-gray-600">{type.time}</Text>
                 </Box>
               </Box>
-              <Icon
-                icon="zi-arrow-right"
-                className="text-gray-400"
-                size={16}
-              />
+              <Icon icon="zi-arrow-right" className="text-gray-400" size={16} />
             </Box>
           </button>
         ))}

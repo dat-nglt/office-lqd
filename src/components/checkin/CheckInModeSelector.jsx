@@ -1,14 +1,14 @@
 import { Box, Text, Icon } from "zmp-ui";
 
 function CheckInModeSelector({
-    selectedCheckInLocation,
+    selectedCheckInLocation: selectedAttendanceLocation,
     currentLocation,
-    selectedCheckInType,
-    selectedCheckInMode,
+    selectedAttendanceType,
+    selectedAttendanceMode,
     onSelectMode,
     canCheckOut,
 }) {
-    if (!selectedCheckInLocation || !currentLocation || !selectedCheckInType) return null;
+    if (!selectedAttendanceLocation || !currentLocation || !selectedAttendanceType) return null;
 
     return (
         <Box className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
@@ -18,7 +18,7 @@ function CheckInModeSelector({
                 <button
                     onClick={() => onSelectMode("in")}
                     className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
-                        selectedCheckInMode === "in"
+                        selectedAttendanceMode === "in"
                             ? "border-blue-600 bg-blue-50"
                             : "border-gray-200 bg-white hover:border-blue-300"
                     }`}
@@ -28,7 +28,7 @@ function CheckInModeSelector({
                         <Box>
                             <Text className="font-semibold text-gray-900">Chấm Vào</Text>
                             <Text className="text-xs text-gray-600">
-                                Bắt đầu công việc tại {selectedCheckInLocation.address}
+                                Bắt đầu công việc tại {selectedAttendanceLocation.address}
                             </Text>
                         </Box>
                     </Box>
@@ -38,7 +38,7 @@ function CheckInModeSelector({
                     onClick={() => onSelectMode("out")}
                     disabled={!canCheckOut()}
                     className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
-                        selectedCheckInMode === "out"
+                        selectedAttendanceMode === "out"
                             ? "border-purple-600 bg-purple-50"
                             : canCheckOut()
                             ? "border-gray-200 bg-white hover:border-purple-300"
@@ -61,7 +61,7 @@ function CheckInModeSelector({
                             </Text>
                             <Text className="text-xs text-gray-600">
                                 {canCheckOut()
-                                    ? `Kết thúc công việc tại ${selectedCheckInLocation.name}`
+                                    ? `Kết thúc công việc tại ${selectedAttendanceLocation.name}`
                                     : "Phải chấm vào trước"}
                             </Text>
                         </Box>

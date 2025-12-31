@@ -35,3 +35,21 @@ export const miniAppGetLocationByUserToken = async (locationToken, accessToken) 
     throw error.response?.data || error;
   }
 };
+
+export const miniAppGetAttendanceLocation = async () => {
+  try {
+    const response = await axiosInstance.get(`/mini-app/profile/attendance/location`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const miniAppGetAttendanceType = async () => {
+  try {
+    const response = await axiosInstance.get(`/mini-app/profile/attendance/type`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};

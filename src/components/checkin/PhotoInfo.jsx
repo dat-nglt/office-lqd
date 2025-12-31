@@ -3,11 +3,13 @@ import { formatDistance } from "../../utils/helpers";
 
 function PhotoInfo({
   capturedPhoto,
-  selectedCheckInMode,
-  selectedCheckInLocation,
+  selectedAttendanceMode,
+  selectedCheckInLocation: selectedAttendanceLocation,
   currentLocation,
   locationViolation,
   violationDistance,
+  notes,
+  onNotesChange,
 }) {
   if (!capturedPhoto) return null;
 
@@ -23,8 +25,8 @@ function PhotoInfo({
       </Box>
       <Box className="space-y-2">
         <Box className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-          <Text className="text-xs text-gray-600">Thời gian:</Text>
-          <Text className="text-xs font-semibold text-blue-600">
+          <Text className="text-xs text-gray-600 min-w-[100px] ">Thời gian:</Text>
+          <Text className="text-xs font-semibold text-blue-600 text-right">
             {new Date().toLocaleTimeString("vi-VN", {
               hour: "2-digit",
               minute: "2-digit",
@@ -35,18 +37,18 @@ function PhotoInfo({
           </Text>
         </Box>
         <Box className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-          <Text className="text-xs text-gray-600">Loại:</Text>
-          <Text className="text-xs font-semibold text-blue-600">
-            {selectedCheckInMode === "in" ? "Chấm Công Vào" : "Chấm Công Ra"}
+          <Text className="text-xs text-gray-600 min-w-[100px] ">Loại:</Text>
+          <Text className="text-xs font-semibold text-blue-600 text-right">
+            {selectedAttendanceMode === "in" ? "Chấm Công Vào" : "Chấm Công Ra"}
           </Text>
         </Box>
         <Box className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-          <Text className="text-xs text-gray-600">Địa điểm:</Text>
-          <Text className="text-xs font-semibold text-blue-600">{selectedCheckInLocation?.address}</Text>
+          <Text className="text-xs text-gray-600 min-w-[100px] ">Địa điểm:</Text>
+          <Text className="text-xs font-semibold text-blue-600 text-right">{selectedAttendanceLocation?.address}</Text>
         </Box>
         <Box className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-          <Text className="text-xs text-gray-600">Tọa độ:</Text>
-          <Text className="text-xs font-semibold text-blue-600">
+          <Text className="text-xs text-gray-600 min-w-[100px] ">Tọa độ:</Text>
+          <Text className="text-xs font-semibold text-blue-600 text-right">
             {currentLocation.latitude.toFixed(4)}, {currentLocation.longitude.toFixed(4)}
           </Text>
         </Box>
@@ -56,6 +58,17 @@ function PhotoInfo({
             <Text className="text-sm font-semibold text-red-700">{formatDistance(violationDistance)}</Text>
           </Box>
         )}
+        <Box className="mt-4">
+          <textarea
+            value={notes}
+            onChange={(e) => onNotesChange(e.target.value)}
+            placeholder="Nhập ghi chú về chấm công (nếu cần)..."
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+            rows="3"
+            maxLength="500"
+          />
+          <Text className="text-xs text-gray-500 mt-1 text-right">{notes.length}/500</Text>
+        </Box>
       </Box>
     </Box>
   );
