@@ -21,7 +21,7 @@ function CheckInTypeSelector({ checkInTypes, selectedAttendanceType, onSelectTyp
               <Box className="flex items-center space-x-3">
                 <Box>
                   <Text className="font-bold text-gray-900">{type.name}</Text>
-                  <Text className="text-sm text-gray-600">{type.time}</Text>
+                  <Text className="text-sm text-gray-600 mt-1">{type.start_time} - {type.end_time}</Text>
                 </Box>
               </Box>
               <Icon icon="zi-arrow-right" className="text-gray-400" size={16} />

@@ -1,8 +1,7 @@
 import { Box, Text, Icon, Button, Page } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { AppError } from "zmp-sdk";
-import { getUserInfo, nativeStorage } from "zmp-sdk/apis";
+import { getUserInfo } from "zmp-sdk/apis";
 import BottomNavigation from "../components/BottomNavigation";
 import { miniAppGetProfileInfoByID } from "../services/user.service";
 import { clearTokens } from "../config/axiosConfig";

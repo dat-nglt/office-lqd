@@ -49,7 +49,7 @@ function ActionButtons({
             disabled={submitting}
             className="py-3 rounded-lg font-semibold text-base bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-2"
           >
-            {submitting ? "Đang gửi..." : "Xác Nhận"}
+            {submitting ? "Đang gửi" : "Xác Nhận"}
           </Button>
         </>
       )}

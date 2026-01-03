@@ -56,7 +56,7 @@ function HomePage() {
   };
 
   const handleStartWork = (job) => {
-    navigate(`/checkin?work_code=${job.workCode}`);
+    navigate(`/checkin?work_id=${job.id}`);
   };
 
   const handleProgressReport = (job) => {

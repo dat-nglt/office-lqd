@@ -96,7 +96,22 @@ export const uploadToCloudinary = async (blob, signature, timestamp, apiKey, clo
  */
 export const submitCheckIn = async (checkInData) => {
   try {
-    const response = await axiosInstance.post(API_ENDPOINTS.CHECKIN.SUBMIT, checkInData);
+    const response = await axiosInstance.post(API_ENDPOINTS.ATTENDANCE.SUBMIT_CHECKIN, checkInData);
+
+    if (!response.data) {
+      throw new Error(response.data?.error || "Lỗi khi gửi chấm công");
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Error submitting check-in:", error);
+    throw error.response?.data || error;
+  }
+};
+
+export const submitCheckOut = async (checkOutData) => {
+  try {
+    const response = await axiosInstance.post(API_ENDPOINTS.ATTENDANCE.SUBMIT_CHECKOUT, checkOutData);
 
     if (!response.data) {
       throw new Error(response.data?.error || "Lỗi khi gửi chấm công");
@@ -166,5 +181,32 @@ export const dataURItoBlob = (dataURI) => {
   } catch (error) {
     console.error("Error converting data URI to blob:", error);
     throw new Error("Không thể xử lý ảnh");
+  }
+};
+
+export const getTodayAttendanceHistory = async (userId) => {
+  try {
+    const response = await axiosInstance.get(`${API_ENDPOINTS.ATTENDANCE.GET_TODAY_HISTORY}/${userId}`);
+
+    if (!response.data) {
+      throw new Error(response.data?.error || "Lỗi khi lấy lịch sử chấm công hôm nay");
+    }
+    return response.data;
+  } catch (error) {
+    console.error("Error getting today's attendance history:", error);
+    throw error.response?.data || error;
+  }
+};
+
+export const getMonthAttendanceHistory = async (userId) => {
+  try {
+    const response = await axiosInstance.get(`${API_ENDPOINTS.ATTENDANCE.GET_MONTH_HISTORY}/${userId}`);
+    if (!response.data) {
+      throw new Error(response.data?.error || "Lỗi khi lấy lịch sử chấm công tháng này");
+    }
+    return response.data;
+  } catch (error) {
+    console.error("Error getting month's attendance history:", error);
+    throw error.response?.data || error;
   }
 };
