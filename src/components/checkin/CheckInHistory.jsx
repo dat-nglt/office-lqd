@@ -4,8 +4,6 @@ import { useState } from "react";
 function CheckInHistory({ todayAttendanceRecords }) {
   const [expanded, setExpanded] = useState(false);
 
-  console.log("Today Attendance Records:", todayAttendanceRecords);
-
   return (
     <Box className="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <Box className="p-4 border-b border-gray-200">
@@ -62,8 +60,7 @@ function CheckInHistory({ todayAttendanceRecords }) {
                     </Text>
                     {record.isViolation && (
                       <Text className="text-xs text-red-700 font-semibold mt-1">
-                        Vi phạm vị trí chấm công công việc ~{" "}
-                        {Number(record.violationDistance / 1000).toFixed(2)}
+                        Vi phạm vị trí chấm công công việc ~ {Number(record.violationDistance / 1000).toFixed(2)}
                         Km
                       </Text>
                     )}

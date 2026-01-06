@@ -50,7 +50,7 @@ function CheckInModeSelector({
                 Chấm Công Ra
               </Text>
               <Text className="text-xs text-gray-600">
-                {canCheckOut() ? `Kết thúc công việc tại ${selectedAttendanceLocation.address}` : "Phải chấm vào trước"}
+                {canCheckOut() ? `Kết thúc công việc tại ${selectedAttendanceLocation.address}` : "Không được chấm công ra tại Kho & Văn phòng. Chỉ có thể chấm công ra tại công việc được giao"}
               </Text>
             </Box>
           </Box>

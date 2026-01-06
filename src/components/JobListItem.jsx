@@ -85,12 +85,6 @@ function JobListItem({ job, onStartWork, onProgressReport, onShowDetail, sx = ""
             Báo cáo tiến độ
           </Button>
         )}
-        {job.status === "completed" && (
-          <Button size="small" className="flex-1 bg-green-500 text-white rounded text-xs">
-            <Icon icon="zi-check-circle" size={12} className="mr-1" />
-            Hoàn thành
-          </Button>
-        )}
         <Button
           size="small"
           className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-xs"
