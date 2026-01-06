@@ -14,7 +14,6 @@ const getTokens = () => {
     if (tokensStr) {
       return JSON.parse(tokensStr);
     }
-    console.log("tokensStr:", tokensStr);
 
     // Fallback to legacy format for backward compatibility
     const legacyToken = nativeStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
@@ -65,17 +64,7 @@ const setTokens = (accessToken, refreshToken = null) => {
  */
 const clearTokens = () => {
   try {
-    nativeStorage.removeItem(STORAGE_KEYS.AUTH_TOKENS);
-    nativeStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-    nativeStorage.removeItem(STORAGE_KEYS.USER_INFO);
-
-    // Also clear from localStorage for safety
-    try {
-      localStorage.removeItem("authTokens");
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("userInfo");
-    } catch (e) {}
-    console.log("[Storage] All tokens cleared");
+    nativeStorage.clear();
   } catch (error) {
     console.error("[Storage] Error clearing tokens:", error);
   }
@@ -85,12 +74,12 @@ const clearTokens = () => {
  * Get user info from nativeStorage
  * @returns {Object|null} - User information or null
  */
-const getUserInfo = () => {
+const getUserInfoInStorage = () => {
   try {
     const userStr = nativeStorage.getItem(STORAGE_KEYS.USER_INFO);
     return userStr ? JSON.parse(userStr) : null;
   } catch (error) {
-    console.error("[Storage] Error getting user info:", error);
+    console.error("[Storage] Error getting user info:", JSON.stringify(error));
     return null;
   }
 };
@@ -299,6 +288,6 @@ axiosInstance.interceptors.response.use(
 // 6. Export Functions and Instance
 // ============================================
 
-export { axiosInstance, getTokens, setTokens, clearTokens, getUserInfo, setUserInfo };
+export { axiosInstance, getTokens, setTokens, clearTokens, getUserInfoInStorage, setUserInfo };
 
 export default axiosInstance;

@@ -274,8 +274,8 @@ function WorkDetailModal({ visible, onClose, work }) {
         {work.notes && (
           <Box>
             <Text className="text-xs text-gray-500 uppercase font-bold mb-2 block">Ghi Chú</Text>
-            <Box className="p-2 bg-gray-50 rounded-lg border border-gray-200">
-              <Text className="text-xs leading-relaxed text-gray-800 whitespace-pre-wrap">{work.notes}</Text>
+            <Box className="p-2 bg-yellow-50 rounded-lg border border-yellow-200">
+              <Text className="text-xs leading-relaxed text-yel-800 whitespace-pre-wrap">{work.notes}</Text>
             </Box>
           </Box>
         )}

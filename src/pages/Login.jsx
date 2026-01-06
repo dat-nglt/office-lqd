@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 import { Box, Button, Page, Text, Icon } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
-import { getAccessToken, getSetting, authorize, openPermissionSetting, openPhone } from "zmp-sdk/apis";
+import { getAccessToken, getSetting, authorize, openPermissionSetting, openPhone, getUserInfo } from "zmp-sdk/apis";
 import { zaloLogin } from "../services/auth.service";
-import { clearTokens, getTokens, getUserInfo, setTokens, setUserInfo } from "../config/axiosConfig";
+import { clearTokens, getTokens, setTokens, setUserInfo } from "../config/axiosConfig";
 import { ToastContext } from "../components/layout";
 
 // Constants
@@ -36,11 +36,19 @@ const Login = () => {
 
   // Kiểm tra nếu đã đăng nhập trước đó và chuyển hướng tự động
   useEffect(() => {
-    const token = getTokens();
+    const checkAuth = async () => {
+      const token = getTokens();
 
-    if (token) {
-      navigate("/", { replace: true });
-    }
+      if (token && isMountedRef.current) {
+        const { userInfo } = await getUserInfo();
+        if (isMountedRef.current) {
+          setUserInfo(userInfo);
+          navigate("/", { replace: true });
+        }
+      }
+    };
+
+    checkAuth();
   }, [navigate]);
 
   const handleCallSupport = async () => {
@@ -98,8 +106,6 @@ const Login = () => {
       if (!accessToken) throw new Error("Không nhận được mã xác thực từ Zalo");
 
       const response = await zaloLogin(accessToken);
-      // if (!response?.data) throw new Error(response?.message || "Đăng nhập thất bại");
-      console.log(response);
 
       const { access_token, user } = response.data;
 
@@ -116,7 +122,9 @@ const Login = () => {
       }
 
       setTokens(access_token);
-      setUserInfo(user);
+      const { userInfo } = await getUserInfo();
+
+      setUserInfo(userInfo);
 
       toast?.success({
         title: "Đăng nhập thành công",

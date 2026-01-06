@@ -1,12 +1,7 @@
-import { Box, Text, Icon, Avatar } from "zmp-ui";
-import { useEffect, useState } from "react";
-import { getUserInfo } from "zmp-sdk/apis";
-import { AppError } from "zmp-sdk";
-import { useNavigate } from "react-router-dom";
-import { miniAppGetProfileInfoByID } from "../services/user.service";
-import { clearTokens } from "../config/axiosConfig";
+import { Box, Text, Icon, Avatar, useNavigate } from "zmp-ui";
 
 function Header({ title, showBack = false, onBack, userInfo, currentTime }) {
+  const navigate = useNavigate();
   return (
     <Box className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 dark:from-gray-800 dark:via-gray-900 dark:to-gray-950 rounded-b-3xl shadow-xl pb-6 relative overflow-hidden">
       {/* Background Effects */}
@@ -75,6 +70,7 @@ function Header({ title, showBack = false, onBack, userInfo, currentTime }) {
               {currentTime.toLocaleTimeString("vi-VN", {
                 hour: "2-digit",
                 minute: "2-digit",
+                second: "2-digit",
               })}
             </Text>
           </Box>

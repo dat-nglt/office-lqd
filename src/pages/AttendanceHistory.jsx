@@ -42,7 +42,7 @@ function AttendanceHistory() {
   // Helper functions
   const getWeekStartEnd = (dateString) => {
     const date = new Date(dateString + "T00:00:00");
-    const day = date.getDay(); // 0 = Sunday
+    const day = date.getDay();
     const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Monday start
     const weekStart = new Date(date.setDate(diff));
     const weekEnd = new Date(weekStart);
@@ -169,10 +169,6 @@ function AttendanceHistory() {
             <Box className="flex-1 bg-white/15 rounded-lg px-3 py-2 text-center border border-white/20">
               <Text className="text-white font-bold text-sm">{overtimeCount}</Text>
               <Text className="text-blue-100 text-xs">Tăng ca</Text>
-            </Box>
-            <Box className="flex-1 bg-white/15 rounded-lg px-3 py-2 text-center border border-white/20">
-              <Text className="text-white font-bold text-sm">{totalWorkingHours.toFixed(1)}</Text>
-              <Text className="text-blue-100 text-xs">Tổng giờ</Text>
             </Box>
           </Box>
         </Box>

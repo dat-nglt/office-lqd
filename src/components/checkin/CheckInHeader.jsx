@@ -1,6 +1,17 @@
-import { Box, Text } from "zmp-ui";
+import { useEffect, useState } from "react";
+import { Box, Text, Icon } from "zmp-ui";
 
 function CheckInHeader() {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <Box className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-lg pb-4 relative overflow-hidden">
       <Box className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></Box>
@@ -11,10 +22,22 @@ function CheckInHeader() {
           Chấm Công Công Việc
         </Text.Title>
         <Text className="text-blue-100 text-sm mt-1">
-          {new Date().toLocaleDateString("vi-VN")} -{" "}
-          {new Date().toLocaleTimeString("vi-VN")}
+          {currentTime.toLocaleDateString("vi-VN")} - {currentTime.toLocaleTimeString("vi-VN")}
         </Text>
       </Box>
+
+      {/* Cảnh báo về chỉnh sửa thời gian */}
+      {/* <Box className="px-4 pb-3 relative z-10">
+        <Box className="bg-amber-50 border-l-4 border-amber-400 rounded py-3 px-3 flex gap-2">
+          <Box>
+            <Text className="text-amber-900 font-semibold text-xs">Cảnh báo bảo mật</Text>
+            <Text className="text-amber-800 text-xs mt-1">
+              Hệ thống ghi nhận thời gian chấm công dựa trên máy chủ IMS. Việc điều chỉnh thời gian trên thiết bị sẽ
+              được ghi lại và có thể xem xét trong quá trình đánh giá hiệu suất làm việc!
+            </Text>
+          </Box>
+        </Box>
+      </Box> */}
     </Box>
   );
 }

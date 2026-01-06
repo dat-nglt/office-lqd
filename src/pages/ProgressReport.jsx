@@ -92,8 +92,8 @@ function ProgressReport() {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "environment",
-          width: { ideal: 1080 },
-          height: { ideal: 1080 },
+          width: { ideal: 720 },
+          height: { ideal: 720 },
         },
       });
       if (videoRef.current) {
@@ -115,7 +115,7 @@ function ProgressReport() {
       const canvas = canvasRef.current;
       const context = canvas.getContext("2d");
 
-      const size = 1080;
+      const size = 720;
       canvas.width = size;
       canvas.height = size;
 
@@ -372,7 +372,7 @@ function ProgressReport() {
               <Box className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">
                 <Box className="flex items-center justify-between mb-3">
                   <Text className="font-bold text-gray-900 flex items-center">
-                    <Icon icon="zi-image" className="mr-2 text-blue-600" size={16} />
+                    <Icon icon="zi-gallery" className="mr-2 text-blue-600" size={16} />
                     Ảnh Báo Cáo ({progressReports.length})
                   </Text>
                   <Text className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded font-semibold">

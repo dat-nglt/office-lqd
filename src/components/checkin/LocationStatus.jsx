@@ -1,15 +1,15 @@
 import { Box, Text, Icon } from "zmp-ui";
 
-function LocationStatus({ currentLocation, currentPlaceName, isLoadingPlaceName }) {
+function LocationStatus({ currentLocation }) {
   return (
     <Box className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-      <Text className="font-bold text-gray-900 mb-3 flex items-center">Vị trí hiện tại</Text>
+      <Text className="font-bold text-gray-900 mb-3 flex items-center capitalize">Vị trí hiện tại</Text>
 
       {currentLocation ? (
         <Box className="space-y-2">
           <Box className="flex justify-between items-center p-2 bg-blue-50 rounded-lg">
             <Text className="text-sm text-gray-600">Địa chỉ:</Text>
-            <Text className="text-xs text-blue-700">{currentPlaceName || "Đang tải..."}</Text>
+            <Text className="text-xs text-blue-700">{currentLocation.placeName || "Đang tải..."}</Text>
           </Box>
 
           <Box className="flex justify-between items-center p-2 bg-blue-50 rounded-lg">

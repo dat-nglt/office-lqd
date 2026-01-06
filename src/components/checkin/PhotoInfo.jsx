@@ -4,7 +4,6 @@ import { formatDistance } from "../../utils/helpers";
 function PhotoInfo({
   capturedPhoto,
   selectedAttendanceMode,
-  selectedCheckInLocation: selectedAttendanceLocation,
   currentLocation,
   locationViolation,
   violationDistance,
@@ -25,7 +24,7 @@ function PhotoInfo({
       </Box>
       <Box className="space-y-2">
         <Box className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-          <Text className="text-xs text-gray-600 min-w-[100px] ">Thời gian:</Text>
+          <Text className="text-xs text-gray-600 min-w-[150px] ">Thời gian trên thiết bị:</Text>
           <Text className="text-xs font-semibold text-blue-600 text-right">
             {new Date().toLocaleTimeString("vi-VN", {
               hour: "2-digit",
@@ -37,24 +36,24 @@ function PhotoInfo({
           </Text>
         </Box>
         <Box className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-          <Text className="text-xs text-gray-600 min-w-[100px] ">Loại:</Text>
+          <Text className="text-xs text-gray-600 min-w-[150px] ">Trạng thái ghi nhận:</Text>
           <Text className="text-xs font-semibold text-blue-600 text-right">
             {selectedAttendanceMode === "in" ? "Chấm Công Vào" : "Chấm Công Ra"}
           </Text>
         </Box>
         <Box className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-          <Text className="text-xs text-gray-600 min-w-[100px] ">Địa điểm:</Text>
-          <Text className="text-xs font-semibold text-blue-600 text-right">{selectedAttendanceLocation?.address}</Text>
+          <Text className="text-xs text-gray-600 min-w-[150px] ">Địa điểm ghi nhận:</Text>
+          <Text className="text-xs font-semibold text-blue-600 text-right">{currentLocation?.placeName}</Text>
         </Box>
         <Box className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-          <Text className="text-xs text-gray-600 min-w-[100px] ">Tọa độ:</Text>
+          <Text className="text-xs text-gray-600 min-w-[150px] ">Tọa độ ghi nhận:</Text>
           <Text className="text-xs font-semibold text-blue-600 text-right">
-            {currentLocation.latitude.toFixed(4)}, {currentLocation.longitude.toFixed(4)}
+            {currentLocation ? `${currentLocation.latitude.toFixed(4)}, ${currentLocation.longitude.toFixed(4)}` : "Không xác định"}
           </Text>
         </Box>
         {locationViolation && (
           <Box className="flex justify-between items-center p-2 bg-red-50 rounded-lg border border-red-200">
-            <Text className="text-sm text-red-700 font-semibold">Khoảng cách:</Text>
+            <Text className="text-sm text-red-700 font-semibold">Khoảng cách vi phạm:</Text>
             <Text className="text-sm font-semibold text-red-700">{formatDistance(violationDistance)}</Text>
           </Box>
         )}

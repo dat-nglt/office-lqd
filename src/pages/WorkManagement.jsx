@@ -1,5 +1,8 @@
 import { Box, Text, Icon, Button, Page, Modal, Input, DatePicker, Select } from "zmp-ui";
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
+import { getPriorityColor, getPriorityLabel, getStatusColor, getStatusLabel } from "../hooks/useLabelColor";
+import { miniAppGetListOfWorkAssignmentsByID } from "../services/user.service";
+import { clearTokens, getTokens, getUserInfoInStorage } from "../config/axiosConfig";
 import { useNavigate } from "react-router-dom";
 import { nativeStorage } from "zmp-sdk/apis";
 import BottomNavigation from "../components/BottomNavigation";
@@ -11,62 +14,9 @@ function WorkManagement() {
   const toast = useContext(ToastContext);
   const today = new Date().toLocaleDateString("vi-VN");
 
-  const [workList, setWorkList] = useState([
-    {
-      id: 1,
-      title: "Bảo trì điều hòa tại NEXUS HOUSE",
-      serviceType: "Bảo trì định kỳ",
-      equipment: "Điều hòa",
-      company: "NEXUS HOUSE",
-      location: "05A Quốc Hương, Phường An Khánh, Quận 2, TP.HCM",
-      address: "05A Quốc Hương, Phường An Khánh, Quận 2, TP.HCM",
-      coordinates: { lat: 10.7769, lng: 106.7009 },
-      scheduledDate: today,
-      scheduledTime: "08:00 - 12:00",
-      status: "pending",
-      priority: "high",
-      customerName: "Nguyễn Văn A",
-      phoneNumber: "0901234567",
-      notes: "Cần kiểm tra gas và lọc",
-      content: "Bảo trì hệ thống điều hòa định kỳ",
-    },
-    {
-      id: 2,
-      title: "Sửa chữa hệ thống điện tại VINHOMES",
-      serviceType: "Sửa chữa",
-      equipment: "Hệ thống điện",
-      company: "VINHOMES",
-      location: "456 Lê Văn Việt, Quận 9, TP.HCM",
-      address: "456 Lê Văn Việt, Quận 9, TP.HCM",
-      coordinates: { lat: 10.8411, lng: 106.8097 },
-      scheduledDate: today,
-      scheduledTime: "13:00 - 17:00",
-      status: "in_progress",
-      priority: "high",
-      customerName: "Trần Thị B",
-      phoneNumber: "0902345678",
-      notes: "Có bảng mạch bị lỗi",
-      content: "Sửa chữa hệ thống điện và kiểm tra bảng mạch",
-    },
-    {
-      id: 3,
-      title: "Kiểm tra thiết bị tại MASTERI",
-      serviceType: "Kiểm tra",
-      equipment: "Điều hòa",
-      company: "MASTERI",
-      location: "789 Võ Văn Ngân, Thủ Đức, TP.HCM",
-      address: "789 Võ Văn Ngân, Thủ Đức, TP.HCM",
-      coordinates: { lat: 10.8505, lng: 106.7717 },
-      scheduledDate: today,
-      scheduledTime: "17:30 - 18:30",
-      status: "pending",
-      priority: "medium",
-      customerName: "Lê Văn C",
-      phoneNumber: "0903456789",
-      notes: "Kiểm tra định kỳ hàng quý",
-      content: "Kiểm tra hệ thống camera an ninh",
-    },
-  ]);
+  const [workList, setWorkList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -76,6 +26,9 @@ function WorkManagement() {
   const [newDate, setNewDate] = useState(new Date());
   const [newTime, setNewTime] = useState("08:00");
   const [cancelReason, setCancelReason] = useState("");
+  const cancelInputRef = useRef(null);
+  const cancelReasonMax = 300;
+  const cancelReasonMin = 5;
   const [overtimeReason, setOvertimeReason] = useState("");
   const [overtimeHours, setOvertimeHours] = useState("1");
   // Add new states for overtime request
@@ -96,9 +49,14 @@ function WorkManagement() {
 
   const handleReschedule = (work) => {
     setSelectedWork(work);
-    const dateParts = work.scheduledDate.split("/");
-    setNewDate(new Date(dateParts[2], parseInt(dateParts[1]) - 1, dateParts[0]));
-    setNewTime(work.scheduledTime.split(" - ")[0]);
+    if (work.scheduledDate && work.scheduledDate.includes("/")) {
+      const dateParts = work.scheduledDate.split("/");
+      setNewDate(new Date(dateParts[2], parseInt(dateParts[1]) - 1, dateParts[0]));
+    } else {
+      setNewDate(new Date());
+    }
+    const startTime = work.scheduledTime ? work.scheduledTime.split(" - ")[0] : work.scheduledTime || "08:00";
+    setNewTime(startTime);
     setShowRescheduleModal(true);
   };
 
@@ -151,18 +109,19 @@ function WorkManagement() {
   };
 
   const confirmCancel = () => {
-    if (selectedWork && cancelReason.trim()) {
+    const reason = cancelReason.trim();
+    if (selectedWork && reason.length >= cancelReasonMin) {
       setWorkList(workList.filter((w) => w.id !== selectedWork.id));
       toast?.success({
         title: "Hủy thành công",
-        message: "Công việc đã được hủy!",
-        duration: 2500,
+        message: `Công việc đã được hủy. Lý do: ${reason}`,
+        duration: 3500,
       });
       setShowCancelModal(false);
     } else {
       toast?.error({
         title: "Thông tin chưa đủ",
-        message: "Vui lòng nhập lý do hủy công việc!",
+        message: `Vui lòng nhập lý do hủy (${cancelReasonMin} ký tự trở lên).`,
         duration: 2500,
       });
     }
@@ -195,56 +154,74 @@ function WorkManagement() {
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "in_progress":
-        return "bg-blue-100 text-blue-800 border-blue-300";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-300";
-      case "completed":
-        return "bg-green-100 text-green-800 border-green-300";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-300";
+  // Focus cancel reason input when modal opens
+  useEffect(() => {
+    if (showCancelModal) {
+      setTimeout(() => cancelInputRef.current?.focus(), 120);
     }
-  };
+  }, [showCancelModal]);
 
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case "pending":
-        return "Chờ thực hiện";
-      case "in_progress":
-        return "Đang thực hiện";
-      case "completed":
-        return "Hoàn thành";
-      default:
-        return "Không xác định";
+  // Fetch today's work assignments from backend and transform to UI shape
+  useEffect(() => {
+    const currentToken = getTokens();
+    if (!currentToken?.accessToken) {
+      clearTokens();
+      setLoading(false);
+      return;
     }
-  };
+    const fetchWorkAssignments = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const userInfo = getUserInfoInStorage();
+        const ZAID = userInfo.id;
+        const response = await miniAppGetListOfWorkAssignmentsByID(ZAID);
+        if (response && response.success && response.data) {
+          const transformedWorkList = response.data.map((assignment) => ({
+            id: assignment.id,
+            title: assignment.work?.title || "Công việc không có tên",
+            serviceType: assignment.work?.service_type || "Không xác định",
+            equipment: assignment.work?.category?.name || "",
+            company: assignment.work?.customer_name || "",
+            location: assignment.work?.location || "Không xác định",
+            address: assignment.work?.customer_address || "Không xác định",
+            coordinates: {
+              lat: assignment.work?.location_lat || 0,
+              lng: assignment.work?.location_lng || 0,
+            },
+            scheduledDate: assignment.work?.required_date
+              ? new Date(assignment.work.required_date).toLocaleDateString("vi-VN")
+              : "Không xác định",
+            scheduledTime: `${assignment.work?.required_time_hour || "00"}:${String(
+              assignment.work?.required_time_minute || 0
+            ).padStart(2, "0")}`,
+            status: assignment.work?.status?.toLowerCase() || "pending",
+            priority: assignment.work?.priority?.toLowerCase() || "medium",
+            customerName: assignment.work?.customer_name || "Không xác định",
+            phoneNumber: assignment.work?.customer_phone || "",
+            notes: assignment.work?.notes || "Không có ghi chú nào",
+            content: assignment.work?.description || "",
+          }));
+          setWorkList(transformedWorkList);
+        } else {
+          setWorkList([]);
+        }
+      } catch (err) {
+        setError("Không thể tải danh sách công việc. Vui lòng thử lại sau.");
+        toast?.show?.({
+          type: "error",
+          message: err.message || "Lỗi khi tải danh sách công việc",
+          duration: 2000,
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchWorkAssignments();
+  }, []);
 
-  const getPriorityLabel = (priority) => {
-    switch (priority) {
-      case "high":
-        return "Cao";
-      case "medium":
-        return "Trung bình";
-      case "low":
-        return "Thấp";
-      default:
-        return "Bình thường";
-    }
-  };
-
-  const getPriorityBadgeColor = (priority) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-100 text-red-800 border-red-300";
-      case "medium":
-        return "bg-orange-100 text-orange-800 border-orange-300";
-      case "low":
-        return "bg-green-100 text-green-800 border-green-300";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-300";
-    }
+  const handleRefreshData = () => {
+    fetchWorkAssignments();
   };
 
   const stats = {
@@ -303,15 +280,27 @@ function WorkManagement() {
       <Box className="px-4 pt-4 pb-28">
         {/* Work List */}
         <Box className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <Box className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
+          <Box className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100 flex items-center justify-between">
             <Text className="font-bold text-gray-900 flex items-center">
               <Icon icon="zi-list-1" className="mr-2 text-blue-600" size={16} />
-              Danh Sách Công Việc Hôm Nay ({todayWorkList.length})
+              Danh Sách Công Việc Hôm Nay
             </Text>
+            <Icon icon="zi-retry" className="mr-2 text-blue-600" size={16} onClick={handleRefreshData} />
           </Box>
 
           <Box className="divide-y divide-gray-200">
-            {todayWorkList.length > 0 ? (
+            {loading ? (
+              <Box className="text-center py-12">
+                <Icon icon="zi-spinner" className="text-blue-600 text-5xl mb-4 animate-spin" />
+                <Text className="text-gray-600 font-semibold">Đang tải danh sách công việc...</Text>
+              </Box>
+            ) : error ? (
+              <Box className="text-center py-12">
+                <Icon icon="zi-alert" className="text-yellow-600 text-5xl mb-4" />
+                <Text className="text-yellow-600 mb-2 font-semibold">Sự cố hệ thống</Text>
+                <Text className="text-gray-500 text-sm">{error}</Text>
+              </Box>
+            ) : todayWorkList.length > 0 ? (
               todayWorkList.map((work, index) => (
                 <Box key={work.id} className="p-4 hover:bg-gray-50 transition-colors">
                   {/* Work Header */}
@@ -323,7 +312,7 @@ function WorkManagement() {
                       <Text className="text-xs text-gray-600">{work.company}</Text>
                     </Box>
                     <Box
-                      className={`px-2.5 py-1 rounded-full text-xs font-semibold border whitespace-nowrap flex-shrink-0 ${getStatusColor(
+                      className={`text-xs font-semibold  whitespace-nowrap flex-shrink-0 ${getStatusColor(
                         work.status
                       )}`}
                     >
@@ -339,13 +328,6 @@ function WorkManagement() {
                     <Box className="text-xs px-2 py-0.5 bg-gray-100 rounded text-gray-700 font-medium">
                       {work.equipment}
                     </Box>
-                    <Box
-                      className={`text-xs px-2 py-0.5 rounded font-medium border ${getPriorityBadgeColor(
-                        work.priority
-                      )}`}
-                    >
-                      {getPriorityLabel(work.priority)}
-                    </Box>
                   </Box>
 
                   {/* Time & Location */}
@@ -353,6 +335,9 @@ function WorkManagement() {
                     <Box className="flex items-center gap-2">
                       <Icon icon="zi-clock-1" size={14} className="text-gray-400 flex-shrink-0" />
                       <Text className="text-xs font-medium">{work.scheduledTime}</Text>
+                      <Box className={`text-xs p-1 rounded font-medium ${getPriorityColor(work.priority)}`}>
+                        Ưu tiên: {getPriorityLabel(work.priority)}
+                      </Box>
                     </Box>
                     <Box className="flex items-start gap-2">
                       <Icon icon="zi-location" size={14} className="text-red-500 flex-shrink-0 mt-0.5" />
@@ -368,8 +353,8 @@ function WorkManagement() {
 
                   {/* Notes */}
                   {work.notes && (
-                    <Box className="p-2 bg-blue-50 rounded border border-blue-200 mb-3">
-                      <Text className="text-xs text-blue-800">
+                    <Box className="p-2 bg-yellow-50 rounded border border-yellow-200 mb-3">
+                      <Text className="text-xs text-yellow-800">
                         <span className="font-semibold">Ghi chú:</span> {work.notes}
                       </Text>
                     </Box>
@@ -381,13 +366,13 @@ function WorkManagement() {
                       <>
                         <button
                           onClick={() => handleReschedule(work)}
-                          className="px-3 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-1 flex-1 min-w-fit"
+                          className="px-3 py-2 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-1 flex-1 min-w-fit"
                         >
                           Thay đổi lịch
                         </button>
                         <button
                           onClick={() => handleCancel(work)}
-                          className="px-3 py-2 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-1 flex-1 min-w-fit"
+                          className="px-3 py-2 bg-red-600 text-white rounded text-xs font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-1 flex-1 min-w-fit"
                         >
                           Hủy
                         </button>
@@ -395,14 +380,14 @@ function WorkManagement() {
                     )}
                     <button
                       onClick={() => handleShowDetail(work)}
-                      className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-300 transition-colors flex items-center justify-center gap-1 flex-1 min-w-fit"
+                      className="px-3 py-2 bg-gray-200 text-gray-700 rounded text-xs font-semibold hover:bg-gray-300 transition-colors flex items-center justify-center gap-1 flex-1 min-w-fit"
                     >
                       Chi tiết
                     </button>
                     {work.status === "in_progress" && (
                       <button
                         onClick={() => handleRequestOvertime(work)}
-                        className="px-3 py-2 bg-green-600 text-white rounded-lg text-xs font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-1 flex-1 min-w-fit"
+                        className="px-3 py-2 bg-green-600 text-white rounded text-xs font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-1 flex-1 min-w-fit"
                       >
                         Yêu cầu tăng ca
                       </button>
@@ -422,16 +407,12 @@ function WorkManagement() {
       </Box>
 
       {/* Reschedule Modal */}
-      <Modal
-        visible={showRescheduleModal}
-        onClose={() => setShowRescheduleModal(false)}
-        title="Thay đổi lịch công việc"
-      >
+      <Modal visible={showRescheduleModal} onClose={() => setShowRescheduleModal(false)}>
         <Box className="p-0 space-y-4">
           {selectedWork && (
             <>
-              <Box className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                <Text className="text-xs text-blue-700 mb-1 font-semibold">Công việc:</Text>
+              <Box className="bg-blue-50 rounded p-3 border border-blue-200">
+                <Text className="text-xs text-blue-700 mb-1 font-semibold">Yêu cầu thay đổi lịch công việc:</Text>
                 <Text className="font-semibold text-gray-900 text-sm">{selectedWork.title}</Text>
               </Box>
 
@@ -446,20 +427,20 @@ function WorkManagement() {
                   type="time"
                   value={newTime}
                   onChange={(e) => setNewTime(e.target.value)}
-                  className="w-full rounded-lg"
+                  className="w-full rounded"
                 />
               </Box>
 
               <Box className="flex gap-2">
                 <button
                   onClick={() => setShowRescheduleModal(false)}
-                  className="flex-1 px-3 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors text-sm"
+                  className="flex-1 px-3 py-2 bg-gray-200 text-gray-800 rounded font-semibold hover:bg-gray-300 transition-colors text-sm"
                 >
                   Hủy
                 </button>
                 <button
                   onClick={confirmReschedule}
-                  className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm"
+                  className="flex-1 px-3 py-2 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700 transition-colors text-sm"
                 >
                   Xác nhận
                 </button>
@@ -470,38 +451,50 @@ function WorkManagement() {
       </Modal>
 
       {/* Cancel Modal */}
-      <Modal visible={showCancelModal} onClose={() => setShowCancelModal(false)} title="Hủy công việc">
+      <Modal visible={showCancelModal} onClose={() => setShowCancelModal(false)}>
         <Box className="p-0 space-y-4">
           {selectedWork && (
             <>
-              <Box className="bg-red-50 rounded-lg p-3 border border-red-200">
-                <Text className="text-xs text-red-900 font-semibold mb-1">Xác nhận hủy công việc</Text>
+              <Box className="bg-red-50 rounded p-3 border border-red-200">
+                <Text className="text-xs text-red-900 font-semibold mb-1">Yêu cầu huỷ công việc</Text>
                 <Text className="font-semibold text-gray-900 text-sm">{selectedWork.title}</Text>
               </Box>
 
               <Box>
                 <Text className="text-sm font-semibold text-gray-700 mb-2">Lý do hủy công việc:</Text>
                 <Input
+                  ref={cancelInputRef}
                   placeholder="Nhập lý do hủy..."
                   value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                  className="w-full rounded-lg border-gray-300"
-                  rows={3}
+                  onChange={(e) => setCancelReason(e.target.value.slice(0, cancelReasonMax))}
+                  className="w-full rounded border-gray-300"
+                  rows={4}
                 />
+                <Box className="flex justify-between items-center mt-2">
+                  <Text className="text-xs text-gray-500">Yêu cầu tối thiểu {cancelReasonMin} ký tự</Text>
+                  <Text
+                    className={`text-xs ${cancelReason.length > cancelReasonMax ? "text-red-600" : "text-gray-500"}`}
+                  >
+                    {cancelReason.length}/{cancelReasonMax} ký tự
+                  </Text>
+                </Box>
               </Box>
 
-              <Box className="flex gap-2">
+              <Box className="flex gap-2 mt-3">
                 <button
                   onClick={() => setShowCancelModal(false)}
-                  className="flex-1 px-3 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors text-sm"
+                  className="flex-1 px-3 py-2 bg-gray-200 text-gray-800 rounded font-semibold hover:bg-gray-300 transition-colors text-sm"
                 >
                   Quay lại
                 </button>
                 <button
                   onClick={confirmCancel}
-                  className="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors text-sm"
+                  disabled={cancelReason.trim().length < cancelReasonMin}
+                  className={`flex-1 px-3 py-2 bg-red-600 text-white rounded font-semibold hover:bg-red-700 transition-colors text-sm ${
+                    cancelReason.trim().length < cancelReasonMin ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
-                  Xác nhận hủy
+                  Yêu cầu huỷ
                 </button>
               </Box>
             </>
@@ -510,11 +503,11 @@ function WorkManagement() {
       </Modal>
 
       {/* Overtime Request Modal */}
-      <Modal visible={showOvertimeModal} onClose={() => setShowOvertimeModal(false)} title="Yêu cầu tăng ca">
+      <Modal visible={showOvertimeModal} onClose={() => setShowOvertimeModal(false)}>
         <Box className="p-0 space-y-4">
           {selectedWork && (
             <>
-              <Box className="bg-orange-50 rounded-lg p-3 border border-orange-200">
+              <Box className="bg-orange-50 rounded p-3 border border-orange-200">
                 <Text className="text-xs text-orange-700 font-semibold mb-1">Công việc gốc:</Text>
                 <Text className="font-semibold text-gray-900 text-sm">{selectedWork.title}</Text>
                 <Text className="text-xs text-gray-600 mt-1">Thời gian: {selectedWork.scheduledTime}</Text>
@@ -593,7 +586,7 @@ function WorkManagement() {
               </Box>
 
               <Box>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">Công việc:</Text>
+                <Text className="text-sm font-semibold text-gray-700 mb-2">Yêu cầu tăng ca công việc:</Text>
                 <Input
                   value={overtimeWork}
                   onChange={(e) => setOvertimeWork(e.target.value)}

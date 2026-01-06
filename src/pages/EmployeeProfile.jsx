@@ -1,10 +1,9 @@
 import { Box, Text, Icon, Button, Page } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { getUserInfo } from "zmp-sdk/apis";
 import BottomNavigation from "../components/BottomNavigation";
 import { miniAppGetProfileInfoByID } from "../services/user.service";
-import { clearTokens } from "../config/axiosConfig";
+import { clearTokens, getUserInfoInStorage } from "../config/axiosConfig";
 
 function EmployeeProfile() {
   const navigate = useNavigate();
@@ -32,9 +31,9 @@ function EmployeeProfile() {
   });
 
   const getUserInfoMiniApp = async () => {
-    const { userInfo } = await getUserInfo();
+    const userInfo = getUserInfoInStorage();
+
     const userInfoResp = await miniAppGetProfileInfoByID(userInfo.id);
-    console.log("Fetched user info:", userInfoResp);
     if (userInfoResp.success) {
       setUserInfo(userInfoResp.data);
     } else {
@@ -118,7 +117,7 @@ function EmployeeProfile() {
         </Box>
 
         {/* Work Location */}
-        <Box className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-gray-100">
+        {/* <Box className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-gray-100">
           <Text className="font-bold text-gray-900 mb-3 flex items-center">
             <Icon icon="zi-location" className="mr-2 text-red-600" size={16} />
             Địa Điểm Chấm Công Mặc Định
@@ -140,7 +139,7 @@ function EmployeeProfile() {
               Xem Bản Đồ
             </Button>
           </Box>
-        </Box>
+        </Box> */}
 
         <Box className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-gray-100">
           <Text className="font-bold text-gray-900 mb-3 flex items-center">

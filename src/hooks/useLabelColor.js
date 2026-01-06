@@ -5,7 +5,7 @@ export const getStatusColor = (status) => {
     case "in_progress":
       return "text-blue-600 border-blue-300";
     case "completed":
-      return "text-blue-600 border-blue-300";
+      return "text-green-600 border-green-300";
     default:
       return "text-gray-600 border-gray-300";
   }

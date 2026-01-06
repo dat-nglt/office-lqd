@@ -1,29 +1,7 @@
-/*
- * Dữ liệu cần thiết cho trang WorkList:
- * - workList: Mảng các đối tượng công việc với các trường id (số), workName (chuỗi), date (chuỗi), scheduledDate (chuỗi), scheduledTime (chuỗi), company (chuỗi), status (chuỗi như "pending"), priority (chuỗi như "high"), service (chuỗi), workType (chuỗi), progress (số), customerName (chuỗi), phoneNumber (chuỗi), location (chuỗi), address (chuỗi), coordinates (đối tượng với lat, lng), content (chuỗi), notes (chuỗi), technicians (mảng đối tượng với name, phone, specialization). Được sử dụng để hiển thị danh sách công việc.
- * - selectedPeriod: Chuỗi ('today', 'week', 'month') để lọc công việc theo thời gian.
- * - selectedWorkType: Chuỗi ('all', 'project', 'service') để lọc loại công việc.
- * - selectedWork: Đối tượng công việc được chọn để hiển thị trong modal.
- * - showDetailModal: Boolean để hiển thị modal chi tiết công việc.
- * - periodOptions: Mảng tùy chọn thời gian lọc.
- * - workTypeOptions: Mảng tùy chọn loại công việc lọc.
- * - filteredWorkList: Mảng công việc đã lọc dựa trên selectedPeriod và selectedWorkType.
- * - stats: Đối tượng thống kê với completed (số), inProgress (số), pending (số), total (số).
- *
- * API cần thiết (đề xuất thực hiện):
- * - fetchWorkList(employeeId, period, workType): API để lấy danh sách công việc từ backend dựa trên ID nhân viên, thời gian và loại. Ví dụ: GET /api/work/list?employeeId=123&period=today&workType=all. Trả về mảng workList.
- * - fetchWorkStats(employeeId, period): API để lấy thống kê công việc cho nhân viên theo thời gian. Ví dụ: GET /api/work/stats?employeeId=123&period=today. Trả về đối tượng stats.
- * - updateWorkStatus(workId, status): API để cập nhật trạng thái công việc. Ví dụ: PUT /api/work/update-status với body {workId: 1, status: "in_progress"}.
- * - Cải tiến tiềm năng: Tích hợp useEffect để gọi fetchWorkList và fetchWorkStats khi component mount hoặc khi selectedPeriod/selectedWorkType thay đổi; thêm xử lý lỗi và loading states; sử dụng Axios hoặc Fetch cho các API backend.
- * - Không có lệnh gọi API backend hiện tại; dựa vào dữ liệu local hardcode.
- */
-
 import { Box, Text, Icon, Button, Page } from "zmp-ui";
 import { useState, useMemo, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getUserInfo } from "zmp-sdk/apis";
 import BottomNavigation from "../components/BottomNavigation";
-import WorkCard from "../components/WorkCard";
 import WorkDetailModal from "../components/WorkDetailModal";
 import { ToastContext } from "../components/layout";
 import { miniAppGetListOfWorkAssignmentsByID } from "../services/user.service";
@@ -35,6 +13,7 @@ import {
   isDateInRange,
 } from "../hooks/useValidationDate";
 import JobListItem from "../components/JobListItem";
+import { clearTokens, getTokens, getUserInfoInStorage } from "../config/axiosConfig";
 
 function WorkList() {
   const navigate = useNavigate();
@@ -48,75 +27,75 @@ function WorkList() {
 
   // Fetch user info và work assignments từ API
   useEffect(() => {
-    const fetchWorkAssignments = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const { userInfo } = await getUserInfo();
-        const ZAID = userInfo.id;
+    const currentToken = getTokens();
+    if (!currentToken.accessToken) {
+      clearTokens();
+    } else {
+      const fetchWorkAssignments = async () => {
+        try {
+          setLoading(true);
+          setError(null);
+          const userInfo = getUserInfoInStorage();
+          const ZAID = userInfo.id;
 
-        // Gọi API để lấy danh sách work assignments
-        const response = await miniAppGetListOfWorkAssignmentsByID(ZAID);
-
-        if (response.success && response.data) {
-          // Transform dữ liệu từ API sang format của workList
-          const transformedWorkList = response.data.map((assignment) => ({
-            id: assignment.id,
-            workName: assignment.work?.title || "Công việc không có tên",
-            equipment: assignment.work?.category?.name || "",
-            title: assignment.work?.title || "Công việc không có tên",
-            required_date: assignment.work?.required_date
-              ? new Date(assignment.work.required_date).toLocaleDateString("vi-VN")
-              : "Không xác định",
-            scheduledDate: assignment.work?.required_date
-              ? new Date(assignment.work.required_date).toLocaleDateString("vi-VN")
-              : "Không xác định",
-            scheduledTime: `${assignment.work?.required_time_hour || "00"}:${String(
-              assignment.work?.required_time_minute || 0
-            ).padStart(2, "0")}`,
-            status: assignment.assigned_status?.toLowerCase() || "pending",
-            priority: assignment.work?.priority?.toLowerCase() || "medium",
-            service: assignment.work?.service_type || "Không xác định",
-            serviceType: assignment.work?.service_type || "Không xác định",
-            progress:
-              assignment.work?.status === "completed" ? 100 : assignment.work?.status === "in_progress" ? 50 : 0,
-            customerName: assignment.work?.customer_name || "Không xác định",
-            phoneNumber: assignment.work?.customer_phone || "",
-            location: assignment.work?.location || "Không xác định",
-            address: assignment.work?.customer_address || "Không xác định",
-            coordinates: {
-              lat: assignment.work?.location_lat || 0,
-              lng: assignment.work?.location_lng || 0,
-            },
-            content: assignment.work?.description || "",
-            notes: assignment.work?.notes || assignment.notes || "",
-            technicians: [
-              {
-                name: userInfo?.name || "Kỹ thuật viên",
-                phone: userInfo?.phone || "",
-                specialization: assignment.work?.category?.name || "Không xác định",
+          // Gọi API để lấy danh sách work assignments
+          const response = await miniAppGetListOfWorkAssignmentsByID(ZAID);
+          if (response && response.success && response.data) {
+            // Transform dữ liệu từ API sang format của workList
+            const transformedWorkList = response.data.map((assignment) => ({
+              id: assignment.id,
+              workName: assignment.work?.title || "Công việc không có tên",
+              equipment: assignment.work?.category?.name || "",
+              title: assignment.work?.title || "Công việc không có tên",
+              required_date: assignment.work?.required_date
+                ? new Date(assignment.work.required_date).toLocaleDateString("vi-VN")
+                : "Không xác định",
+              scheduledDate: assignment.work?.required_date
+                ? new Date(assignment.work.required_date).toLocaleDateString("vi-VN")
+                : "Không xác định",
+              scheduledTime: `${assignment.work?.required_time_hour || "00"}:${String(
+                assignment.work?.required_time_minute || 0
+              ).padStart(2, "0")}`,
+              status: assignment.work.status?.toLowerCase() || "pending",
+              priority: assignment.work?.priority?.toLowerCase() || "medium",
+              service: assignment.work?.service_type || "Không xác định",
+              serviceType: assignment.work?.service_type || "Không xác định",
+              progress:
+                assignment.work?.status === "completed" ? 100 : assignment.work?.status === "in_progress" ? 50 : 0,
+              customerName: assignment.work?.customer_name || "Không xác định",
+              phoneNumber: assignment.work?.customer_phone || "",
+              location: assignment.work?.location || "Không xác định",
+              address: assignment.work?.customer_address || "Không xác định",
+              coordinates: {
+                lat: assignment.work?.location_lat || 0,
+                lng: assignment.work?.location_lng || 0,
               },
-            ],
-          }));
+              content: assignment.work?.description || "",
+              notes: assignment.work?.notes || "Không có ghi chú nào",
+              technicians: [
+                {
+                  name: userInfo?.name || "Kỹ thuật viên",
+                  phone: userInfo?.phone || "",
+                  specialization: assignment.work?.category?.name || "Không xác định",
+                },
+              ],
+            }));
 
-          setWorkList(transformedWorkList);
-        } else {
-          throw new Error(response.error || "Không thể lấy danh sách công việc");
+            setWorkList(transformedWorkList);
+          }
+        } catch (err) {
+          setError("Không thể tải danh sách công việc. Vui lòng thử lại sau khi hoàn thành bảo trì hệ thống.");
+          toast?.show?.({
+            type: "error",
+            message: err.message || "Lỗi khi tải danh sách công việc",
+            duration: 2000,
+          });
+        } finally {
+          setLoading(false);
         }
-      } catch (err) {
-        console.error("Error fetching work assignments:", err);
-        setError(err.message || "Lỗi khi tải danh sách công việc");
-        toast?.show?.({
-          type: "error",
-          message: err.message || "Lỗi khi tải danh sách công việc",
-          duration: 2000,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchWorkAssignments();
+      };
+      fetchWorkAssignments();
+    }
   }, [selectedPeriod]);
 
   const handleStartWork = (job) => {
@@ -167,32 +146,6 @@ function WorkList() {
   const handleViewDetail = (work) => {
     setSelectedWork(work);
     setShowDetailModal(true);
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-100 text-green-800 border-green-300";
-      case "in_progress":
-        return "bg-blue-100 text-blue-800 border-blue-300";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-300";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-300";
-    }
-  };
-
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case "completed":
-        return "Hoàn thành";
-      case "in_progress":
-        return "Đang thực hiện";
-      case "pending":
-        return "Chờ thực hiện";
-      default:
-        return "Không xác định";
-    }
   };
 
   return (
@@ -263,13 +216,14 @@ function WorkList() {
             </Box>
           ) : error ? (
             <Box className="text-center py-12">
-              <Icon icon="zi-alert" className="text-red-600 text-5xl mb-4" />
-              <Text className="text-red-600 mb-2 font-semibold">Lỗi</Text>
+              <Icon icon="zi-alert" className="text-yellow-600 text-5xl mb-4" />
+              <Text className="text-yellow-600 mb-2 font-semibold">Sự cố hệ thống</Text>
               <Text className="text-gray-500 text-sm">{error}</Text>
             </Box>
           ) : filteredWorkList.length > 0 ? (
             filteredWorkList.map((work) => (
               <JobListItem
+                sx={"border border-gray-200 rounded-lg shadow-sm bg-white"}
                 key={work.id}
                 job={work}
                 onStartWork={handleStartWork}

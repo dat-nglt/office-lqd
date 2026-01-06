@@ -1,9 +1,9 @@
 import { Box, Button, Icon, Text } from "zmp-ui";
 import { getPriorityColor, getPriorityLabel, getStatusColor, getStatusLabel } from "../hooks/useLabelColor";
 
-function JobListItem({ job, onStartWork, onProgressReport, onShowDetail }) {
+function JobListItem({ job, onStartWork, onProgressReport, onShowDetail, sx = "" }) {
   return (
-    <Box className="p-4 hover:bg-gray-50 transition-colors">
+    <Box className={`p-4 hover:bg-gray-50 transition-colors ${sx}`}>
       {/* Job Header */}
       <Box className="flex items-start justify-between gap-2 mb-2">
         <Box className="flex-1">
@@ -47,9 +47,17 @@ function JobListItem({ job, onStartWork, onProgressReport, onShowDetail }) {
       </Box>
 
       {/* Notes */}
-      {job.notes && (
+      {job.content && (
         <Box className="p-2 bg-blue-50 rounded border border-blue-200 mb-2">
           <Text className="text-xs text-blue-800">
+            <span className="font-semibold">Nội dung:</span> {job.content}
+          </Text>
+        </Box>
+      )}
+
+      {job.notes && (
+        <Box className="p-2 bg-yellow-50 rounded border border-yellow-200 mb-2">
+          <Text className="text-xs text-yellow-800">
             <span className="font-semibold">Ghi chú:</span> {job.notes}
           </Text>
         </Box>
@@ -63,7 +71,7 @@ function JobListItem({ job, onStartWork, onProgressReport, onShowDetail }) {
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs"
             onClick={() => onStartWork(job)}
           >
-            <Icon icon="zi-play-circle" size={12} className="mr-1" />
+            <Icon icon="zi-send-solid" size={12} className="mr-1" />
             Bắt đầu
           </Button>
         )}
@@ -78,7 +86,7 @@ function JobListItem({ job, onStartWork, onProgressReport, onShowDetail }) {
           </Button>
         )}
         {job.status === "completed" && (
-          <Button size="small" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs" disabled>
+          <Button size="small" className="flex-1 bg-green-500 text-white rounded text-xs">
             <Icon icon="zi-check-circle" size={12} className="mr-1" />
             Hoàn thành
           </Button>

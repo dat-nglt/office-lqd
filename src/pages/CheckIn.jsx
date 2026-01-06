@@ -1,6 +1,6 @@
 import { Box, Page } from "zmp-ui";
 import { useState, useRef, useEffect, useContext } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ToastContext } from "../components/layout";
 import BottomNavigation from "../components/BottomNavigation";
 import { getPlaceNameFromCoordinates, calculateDistance, isPointWithinRadius } from "../utils/geocoding";
@@ -14,7 +14,7 @@ import CameraView from "../components/checkin/CameraView";
 import PhotoInfo from "../components/checkin/PhotoInfo";
 import ActionButtons from "../components/checkin/ActionButtons";
 import CheckInHistory from "../components/checkin/CheckInHistory";
-import { getAccessToken, getLocation, getUserInfo } from "zmp-sdk/apis";
+import { getAccessToken, getLocation } from "zmp-sdk/apis";
 import {
   dataURItoBlob,
   submitCheckIn,
@@ -30,17 +30,17 @@ import {
   miniAppGetLocationByUserToken,
   miniAppGetProfileInfoByID,
 } from "../services/user.service";
+import { clearTokens, getTokens, getUserInfoInStorage } from "../config/axiosConfig";
 
 function CheckIn() {
   const toast = useContext(ToastContext);
+  const navigate = useNavigate();
   const params = useParams(); // lấy tham số từ URL để xác định công việc chấm công
   const [searchParams] = useSearchParams(); // lấy tham số tìm kiếm từ URL
   const work_id = params.work_code || searchParams.get("work_id"); // Lấy work_code từ URL nếu có
-  const [userInfo, setUserInfo] = useState(null); // Thông tin người dùng
+  const [userDataInSystem, setUserDataInSystem] = useState(null); // Thông tin người dùng
   const [checkInLocations, setCheckInLocations] = useState([]); // Danh sách địa điểm chấm công trong ngày + thêm kho vật tư & văn phòng
   const [currentLocation, setCurrentLocation] = useState(null); // Vị trí hiện tại của người dùng
-  const [currentPlaceName, setCurrentPlaceName] = useState(null); // Tên địa điểm hiện tại
-  const [isLoadingPlaceName, setIsLoadingPlaceName] = useState(false); // Trạng thái tải tên địa điểm
   const [isCheckingLocation, setIsCheckingLocation] = useState(false); // Trạng thái đang lấy vị trí
   const [selectedAttendanceLocation, setSelectedAttendanceLocation] = useState(null); // Địa điểm chấm công đã chọn
   const [selectedAttendanceMode, setSelectedAttendanceMode] = useState(null); // Chế độ chấm công đã chọn (in/out)
@@ -75,20 +75,13 @@ function CheckIn() {
   // Lấy danh sách địa điểm chấm công trong ngày từ các công việc được giao
   const fetchLocationOfWorkInCurrentDay = async () => {
     try {
-      const { userInfo } = await getUserInfo();
+      const userInfo = getUserInfoInStorage();
       const ZAID = userInfo.id;
       const userInfoResp = await miniAppGetProfileInfoByID(ZAID);
-      if (userInfoResp.success) {
-        setUserInfo(userInfoResp.data);
-      } else {
-        clearTokens();
-      }
+      setUserDataInSystem(userInfoResp.data);
 
       const listOfWorkAssignmentsResp = await miniAppGetListOfWorkAssignmentsInCurrentDayByZAID(ZAID);
       const todayAttendanceHistoryResp = await getTodayAttendanceHistory(userInfoResp.data.id);
-      console.log("Today's attendance history response:", todayAttendanceHistoryResp);
-
-
       // Parse today's attendance history and set local state
       // if (todayAttendanceHistoryResp?.success) {
       const parsed = parseTodayAttendanceRecords(todayAttendanceHistoryResp.data);
@@ -100,11 +93,11 @@ function CheckIn() {
           id: assign.work.id,
           name: assign.work.title,
           project_id: assign.work.project_id,
-          serviceType: "outside_service",
           address: assign.work.location,
           latitude: parseFloat(assign.work.location_lat),
           longitude: parseFloat(assign.work.location_lng),
           radius: 70,
+          type: "work",
           icon: "zi-setting",
         }));
 
@@ -122,7 +115,7 @@ function CheckIn() {
   const fetchAttendanceData = async () => {
     try {
       // Gọi cả ba API song song
-      const [attendanceLocationResp, checkInTypeResp] = await Promise.all([
+      const [attendanceLocationResp, attendanceTypeResp] = await Promise.all([
         miniAppGetAttendanceLocation(),
         miniAppGetAttendanceType(),
       ]);
@@ -135,8 +128,8 @@ function CheckIn() {
       }
 
       // Xử lý danh sách loại chấm công
-      if (checkInTypeResp.success) {
-        setCheckInTypes(checkInTypeResp.data);
+      if (attendanceTypeResp.success) {
+        setCheckInTypes(attendanceTypeResp.data);
       } else {
         throw new Error("Không thể tải danh sách loại chấm công");
       }
@@ -159,25 +152,20 @@ function CheckIn() {
         const token = response.token;
         const locationData = await decodeLocationToken(token, accessToken);
 
+        const placeName = await getPlaceNameFromCoordinates(
+          parseFloat(locationData.latitude),
+          parseFloat(locationData.longitude)
+        );
+
         const userLocation = {
           latitude: parseFloat(locationData.latitude),
           longitude: parseFloat(locationData.longitude),
+          placeName: placeName,
           accuracy: locationData.accuracy,
           timestamp: locationData.timestamp,
         };
 
         setCurrentLocation(userLocation);
-
-        // Get place name from coordinates
-        setIsLoadingPlaceName(true);
-        try {
-          const placeName = await getPlaceNameFromCoordinates(userLocation.latitude, userLocation.longitude);
-          setCurrentPlaceName(placeName);
-        } catch (error) {
-          setCurrentPlaceName(`${userLocation.latitude.toFixed(5)}, ${userLocation.longitude.toFixed(5)}`);
-        } finally {
-          setIsLoadingPlaceName(false);
-        }
 
         // Check all nearby locations
         const nearby = checkInLocations.filter((loc) => {
@@ -234,11 +222,9 @@ function CheckIn() {
               closestLocation.longitude
             );
 
-            toast?.error({
+            toast?.warn({
               title: "Vị trí không hợp lệ",
-              message: `Bạn cách ${closestLocation.name} ${distanceToClosest.toFixed(
-                0
-              )}m. Vui lòng đến địa điểm chấm công.`,
+              message: `Bạn cách ${closestLocation.name} ${(distanceToClosest / 1000).toFixed(1) || 0}Km.`,
               duration: 3000,
             });
           }
@@ -268,8 +254,8 @@ function CheckIn() {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "user",
-          width: { ideal: 1080 },
-          height: { ideal: 1080 },
+          width: { ideal: 720 },
+          height: { ideal: 720 },
         },
       });
       if (videoRef.current) {
@@ -292,7 +278,7 @@ function CheckIn() {
       const context = canvas.getContext("2d");
 
       // Set canvas to 1:1 aspect ratio
-      const size = 1080;
+      const size = 720;
       canvas.width = size;
       canvas.height = size;
 
@@ -359,73 +345,82 @@ function CheckIn() {
       const blob = dataURItoBlob(capturedPhoto);
       // Trích xuất work_id từ selectedAttendanceLocation (nếu có)
       const workId = selectedAttendanceLocation?.id || null;
-      const resultPayload = await uploadCheckInPhoto(blob, userInfo.zalo_id);
-
-      let attendanceDataPayload = {
-        user_id: userInfo.id,
-        work_id: workId,
-        project_id: selectedAttendanceLocation?.project_id || null,
-        latitude: currentLocation.latitude,
-        longitude: currentLocation.longitude,
-        location_name: selectedAttendanceLocation.name,
-        address: selectedAttendanceLocation.address || null,
-        attendance_type_id: selectedAttendanceType?.id || null,
-        notes: notes || null, // Ghi chú từ user input
-        distance_from_work: violationDistance || 0,
-        technicians: [userInfo.id],
-        ...resultPayload,
-      };
+      const resultPayload = await uploadCheckInPhoto(blob, userDataInSystem.zalo_id);
 
       let attendanceResp;
       if (selectedAttendanceMode === "out") {
         const checkOutDataPayload = {
           work_id: workId,
-          user_id: userInfo.id,
+          user_id: userDataInSystem.id,
+          check_out_time_on_local: new Date(), // Thời gian check-out trên thiết bị
           photo_url_check_out: resultPayload.photo_url,
           latitude_check_out: currentLocation.latitude,
           longitude_check_out: currentLocation.longitude,
-          location_name_check_out: selectedAttendanceLocation.name,
+          location_name_check_out: currentLocation.placeName,
           distance_from_work_check_out: violationDistance || 0,
           attendance_type_id: selectedAttendanceType?.id || null,
           address_check_out: selectedAttendanceLocation.address || null,
         };
         attendanceResp = await submitCheckOut(checkOutDataPayload);
       } else {
-        attendanceResp = await submitCheckIn(attendanceDataPayload);
+        let checkInPayload = {
+          user_id: userDataInSystem.id,
+          work_id: workId,
+          check_in_time_on_local: new Date(),
+          project_id: selectedAttendanceLocation?.project_id || null,
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
+          location_name: currentLocation.placeName,
+          address: selectedAttendanceLocation.address || null,
+          attendance_type_id: selectedAttendanceType?.id || null,
+          notes: notes || null,
+          distance_from_work: violationDistance || 0,
+          technicians: [userDataInSystem.id],
+          ...resultPayload,
+        };
+        attendanceResp = await submitCheckIn(checkInPayload);
       }
 
       if (attendanceResp.success) {
         const attendanceRespData = attendanceResp.data;
-
         const checkInTypeText = selectedAttendanceMode === "in" ? "Chấm công vào" : "Chấm công ra";
-
         // Xác định dữ liệu dựa trên mode check-in/check-out
-        let timeField, photoField, latitudeField, longitudeField, violationDistanceField;
+        let timeField, photoField, latitudeField, longitudeField, violationDistanceField, timeLocalField;
 
-        if (selectedAttendanceMode === "out") {
-          timeField = attendanceRespData?.check_out_time;
-          photoField = attendanceRespData?.photo_url_check_out;
-          latitudeField = attendanceRespData?.latitude_check_out;
-          longitudeField = attendanceRespData?.longitude_check_out;
-          violationDistanceField = attendanceRespData?.violation_distance_check_out;
-        } else {
-          timeField = attendanceRespData?.check_in_time;
-          photoField = attendanceRespData?.photo_url;
-          latitudeField = attendanceRespData?.latitude;
-          longitudeField = attendanceRespData?.longitude;
-          violationDistanceField = attendanceRespData?.violation_distance;
-        }
+        timeField =
+          selectedAttendanceMode === "out" ? attendanceRespData?.check_out_time : attendanceRespData?.check_in_time;
+        timeLocalField =
+          selectedAttendanceMode === "out"
+            ? attendanceRespData?.check_out_time_on_local
+            : attendanceRespData?.check_in_time_on_local;
+        photoField =
+          selectedAttendanceMode === "out" ? attendanceRespData?.photo_url_check_out : attendanceRespData?.photo_url;
+        latitudeField =
+          selectedAttendanceMode === "out" ? attendanceRespData?.latitude_check_out : attendanceRespData?.latitude;
+        longitudeField =
+          selectedAttendanceMode === "out" ? attendanceRespData?.longitude_check_out : attendanceRespData?.longitude;
+        violationDistanceField =
+          selectedAttendanceMode === "out"
+            ? attendanceRespData?.distance_from_work_check_out
+            : attendanceRespData?.distance_from_work;
 
         const now = new Date(timeField || Date.now());
+        const updatedWorkTitle =
+          selectedAttendanceLocation.type === "work" ? selectedAttendanceLocation.name : "chưa xác định";
 
         const newRecord = {
           id: attendanceRespData?.id || Date.now(),
+          attendanceId: `${attendanceRespData.id}-${selectedAttendanceMode}`,
+          workTitle: updatedWorkTitle,
           date: now.toLocaleDateString("vi-VN"),
+          attendanceType: checkInTypeText,
           checkInTime: now.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
-          type: checkInTypeText,
-          checkInType: checkInTypeText,
+          attendanceTimeLocal: timeLocalField
+            ? new Date(timeLocalField).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+            : null,
           location: attendanceRespData?.location_name || selectedAttendanceLocation.name,
           locationType: selectedAttendanceLocation.type,
+          isAtHub: attendanceRespData?.metadata?.hub === "warehouse" || attendanceRespData?.metadata?.hub === "office",
           photo: photoField,
           latitude: parseFloat(latitudeField) || currentLocation.latitude,
           longitude: parseFloat(longitudeField) || currentLocation.longitude,
@@ -433,11 +428,27 @@ function CheckIn() {
           violationDistance: violationDistanceField || null,
         };
 
-        setTodayAttendanceRecords((prev) => [newRecord, ...prev]);
+        // Kiểm tra và cập nhật workTitle nếu có bản ghi cũ với cùng id
+        setTodayAttendanceRecords((prev) => {
+          const existingIndex = prev.findIndex((record) => record.id === newRecord.id);
+
+          if (existingIndex !== -1) {
+            // Có bản ghi cũ, cập nhật workTitle để đồng bộ
+            const updated = [...prev];
+            updated[existingIndex] = {
+              ...updated[existingIndex],
+              workTitle: newRecord.workTitle,
+            };
+            return [newRecord, ...updated];
+          }
+
+          // Không có bản ghi cũ, chỉ thêm mới
+          return [newRecord, ...prev];
+        });
 
         toast?.success({
           title: "Chấm công thành công",
-          message: `Đã ghi nhận chấm ${checkInTypeText} lúc ${newRecord.checkInTime}`,
+          message: `Đã ghi nhận ${checkInTypeText} lúc ${newRecord.checkInTime}`,
           duration: 2000,
         });
       } else {
@@ -497,8 +508,9 @@ function CheckIn() {
     const distance = getDistanceToLocation(selectedAttendanceLocation) || 0;
 
     // Set violation states
+    const roundedDistance = Number.isFinite(distance) ? Math.round(Number(distance)) : null;
     setLocationViolation(isViolation);
-    setViolationDistance(distance?.toFixed(0) || null);
+    setViolationDistance(roundedDistance);
 
     if (isViolation) {
       // Luôn mở camera và set mode (dù vi phạm hay không)
@@ -507,7 +519,7 @@ function CheckIn() {
       toast?.warning({
         title: "⚠️ Cảnh báo vi phạm vị trí",
         message: `Bạn cách ${selectedAttendanceLocation.name} ${
-          distance?.toFixed(0) || 0
+          roundedDistance || 0
         }m. Chấm công này sẽ được đánh dấu là vi phạm!`,
         duration: 3000,
       });
@@ -540,33 +552,94 @@ function CheckIn() {
   };
 
   // Check if time is valid for check-in type
-  const isValidTimeForType = (typeId) => {
+  const isValidTimeForType = (typeOrId) => {
     const now = new Date();
     const hour = now.getHours();
     const minute = now.getMinutes();
     const currentTime = hour * 60 + minute;
 
-    // Regular (ID: 1) - Không ràng buộc thời gian
-    if (typeId === 1) {
-      return true;
+    // If caller passed a type object with start_time/end_time, use them
+    if (typeOrId && typeof typeOrId === "object") {
+      const { start_time, end_time } = typeOrId;
+
+      const parseToMinutes = (timeStr) => {
+        // Expecting format like '11:30:00' or '11:30'
+        const parts = (timeStr || "").split(":");
+        const h = parseInt(parts[0] || "0", 10);
+        const m = parseInt(parts[1] || "0", 10);
+        return h * 60 + m;
+      };
+
+      const startMin = parseToMinutes(start_time);
+      const endMin = parseToMinutes(end_time);
+
+      if (startMin <= endMin) {
+        return currentTime >= startMin && currentTime <= endMin;
+      }
+
+      // Overnight range (e.g., 22:00 - 06:00)
+      return currentTime >= startMin || currentTime <= endMin;
     }
+
+    // Backwards-compatible numeric id handling
+    const typeId = typeof typeOrId === "number" ? typeOrId : typeOrId?.id;
+
+    if (typeId === 1) return currentTime >= 8 * 60 && currentTime <= 17 * 60; // Regular Work (ID: 1) - 08:00 - 17:00
 
     // Overtime Lunch (ID: 4) - 11:30 - 13:00
-    if (typeId === 4) {
-      return currentTime >= 11 * 60 + 30 && currentTime <= 13 * 60;
-    }
+    if (typeId === 4) return currentTime >= 11 * 60 + 30 && currentTime <= 13 * 60;
 
     // Overtime After (ID: 3) - 17:00 - 22:00
-    if (typeId === 3) {
-      return currentTime >= 17 * 60 && currentTime <= 22 * 60;
-    }
+    if (typeId === 3) return currentTime >= 17 * 60 && currentTime <= 22 * 60;
 
-    // Night Shift (ID: 2) - 22:00 - 06:00 (qua đêm)
-    if (typeId === 2) {
-      return currentTime >= 22 * 60 || currentTime <= 6 * 60;
-    }
+    // Night Shift (ID: 2) - 22:00 - 06:00 (overnight)
+    if (typeId === 2) return currentTime >= 22 * 60 || currentTime <= 6 * 60;
 
-    return false; // Trường hợp không xác định
+    return false; // Unknown
+  };
+
+  const handleCheckSelectType = (type) => {
+    console.log("Selected attendance type:", type);
+    if (!isValidTimeForType(type)) {
+      // Build a helpful human-readable time message from available data
+      let timeMsg = "";
+
+      if (type && typeof type === "object") {
+        if (type.start_time && type.end_time) {
+          const start = type.start_time.slice(0, 5);
+          const end = type.end_time.slice(0, 5);
+          timeMsg = `${start} - ${end}`;
+          if (type.code === "night_shift" && start > end) {
+            timeMsg = `trong khoảng ${start} - ${end}`;
+          } else {
+            timeMsg = `trong khoảng ${start} - ${end}`;
+          }
+        } else {
+          // fallback to known codes
+          if (type.code === "overtime_after") timeMsg = "sau 17:00";
+          else if (type.code === "overtime_lunch") timeMsg = "trong khoảng 11:30 - 13:00";
+          else if (type.code === "night_shift") timeMsg = "trong khoảng 22:00 - 06:00";
+        }
+      } else {
+        // fallback to numeric id mapping
+        timeMsg =
+          type.id === 3 // OVERTIME_AFTER
+            ? "sau 17:00"
+            : type.id === 4 // OVERTIME_LUNCH
+            ? "trong khoảng 11:30 - 13:00"
+            : type.id === 2 // NIGHT_SHIFT
+            ? "trong khoảng 22:00 - 06:00"
+            : "";
+      }
+
+      toast?.error({
+        title: "Thời gian không hợp lệ",
+        message: `Chấm công ${type?.name || type?.code || ""} chỉ được thực hiện ${timeMsg}`,
+        duration: 3000,
+      });
+      return;
+    }
+    setSelectedAttendanceType(type);
   };
 
   useEffect(() => {
@@ -576,9 +649,15 @@ function CheckIn() {
   }, [showCamera, capturedPhoto]);
 
   useEffect(() => {
-    fetchAttendanceData();
-    fetchLocationOfWorkInCurrentDay();
-  }, [work_id]); // Load user info on mount
+    const currentToken = getTokens();
+    if (!currentToken.accessToken) {
+      clearTokens();
+      navigate("/login");
+    } else {
+      fetchAttendanceData();
+      fetchLocationOfWorkInCurrentDay();
+    }
+  }, []);
 
   return (
     <Page className="bg-gray-50 min-h-screen pb-20">
@@ -590,36 +669,14 @@ function CheckIn() {
             <CheckInTypeSelector
               checkInTypes={checkInTypes}
               selectedAttendanceType={selectedAttendanceType}
-              onSelectType={(type) => {
-                if (!isValidTimeForType(type.id)) {
-                  const timeMsg =
-                    type.id === 3 // OVERTIME_AFTER
-                      ? "sau 17:00"
-                      : type.id === 4 // OVERTIME_LUNCH
-                      ? "trong khoảng 11:30 - 13:00"
-                      : type.id === 2 // NIGHT_SHIFT
-                      ? "trong khoảng 22:00 - 06:00"
-                      : "";
-                  toast?.error({
-                    title: "Thời gian không hợp lệ",
-                    message: `Chấm công ${type.name} chỉ được thực hiện ${timeMsg}`,
-                    duration: 3000,
-                  });
-                  return;
-                }
-                setSelectedAttendanceType(type);
-              }}
+              onSelectType={handleCheckSelectType}
             />
 
             <Box className="space-y-4 mb-6">
               {selectedAttendanceType && (
                 <>
                   {/* Vị trí hiện tại của người dùng */}
-                  <LocationStatus
-                    currentLocation={currentLocation}
-                    currentPlaceName={currentPlaceName}
-                    isLoadingPlaceName={isLoadingPlaceName}
-                  />
+                  <LocationStatus currentLocation={currentLocation} />
 
                   <GetLocationButton onGetLocation={handleGetLocation} isCheckingLocation={isCheckingLocation} />
 
@@ -653,7 +710,6 @@ function CheckIn() {
             <PhotoInfo
               capturedPhoto={capturedPhoto}
               selectedAttendanceMode={selectedAttendanceMode}
-              selectedCheckInLocation={selectedAttendanceLocation}
               currentLocation={currentLocation}
               locationViolation={locationViolation}
               violationDistance={violationDistance}
@@ -676,7 +732,7 @@ function CheckIn() {
           </>
         )}
 
-        <CheckInHistory todayAttendanceRecords={todayAttendanceRecords} />
+        {showCamera ? null : <CheckInHistory todayAttendanceRecords={todayAttendanceRecords} />}
       </Box>
 
       <BottomNavigation />

@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "zmp-ui";
-import { clearTokens, getTokens, getUserInfo } from "../config/axiosConfig";
+import { clearTokens, getTokens, getUserInfoInStorage } from "../config/axiosConfig";
 import { Spinner } from "zmp-ui";
 
 /**
@@ -59,23 +59,11 @@ const RouteGuard = ({ children, redirectTo = "/login", requireAuth = true }) => 
 
       // Lấy tokens từ storage
       const tokens = getTokens();
-      const userInfo = getUserInfo();
+      const userInfo = getUserInfoInStorage();
 
       // Kiểm tra token tồn tại
-      if (!tokens?.accessToken) {
-        console.warn("[RouteGuard] No access token found");
-        navigate(redirectTo, { replace: true });
-        setIsLoading(false);
-        return;
-      }
-
-      // Kiểm tra token còn hạn
-      if (!isTokenValid(tokens.accessToken)) {
-        console.warn("[RouteGuard] Token expired");
-        // Clear invalid tokens
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("user_info");
-        localStorage.removeItem("authTokens");
+      if (!tokens?.accessToken || !isTokenValid(tokens.accessToken)) {
+        clearTokens();
         navigate(redirectTo, { replace: true });
         setIsLoading(false);
         return;
@@ -83,7 +71,6 @@ const RouteGuard = ({ children, redirectTo = "/login", requireAuth = true }) => 
 
       // Kiểm tra user info được lưu
       if (!userInfo || !userInfo.id) {
-        console.warn("[RouteGuard] User info not found or invalid");
         clearTokens();
         navigate(redirectTo, { replace: true });
         setIsLoading(false);

@@ -17,14 +17,14 @@ function BottomNavigation() {
     () => [
       {
         id: "report",
-        label: "Báo Cáo",
+        label: "Theo dõi",
         icon: "zi-share-external-1",
         path: "/",
         badge: null,
       },
       {
         id: "list",
-        label: "Danh sách",
+        label: "Công Việc",
         icon: "zi-list-1",
         path: "/worklist",
         badge: null,

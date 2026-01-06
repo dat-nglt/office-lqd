@@ -13,7 +13,7 @@ function LocationSelector({
 
   return (
     <Box className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-      <Text className="font-bold text-gray-900 mb-3 flex items-center">Chọn Địa Điểm Chấm Công</Text>
+      <Text className="font-bold text-gray-900 mb-3 flex items-center capitalize">Lựa chọn địa điểm chấm công</Text>
 
       <Box className="space-y-2">
         {checkInLocations.map((location) => {

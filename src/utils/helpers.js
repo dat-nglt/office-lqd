@@ -83,9 +83,11 @@ export const formatPhoneNumber = (phone) => {
 
 // Helper function để format khoảng cách
 export const formatDistance = (distance) => {
-  if (!distance) return "0m";
-  if (distance > 1000) {
-    return `${(distance / 1000).toFixed(1)}km`;
+  // Accept number or string; coerce to number safely
+  const d = distance == null ? 0 : typeof distance === "string" ? parseFloat(distance) : Number(distance);
+  if (isNaN(d) || d <= 0) return "0m";
+  if (d > 1000) {
+    return `${(d / 1000).toFixed(1)}km`;
   }
-  return `${distance.toFixed(0)}m`;
+  return `${Math.round(d)}m`;
 };

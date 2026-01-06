@@ -17,12 +17,12 @@
 import { Box, Button, Icon, Page, Text } from "zmp-ui";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getUserInfo } from "zmp-sdk/apis";
 import Header from "../components/Header";
 import WorkDetailModal from "../components/WorkDetailModal";
 import BottomNavigation from "../components/BottomNavigation";
 import JobListItem from "../components/JobListItem";
 import { miniAppGetListOfWorkAssignmentsInCurrentDayByZAID, miniAppGetProfileInfoByID } from "../services/user.service";
+import { getUserInfoInStorage } from "../config/axiosConfig";
 
 function HomePage() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -64,17 +64,16 @@ function HomePage() {
   };
 
   const getUserInfoMiniApp = async () => {
-    const { userInfo } = await getUserInfo();
+    const userInfo = getUserInfoInStorage(); // Lấy thông tin người dùng từ storage
     const ZAID = userInfo.id;
 
     const userInfoResp = await miniAppGetProfileInfoByID(ZAID);
     const listOfWorkAssignmentsResp = await miniAppGetListOfWorkAssignmentsInCurrentDayByZAID(ZAID);
 
     if (userInfoResp.success) {
+      // Kiểm tra nếu lấy thông tin người dùng thành công
       setUserInfo(userInfoResp.data);
-
       const today = new Date().toISOString().split("T")[0];
-
       // Map assignments từ listOfWorkAssignmentsResp sang todayAssignments
       const mappedAssignments = (listOfWorkAssignmentsResp?.data || []).map((assign) => ({
         id: assign.work.id,
@@ -97,7 +96,7 @@ function HomePage() {
         scheduledTime: `${assign.work.required_time_hour}:${String(assign.work.required_time_minute).padStart(2, "0")}`,
         status: assign.work.status,
         priority: assign.work.priority,
-        notes: assign.work.notes || assign.work.description,
+        notes: assign.work.notes || "Không có ghi chú nào",
         content: assign.work.description,
         workType: "service",
         technicians:
@@ -142,11 +141,15 @@ function HomePage() {
     }
   };
 
+  const handleRefreshData = () => {
+    getUserInfoMiniApp();
+  };
+
   useEffect(() => {
     getUserInfoMiniApp();
     const timer = setInterval(() => {
       setCurrentTime(new Date());
-    }, 60000);
+    }, 1000);
 
     return () => clearInterval(timer);
   }, []);
@@ -191,16 +194,19 @@ function HomePage() {
 
         {/* Today's Assignments */}
         <Box className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <Box className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
+          <Box className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100 flex items-center justify-between">
             <Text className="font-bold text-gray-900 flex items-center">
               <Icon icon="zi-list-1" className="mr-2 text-blue-600" size={16} />
-              Công Việc Hôm Nay ({todayAssignments.length})
+              Công Việc Hôm Nay
+              {/* ({todayAssignments.length}) */}
             </Text>
+            <Icon icon="zi-retry" className="mr-2 text-blue-600" size={16} onClick={handleRefreshData} />
           </Box>
 
           <Box className="divide-y divide-gray-200">
             {todayAssignments.map((job) => (
               <JobListItem
+                sx={{}}
                 key={job.id}
                 job={job}
                 onStartWork={handleStartWork}

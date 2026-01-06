@@ -46,29 +46,27 @@ const buildEvent = ({ attendance, mode }) => {
 
   const time = normalizeTimestamp(timeField);
 
-  // location & locationType
-  const locationName = attendance.address || "Không rõ";
-  const locationCheckOutName = attendance.address_check_out || locationName;
+  // location & isAtHub
+  const locationName = attendance.location_name || "Không rõ";
+  const locationCheckOutName = attendance.location_name_check_out || locationName;
   const metadataHub = attendance.metadata?.hub;
-  let locationType = "work";
+  let isAtHub = false;
+  let workTitle = attendance.work?.title || "chưa xác định";
   if (metadataHub === "warehouse" || metadataHub === "office") {
-    locationType = "warehouse";
-  } else if (attendance.project_id == null && !attendance.work) {
-    // Fallback to warehouse when no work/project associated
-    locationType = "warehouse";
+    isAtHub = true;
   }
-
   return {
-    id: `${attendance.id}-${mode}`,
-    attendanceId: attendance.id,
+    attendanceId: `${attendance.id}-${mode}`,
+    id: attendance.id,
+    workTitle,
     mode: mode,
     type: isOut ? "Chấm công Ra" : "Chấm công Vào",
-    checkInType: isOut ? "Chấm công ra" : "Chấm công vào",
+    attendanceType: isOut ? "Chấm công ra" : "Chấm công vào",
     checkInTime: time.time,
     date: time.date,
     iso: time.iso,
     location: isOut ? locationCheckOutName : locationName,
-    locationType,
+    isAtHub,
     photo: photoField || null,
     latitude: latField != null ? parseFloat(latField) : 0,
     longitude: lonField != null ? parseFloat(lonField) : 0,
@@ -105,8 +103,6 @@ export const parseTodayAttendanceRecords = (attendances = []) => {
 
   // Sort by ISO timestamp desc
   events.sort((a, b) => new Date(b.iso) - new Date(a.iso));
-
-  console.log("Parsed today attendance records:", events);
 
   return events;
 };
