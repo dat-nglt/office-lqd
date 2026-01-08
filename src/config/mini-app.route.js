@@ -7,7 +7,7 @@ const WorkListPage = lazy(() => import("../pages/WorkList"));
 const Notifications = lazy(() => import("../pages/Notifications"));
 const WorkManagement = lazy(() => import("../pages/WorkManagement"));
 const EmployeeProfile = lazy(() => import("../pages/EmployeeProfile"));
-const CheckIn = lazy(() => import("../pages/CheckIn"));
+const CheckIn = lazy(() => import("../pages/Attendance"));
 const ProgressReport = lazy(() => import("../pages/ProgressReport"));
 const OvertimeRequest = lazy(() => import("../pages/OvertimeRequest"));
 const WorkReportList = lazy(() => import("../pages/WorkReportList"));

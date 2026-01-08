@@ -7,12 +7,30 @@ import { useNavigate } from "react-router-dom";
 import { nativeStorage } from "zmp-sdk/apis";
 import BottomNavigation from "../components/BottomNavigation";
 import WorkDetailModal from "../components/WorkDetailModal";
+import OvertimeRequestModal from "../components/OvertimeRequestModal";
 import { ToastContext } from "../components/layout";
 
 function WorkManagement() {
   const navigate = useNavigate();
   const toast = useContext(ToastContext);
   const today = new Date().toLocaleDateString("vi-VN");
+
+  // Technician list for reference
+  const availableTechnicians = [
+    { id: 1, name: "Sơn" },
+    { id: 2, name: "Lâm" },
+    { id: 3, name: "Sỹ" },
+    { id: 4, name: "Huy" },
+    { id: 5, name: "Quang" },
+    { id: 6, name: "Thương TT" },
+  ];
+
+  // Helper function to get technician names from IDs
+  const getTechnicianNames = (techIds) => {
+    return techIds
+      .map((id) => availableTechnicians.find((t) => t.id === id)?.name || `ID: ${id}`)
+      .join(", ");
+  };
 
   const [workList, setWorkList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,20 +47,17 @@ function WorkManagement() {
   const cancelInputRef = useRef(null);
   const cancelReasonMax = 300;
   const cancelReasonMin = 5;
-  const [overtimeReason, setOvertimeReason] = useState("");
-  const [overtimeHours, setOvertimeHours] = useState("1");
-  // Add new states for overtime request
-  const [overtimeDate, setOvertimeDate] = useState(new Date("2025-11-26"));
-  const [overtimeAddress, setOvertimeAddress] = useState(
-    "Karaoke The King, 69 Đ. Nguyễn Ảnh Thủ, Hiệp Thành, Quận 12, Thành phố Hồ Chí Minh"
-  );
-  const [overtimeTechnicians, setOvertimeTechnicians] = useState([]);
-  const [overtimeStartTime, setOvertimeStartTime] = useState("17:00");
-  const [overtimeEndTime, setOvertimeEndTime] = useState("21:00");
-  const [overtimeWork, setOvertimeWork] = useState("lắp các dàn nóng treo tường Sumikura 2,5hp");
-
-  // Available technicians
-  const availableTechnicians = ["Sơn", "Lâm", "Sỹ", "Huy", "Quang", "Thương TT"];
+  // Consolidated overtime request state
+  const [overtimeRequest, setOvertimeRequest] = useState({
+    type: "overtime_lunch", // overtime_lunch | overtime_night | other
+    reason: "",
+    startTime: "17:00",
+    endTime: "21:00",
+    technicians: [],
+    work: "",
+    workId: null,
+    userRequestingId: getUserInfoInStorage()?.id || null,
+  });
 
   // Filter only today's work
   const todayWorkList = workList.filter((w) => w.scheduledDate === today);
@@ -68,15 +83,16 @@ function WorkManagement() {
 
   const handleRequestOvertime = (work) => {
     setSelectedWork(work);
-    setOvertimeReason("");
-    setOvertimeHours("1");
-    // Reset new fields
-    setOvertimeDate(new Date("2025-11-26"));
-    setOvertimeAddress("Karaoke The King, 69 Đ. Nguyễn Ảnh Thủ, Hiệp Thành, Quận 12, Thành phố Hồ Chí Minh");
-    setOvertimeTechnicians([]);
-    setOvertimeStartTime("17:00");
-    setOvertimeEndTime("21:00");
-    setOvertimeWork("lắp các dàn nóng treo tường Sumikura 2,5hp");
+    setOvertimeRequest({
+      type: "overtime_lunch",
+      reason: "",
+      startTime: "11:30",
+      endTime: "13:00",
+      technicians: [],
+      work: work.title,
+      workId: work.id,
+      userRequestingId: getUserInfoInStorage()?.id || null,
+    });
     setShowOvertimeModal(true);
   };
 
@@ -129,8 +145,8 @@ function WorkManagement() {
 
   // Function to calculate overtime hours
   const calculateOvertimeHours = () => {
-    const start = new Date(`1970-01-01T${overtimeStartTime}:00`);
-    const end = new Date(`1970-01-01T${overtimeEndTime}:00`);
+    const start = new Date(`1970-01-01T${overtimeRequest.startTime}:00`);
+    const end = new Date(`1970-01-01T${overtimeRequest.endTime}:00`);
     const diffMs = end - start;
     const diffHours = diffMs / (1000 * 60 * 60);
     return diffHours > 0 ? diffHours : 0;
@@ -138,17 +154,28 @@ function WorkManagement() {
 
   const confirmOvertimeRequest = () => {
     const hours = calculateOvertimeHours();
-    if (selectedWork && overtimeReason.trim() && hours > 0 && overtimeTechnicians.length > 0) {
+
+    if (selectedWork && overtimeRequest.reason.trim() && hours > 0 && overtimeRequest.type) {
+      const technicianNames = getTechnicianNames(overtimeRequest.technicians);
       toast?.success({
         title: "Yêu cầu thành công",
-        message: `Yêu cầu tăng ca ${hours} giờ cho ${overtimeTechnicians.join(", ")} đã được gửi!`,
+        message: `Yêu cầu ${
+          overtimeRequest.type === "overtime_lunch"
+            ? "tăng ca trưa"
+            : overtimeRequest.type === "overtime_night"
+            ? "tăng ca tối"
+            : "tăng ca"
+        } ${hours} giờ cho ${technicianNames} đã được gửi!`,
         duration: 2500,
       });
+
+      console.log(overtimeRequest);
+
       setShowOvertimeModal(false);
     } else {
       toast?.error({
         title: "Thông tin chưa đủ",
-        message: "Vui lòng nhập đủ thông tin và chọn kỹ thuật viên!",
+        message: "Vui lòng nhập đủ thông tin (loại tăng ca, lý do, thời gian) và chọn kỹ thuật viên!",
         duration: 2500,
       });
     }
@@ -502,128 +529,16 @@ function WorkManagement() {
         </Box>
       </Modal>
 
-      {/* Overtime Request Modal */}
-      <Modal visible={showOvertimeModal} onClose={() => setShowOvertimeModal(false)}>
-        <Box className="p-0 space-y-4">
-          {selectedWork && (
-            <>
-              <Box className="bg-orange-50 rounded p-3 border border-orange-200">
-                <Text className="text-xs text-orange-700 font-semibold mb-1">Công việc gốc:</Text>
-                <Text className="font-semibold text-gray-900 text-sm">{selectedWork.title}</Text>
-                <Text className="text-xs text-gray-600 mt-1">Thời gian: {selectedWork.scheduledTime}</Text>
-              </Box>
-
-              <Box>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">Ngày tăng ca:</Text>
-                <DatePicker
-                  value={overtimeDate}
-                  onChange={setOvertimeDate}
-                  className="w-full"
-                  dateFormat="dd/mm/yyyy"
-                />
-              </Box>
-
-              <Box>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">Địa chỉ:</Text>
-                <Input
-                  value={overtimeAddress}
-                  onChange={(e) => setOvertimeAddress(e.target.value)}
-                  className="w-full rounded-lg"
-                  placeholder="Nhập địa chỉ..."
-                />
-              </Box>
-
-              <Box>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">Kỹ thuật viên công tác</Text>
-                <Box className="max-h-32 overflow-y-auto border rounded-lg p-2 bg-gray-50">
-                  {availableTechnicians.map((tech) => (
-                    <Box key={tech} className="flex items-center mb-1">
-                      <input
-                        type="checkbox"
-                        id={`tech-${tech}`}
-                        checked={overtimeTechnicians.includes(tech)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setOvertimeTechnicians([...overtimeTechnicians, tech]);
-                          } else {
-                            setOvertimeTechnicians(overtimeTechnicians.filter((t) => t !== tech));
-                          }
-                        }}
-                        className="mr-2"
-                      />
-                      <label htmlFor={`tech-${tech}`} className="text-sm cursor-pointer">
-                        {tech}
-                      </label>
-                    </Box>
-                  ))}
-                </Box>
-              </Box>
-
-              <Box className="grid grid-cols-2 gap-4">
-                <Box>
-                  <Text className="text-sm font-semibold text-gray-700 mb-2">Thời gian bắt đầu:</Text>
-                  <Input
-                    type="time"
-                    value={overtimeStartTime}
-                    onChange={(e) => setOvertimeStartTime(e.target.value)}
-                    className="w-full rounded-lg"
-                  />
-                </Box>
-                <Box>
-                  <Text className="text-sm font-semibold text-gray-700 mb-2">Thời gian kết thúc:</Text>
-                  <Input
-                    type="time"
-                    value={overtimeEndTime}
-                    onChange={(e) => setOvertimeEndTime(e.target.value)}
-                    className="w-full rounded-lg"
-                  />
-                </Box>
-              </Box>
-
-              <Box>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">Số giờ tăng ca (tự động):</Text>
-                <Input value={`${calculateOvertimeHours()} giờ`} readOnly className="w-full rounded-lg bg-gray-100" />
-              </Box>
-
-              <Box>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">Yêu cầu tăng ca công việc:</Text>
-                <Input
-                  value={overtimeWork}
-                  onChange={(e) => setOvertimeWork(e.target.value)}
-                  className="w-full rounded-lg border-gray-300"
-                  rows={2}
-                />
-              </Box>
-
-              <Box>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">Lý do yêu cầu tăng ca:</Text>
-                <Input
-                  placeholder="Nhập lý do tăng ca..."
-                  value={overtimeReason}
-                  onChange={(e) => setOvertimeReason(e.target.value)}
-                  className="w-full rounded-lg border-gray-300"
-                  rows={3}
-                />
-              </Box>
-
-              <Box className="flex gap-2">
-                <button
-                  onClick={() => setShowOvertimeModal(false)}
-                  className="flex-1 px-3 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors text-sm"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={confirmOvertimeRequest}
-                  className="flex-1 px-3 py-2 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-colors text-sm"
-                >
-                  Gửi yêu cầu
-                </button>
-              </Box>
-            </>
-          )}
-        </Box>
-      </Modal>
+      {/* Overtime Request Modal Component */}
+      <OvertimeRequestModal
+        visible={showOvertimeModal}
+        onClose={() => setShowOvertimeModal(false)}
+        selectedWork={selectedWork}
+        overtimeRequest={overtimeRequest}
+        setOvertimeRequest={setOvertimeRequest}
+        calculateOvertimeHours={calculateOvertimeHours}
+        onConfirm={confirmOvertimeRequest}
+      />
 
       {/* Work Detail Modal - Use Component */}
       <WorkDetailModal visible={showDetailModal} onClose={() => setShowDetailModal(false)} work={selectedWork} />

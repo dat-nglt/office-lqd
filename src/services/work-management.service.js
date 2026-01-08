@@ -44,3 +44,15 @@ export const cancelTask = async (id, data) => {
         throw error.response?.data || error;
     }
 };
+
+export const requestOvertime = async (overtimeData) => {
+try {
+    const response = await axiosInstance.post(
+    API_ENDPOINTS.WORK_MANAGEMENT.REQUEST_OVERTIME,
+    overtimeData
+    );
+    return response.data;   
+} catch (error) {
+    throw error.response?.data || error;
+}
+}

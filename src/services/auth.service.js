@@ -31,14 +31,6 @@ export const zaloLogin = async (accessToken) => {
   }
 };
 
-export const register = async (userData) => {
-  try {
-    const response = await axiosInstance.post(API_ENDPOINTS.AUTH.REGISTER, userData);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
 
 export const linkZalo = async (zaloId) => {
   try {
