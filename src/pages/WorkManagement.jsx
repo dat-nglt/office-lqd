@@ -9,9 +9,9 @@ import BottomNavigation from "../components/BottomNavigation";
 import WorkDetailModal from "../components/WorkDetailModal";
 import OvertimeRequestModal from "../components/OvertimeRequestModal";
 import { ToastContext } from "../components/layout";
+import { requestOvertimeService } from "../services/work-management.service";
 
 function WorkManagement() {
-  const navigate = useNavigate();
   const toast = useContext(ToastContext);
   const today = new Date().toLocaleDateString("vi-VN");
 
@@ -27,9 +27,7 @@ function WorkManagement() {
 
   // Helper function to get technician names from IDs
   const getTechnicianNames = (techIds) => {
-    return techIds
-      .map((id) => availableTechnicians.find((t) => t.id === id)?.name || `ID: ${id}`)
-      .join(", ");
+    return techIds.map((id) => availableTechnicians.find((t) => t.id === id)?.name || `ID: ${id}`).join(", ");
   };
 
   const [workList, setWorkList] = useState([]);
@@ -50,7 +48,7 @@ function WorkManagement() {
   // Consolidated overtime request state
   const [overtimeRequest, setOvertimeRequest] = useState({
     type: "overtime_lunch", // overtime_lunch | overtime_night | other
-    reason: "",
+    reason: "Hoàn thành công việc ngoài giờ",
     startTime: "17:00",
     endTime: "21:00",
     technicians: [],
@@ -85,7 +83,7 @@ function WorkManagement() {
     setSelectedWork(work);
     setOvertimeRequest({
       type: "overtime_lunch",
-      reason: "",
+      reason: "Hoàn thành công việc ngoài giờ",
       startTime: "11:30",
       endTime: "13:00",
       technicians: [],
@@ -152,24 +150,33 @@ function WorkManagement() {
     return diffHours > 0 ? diffHours : 0;
   };
 
-  const confirmOvertimeRequest = () => {
+  const confirmOvertimeRequest = async () => {
     const hours = calculateOvertimeHours();
 
     if (selectedWork && overtimeRequest.reason.trim() && hours > 0 && overtimeRequest.type) {
       const technicianNames = getTechnicianNames(overtimeRequest.technicians);
-      toast?.success({
-        title: "Yêu cầu thành công",
-        message: `Yêu cầu ${
-          overtimeRequest.type === "overtime_lunch"
-            ? "tăng ca trưa"
-            : overtimeRequest.type === "overtime_night"
-            ? "tăng ca tối"
-            : "tăng ca"
-        } ${hours} giờ cho ${technicianNames} đã được gửi!`,
-        duration: 2500,
-      });
 
-      console.log(overtimeRequest);
+      const requestOverTimeResp = await requestOvertimeService(overtimeRequest);
+
+      if (requestOverTimeResp && requestOverTimeResp.success) {
+        toast?.success({
+          title: "Yêu cầu thành công",
+          message: `Yêu cầu ${
+            overtimeRequest.type === "overtime_lunch"
+              ? "tăng ca trưa"
+              : overtimeRequest.type === "overtime_night"
+              ? "tăng ca tối"
+              : "tăng ca"
+          } ${hours} giờ cho ${technicianNames} đã được gửi!`,
+          duration: 2500,
+        });
+      } else {
+        toast?.error({
+          title: "Yêu cầu thất bại",
+          message: requestOverTimeResp.message || "Đã có lỗi xảy ra khi gửi yêu cầu tăng ca.",
+          duration: 2500,
+        });
+      }
 
       setShowOvertimeModal(false);
     } else {
