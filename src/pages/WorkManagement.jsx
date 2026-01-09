@@ -1,7 +1,7 @@
 import { Box, Text, Icon, Button, Page, Modal, Input, DatePicker, Select } from "zmp-ui";
 import { useState, useContext, useEffect, useRef } from "react";
 import { getPriorityColor, getPriorityLabel, getStatusColor, getStatusLabel } from "../hooks/useLabelColor";
-import { miniAppGetListOfWorkAssignmentsByID } from "../services/user.service";
+import { miniAppGetListOfWorkAssignmentsByID, miniAppGetProfileInfoByID } from "../services/user.service";
 import { clearTokens, getTokens, getUserInfoInStorage } from "../config/axiosConfig";
 import { useNavigate } from "react-router-dom";
 import { nativeStorage } from "zmp-sdk/apis";
@@ -9,21 +9,26 @@ import BottomNavigation from "../components/BottomNavigation";
 import WorkDetailModal from "../components/WorkDetailModal";
 import OvertimeRequestModal from "../components/OvertimeRequestModal";
 import { ToastContext } from "../components/layout";
-import { requestOvertimeService } from "../services/work-management.service";
+import { getAllTechniciansService, requestOvertimeService } from "../services/work-management.service";
 
 function WorkManagement() {
   const toast = useContext(ToastContext);
   const today = new Date().toLocaleDateString("vi-VN");
 
   // Technician list for reference
-  const availableTechnicians = [
-    { id: 1, name: "Sơn" },
-    { id: 2, name: "Lâm" },
-    { id: 3, name: "Sỹ" },
-    { id: 4, name: "Huy" },
-    { id: 5, name: "Quang" },
-    { id: 6, name: "Thương TT" },
-  ];
+  const [availableTechnicians, setAvailableTechnicians] = useState([]);
+
+  const fetchAvailableTechnicians = async () => {
+    try {
+      const availableTechniciansResp = await getAllTechniciansService();
+      if (availableTechniciansResp.status === "success") {
+        console.log("Available technicians:", availableTechniciansResp);
+        setAvailableTechnicians(availableTechniciansResp.data);
+      }
+    } catch (error) {
+      console.error("Error fetching available technicians:", error);
+    }
+  };
 
   // Helper function to get technician names from IDs
   const getTechnicianNames = (techIds) => {
@@ -79,18 +84,19 @@ function WorkManagement() {
     setShowCancelModal(true);
   };
 
-  const handleRequestOvertime = (work) => {
+  const handleRequestOvertime = async (work) => {
     const userId = getUserInfoInStorage()?.id;
+    const userInSystem = await miniAppGetProfileInfoByID(userId);
     setSelectedWork(work);
     setOvertimeRequest({
       type: "overtime_lunch",
       reason: "Hoàn thành công việc ngoài giờ",
       startTime: "11:30",
       endTime: "13:00",
-      technicians: userId ? [userId] : [], // Thêm ID người dùng hiện tại vào mảng technicians ban đầu
+      technicians: userId ? [userInSystem?.data?.id] : [], // Thêm ID người dùng hiện tại vào mảng technicians ban đầu
       work: work.title,
       workId: work.id,
-      userRequestingId: userId,
+      userRequestingId: userInSystem?.data?.id || null,
     });
     setShowOvertimeModal(true);
   };
@@ -154,10 +160,10 @@ function WorkManagement() {
   const confirmOvertimeRequest = async () => {
     const hours = calculateOvertimeHours();
 
+    console.log("Submitting overtime request:", overtimeRequest);
+
     if (selectedWork && overtimeRequest.reason.trim() && hours > 0 && overtimeRequest.type) {
       const technicianNames = getTechnicianNames(overtimeRequest.technicians);
-      console.log("Submitting overtime request:", overtimeRequest);
-
       const requestOverTimeResp = await requestOvertimeService(overtimeRequest);
 
       if (requestOverTimeResp && requestOverTimeResp.success) {
@@ -214,7 +220,7 @@ function WorkManagement() {
         const response = await miniAppGetListOfWorkAssignmentsByID(ZAID);
         if (response && response.success && response.data) {
           const transformedWorkList = response.data.map((assignment) => ({
-            id: assignment.id,
+            id: assignment.work.id,
             title: assignment.work?.title || "Công việc không có tên",
             serviceType: assignment.work?.service_type || "Không xác định",
             equipment: assignment.work?.category?.name || "",
@@ -253,6 +259,7 @@ function WorkManagement() {
         setLoading(false);
       }
     };
+    fetchAvailableTechnicians();
     fetchWorkAssignments();
   }, []);
 
@@ -541,6 +548,7 @@ function WorkManagement() {
       {/* Overtime Request Modal Component */}
       <OvertimeRequestModal
         visible={showOvertimeModal}
+        availableTechnicians={availableTechnicians}
         onClose={() => setShowOvertimeModal(false)}
         selectedWork={selectedWork}
         overtimeRequest={overtimeRequest}

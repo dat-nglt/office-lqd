@@ -5,19 +5,11 @@ function OvertimeRequestModal({
   onClose,
   selectedWork,
   overtimeRequest,
+  availableTechnicians,
   setOvertimeRequest,
   calculateOvertimeHours,
   onConfirm,
 }) {
-  const availableTechnicians = [
-    { id: 1, name: "Sơn" },
-    { id: 2, name: "Lâm" },
-    { id: 3, name: "Sỹ" },
-    { id: 4, name: "Huy" },
-    { id: 5, name: "Quang" },
-    { id: 6, name: "Thương TT" },
-  ];
-
   return (
     <Modal visible={visible} onClose={onClose}>
       <Box className="p-0 space-y-4">
@@ -31,35 +23,39 @@ function OvertimeRequestModal({
 
             {/* Kỹ thuật viên công tác */}
             <Box>
-              <Text className="text-sm font-semibold text-gray-700 mb-2">Kỹ thuật viên công tác</Text>
-              <Box className="max-h-32 overflow-y-auto border rounded-lg p-2 bg-gray-50">
-                {availableTechnicians.map((tech) => (
-                  <Box key={tech.id} className="flex items-center mb-1">
-                    <input
-                      type="checkbox"
-                      id={`tech-${tech.id}`}
-                      checked={overtimeRequest.technicians.includes(tech.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setOvertimeRequest((prev) => ({
-                            ...prev,
-                            technicians: [...prev.technicians, tech.id],
-                          }));
-                        } else {
-                          setOvertimeRequest((prev) => ({
-                            ...prev,
-                            technicians: prev.technicians.filter((t) => t !== tech.id),
-                          }));
-                        }
-                      }}
-                      className="mr-2"
-                    />
-                    <label htmlFor={`tech-${tech.id}`} className="text-sm cursor-pointer">
-                      {tech.name}
-                    </label>
+              {availableTechnicians.length > 0 && (
+                <>
+                  <Text className="text-sm font-semibold text-gray-700 mb-2">Kỹ thuật viên công tác</Text>
+                  <Box className="max-h-32 overflow-y-auto border rounded-lg p-2 bg-gray-50">
+                    {availableTechnicians.map((tech) => (
+                      <Box key={tech.id} className="flex items-center mb-1 p-1">
+                        <input
+                          type="checkbox"
+                          id={`tech-${tech.id}`}
+                          checked={overtimeRequest.technicians.includes(tech.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setOvertimeRequest((prev) => ({
+                                ...prev,
+                                technicians: [...prev.technicians, tech.id],
+                              }));
+                            } else {
+                              setOvertimeRequest((prev) => ({
+                                ...prev,
+                                technicians: prev.technicians.filter((t) => t !== tech.id),
+                              }));
+                            }
+                          }}
+                          className="mr-2"
+                        />
+                        <label htmlFor={`tech-${tech.id}`} className="text-sm cursor-pointer">
+                          {tech.name}
+                        </label>
+                      </Box>
+                    ))}
                   </Box>
-                ))}
-              </Box>
+                </>
+              )}
             </Box>
 
             {/* Loại tăng ca */}

@@ -31,6 +31,10 @@ const normalizeTimestamp = (timestamp) => {
 const buildEvent = ({ attendance, mode }) => {
   const isOut = mode === "out";
 
+  // Lấy metadata tương ứng với mode (check-in hoặc check-out)
+  const metadata = isOut ? attendance.check_out_metadata : attendance.check_in_metadata;
+  const fallbackMetadata = attendance.metadata; // Fallback để backward compatibility
+
   const timeField = isOut ? attendance.check_out_time : attendance.check_in_time;
   const photoField = isOut ? attendance.photo_url_check_out || attendance.photo_url : attendance.photo_url;
   const latField = isOut ? attendance.latitude_check_out || attendance.latitude : attendance.latitude;
@@ -46,31 +50,37 @@ const buildEvent = ({ attendance, mode }) => {
 
   const time = normalizeTimestamp(timeField);
 
-  // location & isAtHub
+  // Xác định vị trí và loại địa điểm từ metadata chính xác
   const locationName = attendance.location_name || "Không rõ";
   const locationCheckOutName = attendance.location_name_check_out || locationName;
-  const metadataHub = attendance.metadata?.hub;
-  let isAtHub = false;
+  const currentLocation = isOut ? locationCheckOutName : locationName;
+
+  // Lấy thông tin từ metadata ưu tiên, nếu không có thì fallback
+  const isAtHub = metadata?.isAtHub ?? fallbackMetadata?.isAtHub ?? false;
+  const locationType = metadata?.locationType ?? fallbackMetadata?.locationType ?? null;
+  const attendanceMode = metadata?.attendanceMode ?? mode;
+
+  // Xác định tiêu đề công việc
   let workTitle = attendance.work?.title || "chưa xác định";
-  if (metadataHub === "warehouse" || metadataHub === "office") {
-    isAtHub = true;
-  }
+
   return {
     attendanceId: `${attendance.id}-${mode}`,
     id: attendance.id,
     workTitle,
     mode: mode,
+    attendanceMode: attendanceMode, // 'in' hoặc 'out' từ metadata
     type: isOut ? "Chấm công Ra" : "Chấm công Vào",
     attendanceType: isOut ? "Chấm công ra" : "Chấm công vào",
     checkInTime: time.time,
     date: time.date,
     iso: time.iso,
-    location: isOut ? locationCheckOutName : locationName,
-    isAtHub,
+    location: currentLocation,
+    locationType: locationType, // Loại địa điểm: 'work', 'warehouse', 'office', etc.
+    isAtHub: isAtHub, // Xác định xem có phải tại hub hay không
     photo: photoField || null,
     latitude: latField != null ? parseFloat(latField) : 0,
     longitude: lonField != null ? parseFloat(lonField) : 0,
-    isViolation: isWithinRadiusField === false || false, // default false
+    isViolation: !isWithinRadiusField, // default false
     violationDistance: violationDistanceField != null ? parseFloat(violationDistanceField) : 0,
     raw: attendance,
   };

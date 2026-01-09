@@ -48,6 +48,7 @@ const API_ENDPOINTS = {
     RESCHEDULE_TASK: (id) => `/work-management/tasks/${id}/reschedule`,
     CANCEL_TASK: (id) => `/work-management/tasks/${id}/cancel`,
     REQUEST_OVERTIME: "/overtime-requests",
+    GET_ALL_TECHNICIANS: "/works/technicians-list-to-assign",
   },
 
   // ============================================

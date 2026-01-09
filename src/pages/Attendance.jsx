@@ -35,26 +35,51 @@ import { clearTokens, getTokens, getUserInfoInStorage } from "../config/axiosCon
 function CheckIn() {
   const toast = useContext(ToastContext);
   const navigate = useNavigate();
-  const params = useParams(); // lấy tham số từ URL để xác định công việc chấm công
-  const [searchParams] = useSearchParams(); // lấy tham số tìm kiếm từ URL
-  const work_id = params.work_code || searchParams.get("work_id"); // Lấy work_code từ URL nếu có
-  const [userDataInSystem, setUserDataInSystem] = useState(null); // Thông tin người dùng
-  const [checkInLocations, setCheckInLocations] = useState([]); // Danh sách địa điểm chấm công trong ngày + thêm kho vật tư & văn phòng
-  const [currentLocation, setCurrentLocation] = useState(null); // Vị trí hiện tại của người dùng
-  const [isCheckingLocation, setIsCheckingLocation] = useState(false); // Trạng thái đang lấy vị trí
-  const [selectedAttendanceLocation, setSelectedAttendanceLocation] = useState(null); // Địa điểm chấm công đã chọn
-  const [selectedAttendanceMode, setSelectedAttendanceMode] = useState(null); // Chế độ chấm công đã chọn (in/out)
-  const [showCamera, setShowCamera] = useState(false); // Hiển thị camera để chụp ảnh
-  const [capturedPhoto, setCapturedPhoto] = useState(null); // Ảnh đã chụp
-  const [todayAttendanceRecords, setTodayAttendanceRecords] = useState([]); // Lịch sử chấm công
-  const [locationViolation, setLocationViolation] = useState(false); // Trạng thái vi phạm vị trí
-  const [violationDistance, setViolationDistance] = useState(null); // Lưu khoảng cách vi phạm
-  const [selectedAttendanceType, setSelectedAttendanceType] = useState(null); // Loại chấm công đã chọn
-  const [submitting, setSubmitting] = useState(false);
+  const params = useParams();
+  const [searchParams] = useSearchParams();
+  const work_id = params.work_code || searchParams.get("work_id");
+
+  // User & System Data
+  const [userDataInSystem, setUserDataInSystem] = useState(null);
+  const [checkInTypes, setCheckInTypes] = useState([]);
+
+  // Attendance Locations
+  const [attendanceLocations, setAttendanceLocations] = useState({
+    workAssignments: [], // Địa điểm từ công việc được giao
+    defaults: [], // Địa điểm mặc định (kho, văn phòng, công trình)
+  });
+
+  // Current Location
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const [isCheckingLocation, setIsCheckingLocation] = useState(false);
+
+  // Check-in Selection
+  const [checkinSelection, setCheckinSelection] = useState({
+    location: null,
+    mode: null, // 'in' | 'out'
+    type: null,
+  });
+
+  // Location Violation Status
+  const [locationStatus, setLocationStatus] = useState({
+    isViolation: false,
+    violationDistance: null,
+  });
+
+  // Camera State
+  const [cameraState, setCameraState] = useState({
+    isOpen: false,
+    capturedPhoto: null,
+  });
+
+  // Attendance Records & Notes
+  const [todayAttendanceRecords, setTodayAttendanceRecords] = useState([]);
   const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  // Refs
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const [checkInTypes, setCheckInTypes] = useState([]);
   const decodeLocationToken = async (locationToken, accessToken) => {
     try {
       const locationResp = await miniAppGetLocationByUserToken(locationToken, accessToken);
@@ -82,11 +107,8 @@ function CheckIn() {
 
       const listOfWorkAssignmentsResp = await miniAppGetListOfWorkAssignmentsInCurrentDayByZAID(ZAID);
       const todayAttendanceHistoryResp = await getTodayAttendanceHistory(userInfoResp.data.id);
-      // Parse today's attendance history and set local state
-      // if (todayAttendanceHistoryResp?.success) {
       const parsed = parseTodayAttendanceRecords(todayAttendanceHistoryResp.data);
       setTodayAttendanceRecords(parsed);
-      // }
 
       if (listOfWorkAssignmentsResp.success) {
         const mappedAssignments = (listOfWorkAssignmentsResp?.data || []).map((assign) => ({
@@ -101,7 +123,10 @@ function CheckIn() {
           icon: "zi-setting",
         }));
 
-        setCheckInLocations((prev) => [...prev, ...mappedAssignments]);
+        setAttendanceLocations((prev) => ({
+          ...prev,
+          workAssignments: [...prev.workAssignments, ...mappedAssignments],
+        }));
       }
     } catch (error) {
       toast?.error({
@@ -111,23 +136,24 @@ function CheckIn() {
       });
     }
   };
+
   // Lấy danh sách địa điểm chấm công (Kho vật tư + Công trình) và loại chấm công
   const fetchAttendanceData = async () => {
     try {
-      // Gọi cả ba API song song
       const [attendanceLocationResp, attendanceTypeResp] = await Promise.all([
         miniAppGetAttendanceLocation(),
         miniAppGetAttendanceType(),
       ]);
 
-      // Xử lý danh sách địa điểm
       if (attendanceLocationResp.success) {
-        setCheckInLocations((prev) => [...prev, ...attendanceLocationResp.data]);
+        setAttendanceLocations((prev) => ({
+          ...prev,
+          defaults: attendanceLocationResp.data,
+        }));
       } else {
         throw new Error("Không thể tải danh sách địa điểm chấm công");
       }
 
-      // Xử lý danh sách loại chấm công
       if (attendanceTypeResp.success) {
         setCheckInTypes(attendanceTypeResp.data);
       } else {
@@ -141,6 +167,7 @@ function CheckIn() {
       });
     }
   };
+
   // Lấy vị trí hiện tại của người dùng từ Zalo Mini App
   const handleGetLocation = async () => {
     setIsCheckingLocation(true);
@@ -167,39 +194,73 @@ function CheckIn() {
 
         setCurrentLocation(userLocation);
 
-        // Check all nearby locations
-        const nearby = checkInLocations.filter((loc) => {
-          return isPointWithinRadius(
-            userLocation.latitude,
-            userLocation.longitude,
-            loc.latitude,
-            loc.longitude,
-            loc.radius
-          );
-        });
+        // Tạo danh sách tất cả địa điểm (công việc + mặc định) CHỈ để kiểm tra tính hợp lệ
+        const allLocations = [...attendanceLocations.workAssignments, ...attendanceLocations.defaults];
+
+        // Kiểm tra khoảng cách từ vị trí hiện tại đến TẤT CẢ địa điểm - nếu < 150m thì vị trí hợp lệ
+        const locationsWithin150m = allLocations
+          .map((loc) => ({
+            ...loc,
+            distance: calculateDistance(userLocation.latitude, userLocation.longitude, loc.latitude, loc.longitude),
+          }))
+          .filter((loc) => loc.distance < 150);
+
+        // Xác định vị trí hợp lệ hay không (dùng tất cả địa điểm để kiểm tra)
+        const isLocationValid = locationsWithin150m.length > 0;
 
         if (work_id) {
-          const workLocation = checkInLocations.find((loc) => loc.id === Number(work_id));
-          setSelectedAttendanceLocation(workLocation || null);
-        } else {
-          if (nearby.length > 0) {
-            // Tự động chọn địa điểm đầu tiên gần nhất
-            const closest = nearby[0];
-            const distance = calculateDistance(
-              userLocation.latitude,
-              userLocation.longitude,
-              closest.latitude,
-              closest.longitude
-            );
-            setSelectedAttendanceLocation(closest);
+          const workLocation = attendanceLocations.workAssignments.find((loc) => loc.id === Number(work_id));
+          setCheckinSelection((prev) => ({ ...prev, location: workLocation || null }));
+          if (isLocationValid) {
             toast?.success({
               title: "Vị trí hợp lệ",
-              message: `Bạn đang ở ${closest.name} (${distance.toFixed(2)}m)`,
+              message: `Bạn có thể thực hiện chấm công ngay bây giờ!`,
+              duration: 2000,
+            });
+          }
+        } else {
+          if (isLocationValid) {
+            // Vị trí hợp lệ - chọn công việc được giao gần nhất từ attendanceLocations.workAssignments
+            if (attendanceLocations.workAssignments.length === 0) {
+              setLocationStatus({ isViolation: false, violationDistance: null });
+              toast?.warn({
+                title: "Không có công việc",
+                message: "Bạn không có công việc nào được giao trong ngày hôm nay",
+                duration: 3000,
+              });
+              return;
+            }
+
+            const workLocationsWithDistance = attendanceLocations.workAssignments.map((loc) => ({
+              ...loc,
+              distance: calculateDistance(userLocation.latitude, userLocation.longitude, loc.latitude, loc.longitude),
+            }));
+
+            const closest = workLocationsWithDistance.reduce((prev, current) =>
+              prev.distance < current.distance ? prev : current
+            );
+
+            setCheckinSelection((prev) => ({ ...prev, location: closest }));
+            setLocationStatus({ isViolation: false, violationDistance: closest.distance });
+
+            toast?.success({
+              title: "Vị trí hợp lệ",
+              message: `Bạn có thể thực hiện chấm công ngay bây giờ!`,
               duration: 2000,
             });
           } else {
-            // Không ở trong phạm vi chấm công nào
-            const closestLocation = checkInLocations.reduce((prev, current) => {
+            // Vị trí không hợp lệ - tìm địa điểm gần nhất từ toàn bộ danh sách để báo vi phạm
+            if (allLocations.length === 0) {
+              setLocationStatus({ isViolation: false, violationDistance: null });
+              toast?.warn({
+                title: "Xác định vị trí thất bại",
+                message: "Không có địa điểm chấm công được cấu hình sẵn trong hệ thống",
+                duration: 3000,
+              });
+              return;
+            }
+
+            const closestLocation = allLocations.reduce((prev, current) => {
               const prevDistance = calculateDistance(
                 userLocation.latitude,
                 userLocation.longitude,
@@ -222,9 +283,13 @@ function CheckIn() {
               closestLocation.longitude
             );
 
+            setLocationStatus({ isViolation: true, violationDistance: distanceToClosest });
+
             toast?.warn({
               title: "Vị trí không hợp lệ",
-              message: `Bạn cách ${closestLocation.name} ${(distanceToClosest / 1000).toFixed(1) || 0}Km.`,
+              message: `Bạn đang ở ngoài phạm vi chấm công (${Math.round(
+                distanceToClosest
+              )}m). Vui lòng di chuyển đến gần địa điểm chấm công hơn!`,
               duration: 3000,
             });
           }
@@ -243,11 +308,11 @@ function CheckIn() {
       setIsCheckingLocation(false);
     }
   };
-  // Check if can check out (must have checked in before)
+
   const canCheckOut = () => {
     return true;
-    // return todayAttendanceRecords.some((record) => record.type === "Vào");
   };
+
   // Start camera
   const startCamera = async () => {
     try {
@@ -270,6 +335,7 @@ function CheckIn() {
       });
     }
   };
+
   // Capture photo with 1:1 aspect ratio
   const capturePhoto = () => {
     if (canvasRef.current && videoRef.current) {
@@ -277,12 +343,10 @@ function CheckIn() {
       const canvas = canvasRef.current;
       const context = canvas.getContext("2d");
 
-      // Set canvas to 1:1 aspect ratio
       const size = 720;
       canvas.width = size;
       canvas.height = size;
 
-      // Calculate the crop area to maintain aspect ratio
       const videoWidth = video.videoWidth;
       const videoHeight = video.videoHeight;
       const videoAspectRatio = videoWidth / videoHeight;
@@ -301,7 +365,6 @@ function CheckIn() {
         sourceY = (videoHeight - sourceHeight) / 2;
       }
 
-      // Draw with mirror effect
       context.save();
       context.scale(-1, 1);
       context.translate(-size, 0);
@@ -309,17 +372,16 @@ function CheckIn() {
       context.restore();
 
       const imageData = canvas.toDataURL("image/jpeg", 0.95);
-      setCapturedPhoto(imageData);
+      setCameraState((prev) => ({ ...prev, capturedPhoto: imageData }));
 
-      // Stop video stream
       const stream = video.srcObject;
       const tracks = stream.getTracks();
       tracks.forEach((track) => track.stop());
     }
   };
 
-  const handleSubmitCheckIn = async () => {
-    if (!capturedPhoto || !currentLocation || !selectedAttendanceLocation || !selectedAttendanceMode) {
+  const handleSubmitAttendance = async () => {
+    if (!cameraState.capturedPhoto || !currentLocation || !checkinSelection.location || !checkinSelection.mode) {
       toast?.error({
         title: "Thông tin chấm công chưa đầy đủ",
         message: "Đảm bảo đã chụp ảnh, lấy vị trí và chọn địa điểm chấm công",
@@ -328,8 +390,7 @@ function CheckIn() {
       return;
     }
 
-    // Kiểm tra: phải chấm vào trước khi chấm ra
-    if (selectedAttendanceMode === "out" && !canCheckOut()) {
+    if (checkinSelection.mode === "out" && !canCheckOut()) {
       toast?.error({
         title: "Sai quy trình chấm công",
         message: "Bạn phải chấm vào trước khi chấm ra",
@@ -341,40 +402,74 @@ function CheckIn() {
     setSubmitting(true);
 
     try {
-      // Chuyển đổi hình ảnh sang Blob
-      const blob = dataURItoBlob(capturedPhoto);
-      // Trích xuất work_id từ selectedAttendanceLocation (nếu có)
-      const workId = selectedAttendanceLocation?.id || null;
+      const blob = dataURItoBlob(cameraState.capturedPhoto);
+      const workId = checkinSelection.location?.id || null;
       const resultPayload = await uploadCheckInPhoto(blob, userDataInSystem.zalo_id);
 
       let attendanceResp;
-      if (selectedAttendanceMode === "out") {
+      if (checkinSelection.mode === "out") {
+        const isWithinRadius = isWithinLocation(checkinSelection.location);
+        const matchingDefaultLocation = attendanceLocations.defaults.find((defaultLoc) =>
+          isPointWithinRadius(
+            currentLocation.latitude,
+            currentLocation.longitude,
+            defaultLoc.latitude,
+            defaultLoc.longitude,
+            defaultLoc.radius || 70
+          )
+        );
+
         const checkOutDataPayload = {
           work_id: workId,
           user_id: userDataInSystem.id,
-          check_out_time_on_local: new Date(), // Thời gian check-out trên thiết bị
+          check_out_time_on_local: new Date(),
           photo_url_check_out: resultPayload.photo_url,
           latitude_check_out: currentLocation.latitude,
           longitude_check_out: currentLocation.longitude,
           location_name_check_out: currentLocation.placeName,
-          distance_from_work_check_out: violationDistance || 0,
-          attendance_type_id: selectedAttendanceType?.id || null,
-          address_check_out: selectedAttendanceLocation.address || null,
+          distance_from_work_check_out: locationStatus.violationDistance || 0,
+          attendance_type_id: checkinSelection.type?.id || null,
+          address_check_out: checkinSelection.location.address || null,
+          is_within_radius_check_out: isWithinRadius,
+          violation_distance_check_out: locationStatus.violationDistance || 0,
+          check_out_metadata: {
+            attendanceMode: 'out',
+            isAtHub: !!matchingDefaultLocation,
+            locationType: matchingDefaultLocation?.type || checkinSelection.location?.type || null,
+          },
         };
         attendanceResp = await submitCheckOut(checkOutDataPayload);
       } else {
+        const isWithinRadius = isWithinLocation(checkinSelection.location);
+        const matchingDefaultLocation = attendanceLocations.defaults.find((defaultLoc) =>
+          isPointWithinRadius(
+            currentLocation.latitude,
+            currentLocation.longitude,
+            defaultLoc.latitude,
+            defaultLoc.longitude,
+            defaultLoc.radius || 70
+          )
+        );
+
         let checkInPayload = {
           user_id: userDataInSystem.id,
           work_id: workId,
           check_in_time_on_local: new Date(),
-          project_id: selectedAttendanceLocation?.project_id || null,
+          project_id: checkinSelection.location?.project_id || null,
           latitude: currentLocation.latitude,
           longitude: currentLocation.longitude,
           location_name: currentLocation.placeName,
-          address: selectedAttendanceLocation.address || null,
-          attendance_type_id: selectedAttendanceType?.id || null,
+          address: checkinSelection.location.address || null,
+          attendance_type_id: checkinSelection.type?.id || null,
           notes: notes || null,
-          distance_from_work: violationDistance || 0,
+          distance_from_work: locationStatus.violationDistance || 0,
+          is_within_radius: isWithinRadius,
+          violation_distance: locationStatus.violationDistance || 0,
+          check_in_metadata: {
+            attendanceMode: 'in',
+            isAtHub: !!matchingDefaultLocation,
+            locationType: matchingDefaultLocation?.type || checkinSelection.location?.type || null,
+          },
           technicians: [userDataInSystem.id],
           ...resultPayload,
         };
@@ -383,34 +478,41 @@ function CheckIn() {
 
       if (attendanceResp.success) {
         const attendanceRespData = attendanceResp.data;
-        const checkInTypeText = selectedAttendanceMode === "in" ? "Chấm công vào" : "Chấm công ra";
-        // Xác định dữ liệu dựa trên mode check-in/check-out
+        const checkInTypeText = checkinSelection.mode === "in" ? "Chấm công vào" : "Chấm công ra";
         let timeField, photoField, latitudeField, longitudeField, violationDistanceField, timeLocalField;
 
         timeField =
-          selectedAttendanceMode === "out" ? attendanceRespData?.check_out_time : attendanceRespData?.check_in_time;
+          checkinSelection.mode === "out" ? attendanceRespData?.check_out_time : attendanceRespData?.check_in_time;
         timeLocalField =
-          selectedAttendanceMode === "out"
+          checkinSelection.mode === "out"
             ? attendanceRespData?.check_out_time_on_local
             : attendanceRespData?.check_in_time_on_local;
         photoField =
-          selectedAttendanceMode === "out" ? attendanceRespData?.photo_url_check_out : attendanceRespData?.photo_url;
+          checkinSelection.mode === "out" ? attendanceRespData?.photo_url_check_out : attendanceRespData?.photo_url;
         latitudeField =
-          selectedAttendanceMode === "out" ? attendanceRespData?.latitude_check_out : attendanceRespData?.latitude;
+          checkinSelection.mode === "out" ? attendanceRespData?.latitude_check_out : attendanceRespData?.latitude;
         longitudeField =
-          selectedAttendanceMode === "out" ? attendanceRespData?.longitude_check_out : attendanceRespData?.longitude;
+          checkinSelection.mode === "out" ? attendanceRespData?.longitude_check_out : attendanceRespData?.longitude;
         violationDistanceField =
-          selectedAttendanceMode === "out"
+          checkinSelection.mode === "out"
             ? attendanceRespData?.distance_from_work_check_out
             : attendanceRespData?.distance_from_work;
 
         const now = new Date(timeField || Date.now());
         const updatedWorkTitle =
-          selectedAttendanceLocation.type === "work" ? selectedAttendanceLocation.name : "chưa xác định";
+          checkinSelection.location.type === "work" ? checkinSelection.location.name : "chưa xác định";
+
+        // Xác định metadata chính xác dựa trên mode (check-in hoặc check-out)
+        const relevantMetadata = checkinSelection.mode === "out" 
+          ? attendanceRespData?.check_out_metadata 
+          : attendanceRespData?.check_in_metadata;
+
+        const isAtHub = relevantMetadata?.isAtHub ?? false;
+        const locationType = relevantMetadata?.locationType ?? checkinSelection.location?.type;
 
         const newRecord = {
           id: attendanceRespData?.id || Date.now(),
-          attendanceId: `${attendanceRespData.id}-${selectedAttendanceMode}`,
+          attendanceId: `${attendanceRespData.id}-${checkinSelection.mode}`,
           workTitle: updatedWorkTitle,
           date: now.toLocaleDateString("vi-VN"),
           attendanceType: checkInTypeText,
@@ -418,22 +520,20 @@ function CheckIn() {
           attendanceTimeLocal: timeLocalField
             ? new Date(timeLocalField).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
             : null,
-          location: attendanceRespData?.location_name || selectedAttendanceLocation.name,
-          locationType: selectedAttendanceLocation.type,
-          isAtHub: attendanceRespData?.metadata?.hub === "warehouse" || attendanceRespData?.metadata?.hub === "office",
+          location: attendanceRespData?.location_name || checkinSelection.location.name,
+          locationType: locationType,
+          isAtHub: isAtHub,
           photo: photoField,
           latitude: parseFloat(latitudeField) || currentLocation.latitude,
           longitude: parseFloat(longitudeField) || currentLocation.longitude,
-          isViolation: locationViolation,
+          isViolation: locationStatus.isViolation,
           violationDistance: violationDistanceField || null,
         };
 
-        // Kiểm tra và cập nhật workTitle nếu có bản ghi cũ với cùng id
         setTodayAttendanceRecords((prev) => {
           const existingIndex = prev.findIndex((record) => record.id === newRecord.id);
 
           if (existingIndex !== -1) {
-            // Có bản ghi cũ, cập nhật workTitle để đồng bộ
             const updated = [...prev];
             updated[existingIndex] = {
               ...updated[existingIndex],
@@ -442,7 +542,6 @@ function CheckIn() {
             return [newRecord, ...updated];
           }
 
-          // Không có bản ghi cũ, chỉ thêm mới
           return [newRecord, ...prev];
         });
 
@@ -459,14 +558,10 @@ function CheckIn() {
         });
       }
 
-      // Reset
-      setCapturedPhoto(null);
-      setShowCamera(false);
+      setCameraState({ isOpen: false, capturedPhoto: null });
       setCurrentLocation(null);
-      setSelectedAttendanceLocation(null);
-      setSelectedAttendanceMode(null);
-      setLocationViolation(false);
-      setViolationDistance(null);
+      setCheckinSelection({ location: null, mode: null, type: null });
+      setLocationStatus({ isViolation: false, violationDistance: null });
       setNotes("");
     } catch (error) {
       console.error("Error submitting check-in: " + error.message);
@@ -478,13 +573,13 @@ function CheckIn() {
 
   // Retake photo
   const retakePhoto = () => {
-    setCapturedPhoto(null);
+    setCameraState((prev) => ({ ...prev, capturedPhoto: null }));
     startCamera();
   };
 
   // Proceed to camera selection
   const handleSelectAttendaceMode = (mode) => {
-    if (!selectedAttendanceLocation) {
+    if (!checkinSelection.location) {
       toast?.error({
         title: "Lỗi",
         message: "Vui lòng chọn địa điểm chấm công",
@@ -493,7 +588,6 @@ function CheckIn() {
       return;
     }
 
-    // Validate mode FIRST before doing anything else
     if (mode === "out" && !canCheckOut()) {
       toast?.error({
         title: "Lỗi",
@@ -503,42 +597,39 @@ function CheckIn() {
       return;
     }
 
-    // Check location violation
-    const isViolation = !isWithinLocation(selectedAttendanceLocation);
-    const distance = getDistanceToLocation(selectedAttendanceLocation) || 0;
-
-    // Set violation states
+    const isViolation = !isWithinLocation(checkinSelection.location);
+    const distance = getDistanceToLocation(checkinSelection.location) || 0;
     const roundedDistance = Number.isFinite(distance) ? Math.round(Number(distance)) : null;
-    setLocationViolation(isViolation);
-    setViolationDistance(roundedDistance);
 
-    if (isViolation) {
-      // Luôn mở camera và set mode (dù vi phạm hay không)
-      setSelectedAttendanceMode(mode);
-      setShowCamera(true);
-      toast?.warning({
-        title: "⚠️ Cảnh báo vi phạm vị trí",
-        message: `Bạn cách ${selectedAttendanceLocation.name} ${
-          roundedDistance || 0
-        }m. Chấm công này sẽ được đánh dấu là vi phạm!`,
-        duration: 3000,
-      });
-    } else {
-      // Luôn mở camera và set mode (dù vi phạm hay không)
-      setSelectedAttendanceMode(mode);
-      setShowCamera(true);
-    }
+    setLocationStatus({ isViolation, violationDistance: roundedDistance });
+    setCheckinSelection((prev) => ({ ...prev, mode }));
+    setCameraState((prev) => ({ ...prev, isOpen: true }));
   };
 
   const isWithinLocation = (location) => {
     if (!currentLocation || !location) return false;
-    return isPointWithinRadius(
+
+    const isWithinSelectedLocation = isPointWithinRadius(
       currentLocation.latitude,
       currentLocation.longitude,
       location.latitude,
       location.longitude,
       location.radius
     );
+
+    if (isWithinSelectedLocation) return true;
+
+    const isWithinDefaultLocation = attendanceLocations.defaults.some((defaultLoc) =>
+      isPointWithinRadius(
+        currentLocation.latitude,
+        currentLocation.longitude,
+        defaultLoc.latitude,
+        defaultLoc.longitude,
+        defaultLoc.radius || 70
+      )
+    );
+
+    return isWithinDefaultLocation;
   };
 
   const getDistanceToLocation = (location) => {
@@ -558,12 +649,10 @@ function CheckIn() {
     const minute = now.getMinutes();
     const currentTime = hour * 60 + minute;
 
-    // If caller passed a type object with start_time/end_time, use them
     if (typeOrId && typeof typeOrId === "object") {
       const { start_time, end_time } = typeOrId;
 
       const parseToMinutes = (timeStr) => {
-        // Expecting format like '11:30:00' or '11:30'
         const parts = (timeStr || "").split(":");
         const h = parseInt(parts[0] || "0", 10);
         const m = parseInt(parts[1] || "0", 10);
@@ -577,75 +666,28 @@ function CheckIn() {
         return currentTime >= startMin && currentTime <= endMin;
       }
 
-      // Overnight range (e.g., 22:00 - 06:00)
       return currentTime >= startMin || currentTime <= endMin;
     }
 
-    // Backwards-compatible numeric id handling
     const typeId = typeof typeOrId === "number" ? typeOrId : typeOrId?.id;
 
-    if (typeId === 1) return currentTime >= 8 * 60 && currentTime <= 17 * 60; // Regular Work (ID: 1) - 08:00 - 17:00
-
-    // Overtime Lunch (ID: 4) - 11:30 - 13:00
+    if (typeId === 1) return currentTime >= 8 * 60 && currentTime <= 17 * 60;
     if (typeId === 4) return currentTime >= 11 * 60 + 30 && currentTime <= 13 * 60;
-
-    // Overtime After (ID: 3) - 17:00 - 22:00
     if (typeId === 3) return currentTime >= 17 * 60 && currentTime <= 22 * 60;
-
-    // Night Shift (ID: 2) - 22:00 - 06:00 (overnight)
     if (typeId === 2) return currentTime >= 22 * 60 || currentTime <= 6 * 60;
 
-    return false; // Unknown
+    return false;
   };
 
   const handleCheckSelectType = (type) => {
-    console.log("Selected attendance type:", type);
-    // if (!isValidTimeForType(type)) {
-    //   let timeMsg = "";
-
-    //   if (type && typeof type === "object") {
-    //     if (type.start_time && type.end_time) {
-    //       const start = type.start_time.slice(0, 5);
-    //       const end = type.end_time.slice(0, 5);
-    //       timeMsg = `${start} - ${end}`;
-    //       if (type.code === "night_shift" && start > end) {
-    //         timeMsg = `trong khoảng ${start} - ${end}`;
-    //       } else {
-    //         timeMsg = `trong khoảng ${start} - ${end}`;
-    //       }
-    //     } else {
-    //       // fallback to known codes
-    //       if (type.code === "overtime_after") timeMsg = "sau 17:00";
-    //       else if (type.code === "overtime_lunch") timeMsg = "trong khoảng 11:30 - 13:00";
-    //       else if (type.code === "night_shift") timeMsg = "trong khoảng 22:00 - 06:00";
-    //     }
-    //   } else {
-    //     // fallback to numeric id mapping
-    //     timeMsg =
-    //       type.id === 3 // OVERTIME_AFTER
-    //         ? "sau 17:00"
-    //         : type.id === 4 // OVERTIME_LUNCH
-    //         ? "trong khoảng 11:30 - 13:00"
-    //         : type.id === 2 // NIGHT_SHIFT
-    //         ? "trong khoảng 22:00 - 06:00"
-    //         : "";
-    //   }
-
-    //   toast?.error({
-    //     title: "Thời gian không hợp lệ",
-    //     message: `Chấm công ${type?.name || type?.code || ""} chỉ được thực hiện ${timeMsg}`,
-    //     duration: 3000,
-    //   });
-    //   return;
-    // }
-    setSelectedAttendanceType(type);
+    setCheckinSelection((prev) => ({ ...prev, type }));
   };
 
   useEffect(() => {
-    if (showCamera && !capturedPhoto) {
+    if (cameraState.isOpen && !cameraState.capturedPhoto) {
       startCamera();
     }
-  }, [showCamera, capturedPhoto]);
+  }, [cameraState.isOpen, cameraState.capturedPhoto]);
 
   useEffect(() => {
     const currentToken = getTokens();
@@ -663,40 +705,37 @@ function CheckIn() {
       <CheckInHeader />
 
       <Box className="p-4 pb-20">
-        {!showCamera ? (
+        {!cameraState.isOpen ? (
           <>
             <CheckInTypeSelector
               checkInTypes={checkInTypes}
-              selectedAttendanceType={selectedAttendanceType}
+              selectedAttendanceType={checkinSelection.type}
               onSelectType={handleCheckSelectType}
             />
 
             <Box className="space-y-4 mb-6">
-              {selectedAttendanceType && (
+              {checkinSelection.type && (
                 <>
-                  {/* Vị trí hiện tại của người dùng */}
                   <LocationStatus currentLocation={currentLocation} />
 
                   <GetLocationButton onGetLocation={handleGetLocation} isCheckingLocation={isCheckingLocation} />
 
-                  {/* Lựa chọn địa điểm chấm công trong ngày (Kho hoặc công trình) */}
                   <LocationSelector
                     currentLocation={currentLocation}
-                    checkInLocations={checkInLocations}
-                    selectedCheckInLocation={selectedAttendanceLocation}
-                    onSelectLocation={setSelectedAttendanceLocation}
+                    checkInLocations={attendanceLocations.workAssignments}
+                    selectedCheckInLocation={checkinSelection.location}
+                    onSelectLocation={(location) => setCheckinSelection((prev) => ({ ...prev, location }))}
                     isWithinLocation={isWithinLocation}
                     getDistanceToLocation={getDistanceToLocation}
                   />
                 </>
               )}
 
-              {/* Lựa chọn hình thức chấm công (Vào / Ra) */}
               <CheckInModeSelector
-                selectedCheckInLocation={selectedAttendanceLocation}
+                selectedCheckInLocation={checkinSelection.location}
                 currentLocation={currentLocation}
-                selectedAttendanceType={selectedAttendanceType}
-                selectedAttendanceMode={selectedAttendanceMode}
+                selectedAttendanceType={checkinSelection.type}
+                selectedAttendanceMode={checkinSelection.mode}
                 onSelectMode={handleSelectAttendaceMode}
                 canCheckOut={canCheckOut}
               />
@@ -704,34 +743,33 @@ function CheckIn() {
           </>
         ) : (
           <>
-            <CameraView capturedPhoto={capturedPhoto} videoRef={videoRef} canvasRef={canvasRef} />
+            <CameraView capturedPhoto={cameraState.capturedPhoto} videoRef={videoRef} canvasRef={canvasRef} />
 
             <PhotoInfo
-              capturedPhoto={capturedPhoto}
-              selectedAttendanceMode={selectedAttendanceMode}
+              capturedPhoto={cameraState.capturedPhoto}
+              selectedAttendanceMode={checkinSelection.mode}
               currentLocation={currentLocation}
-              locationViolation={locationViolation}
-              violationDistance={violationDistance}
+              locationViolation={locationStatus.isViolation}
+              violationDistance={locationStatus.violationDistance}
               notes={notes}
               onNotesChange={setNotes}
             />
 
             <ActionButtons
-              capturedPhoto={capturedPhoto}
+              capturedPhoto={cameraState.capturedPhoto}
               onCapturePhoto={capturePhoto}
-              onSubmitCheckIn={handleSubmitCheckIn}
+              onSubmitCheckIn={handleSubmitAttendance}
               onRetakePhoto={retakePhoto}
               onCancel={() => {
-                setShowCamera(false);
-                setCapturedPhoto(null);
-                setSelectedAttendanceMode(null);
+                setCameraState({ isOpen: false, capturedPhoto: null });
+                setCheckinSelection((prev) => ({ ...prev, mode: null }));
               }}
               submitting={submitting}
             />
           </>
         )}
 
-        {showCamera ? null : <CheckInHistory todayAttendanceRecords={todayAttendanceRecords} />}
+        {cameraState.isOpen ? null : <CheckInHistory todayAttendanceRecords={todayAttendanceRecords} />}
       </Box>
 
       <BottomNavigation />
