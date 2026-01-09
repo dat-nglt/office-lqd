@@ -80,16 +80,17 @@ function WorkManagement() {
   };
 
   const handleRequestOvertime = (work) => {
+    const userId = getUserInfoInStorage()?.id;
     setSelectedWork(work);
     setOvertimeRequest({
       type: "overtime_lunch",
       reason: "Hoàn thành công việc ngoài giờ",
       startTime: "11:30",
       endTime: "13:00",
-      technicians: [],
+      technicians: userId ? [userId] : [], // Thêm ID người dùng hiện tại vào mảng technicians ban đầu
       work: work.title,
       workId: work.id,
-      userRequestingId: getUserInfoInStorage()?.id || null,
+      userRequestingId: userId,
     });
     setShowOvertimeModal(true);
   };
@@ -155,6 +156,7 @@ function WorkManagement() {
 
     if (selectedWork && overtimeRequest.reason.trim() && hours > 0 && overtimeRequest.type) {
       const technicianNames = getTechnicianNames(overtimeRequest.technicians);
+      console.log("Submitting overtime request:", overtimeRequest);
 
       const requestOverTimeResp = await requestOvertimeService(overtimeRequest);
 
@@ -418,7 +420,7 @@ function WorkManagement() {
                     >
                       Chi tiết
                     </button>
-                    {work.status === "in_progress" && (
+                    {work.status !== "completed" && (
                       <button
                         onClick={() => handleRequestOvertime(work)}
                         className="px-3 py-2 bg-green-600 text-white rounded text-xs font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-1 flex-1 min-w-fit"

@@ -83,8 +83,8 @@ function OvertimeRequestModal({
                 }}
                 className="w-full h-[50px] rounded-lg border border-gray-300 p-2 bg-white"
               >
-                <option value="lunch">Tăng ca trưa</option>
-                <option value="night">Tăng ca tối</option>
+                <option value="overtime_lunch">Tăng ca trưa</option>
+                <option value="overtime_night">Tăng ca tối</option>
                 <option value="other">Khác</option>
               </select>
             </Box>
