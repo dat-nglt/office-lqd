@@ -33,7 +33,7 @@ function ProgressReport() {
   const [userInfo, setUserInfo] = useState(null);
 
   // Current work assignment
-  const [currentWork] = useState({
+  const [currentWork, setCurrentWork] = useState({
     id: 1,
     title: "Bảo trì điều hòa",
     location: "05A Quốc Hương, Phường An Khánh, Quận 2, TP.HCM",
@@ -300,22 +300,6 @@ function ProgressReport() {
                 </Box>
               </Box>
             </Box>
-
-            {/* Requirements */}
-            {/* <Box className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">
-                            <Text className="font-bold text-gray-900 mb-3 flex items-center">
-                                <Icon icon="zi-checklist" className="mr-2 text-blue-600" size={16} />
-                                Yêu Cầu Công Việc
-                            </Text>
-                            <Box className="space-y-1.5">
-                                {currentWork.requirements.map((req, index) => (
-                                    <Box key={index} className="flex items-start gap-2 text-sm">
-                                        <Box className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0"></Box>
-                                        <Text className="text-gray-700">{req}</Text>
-                                    </Box>
-                                ))}
-                            </Box>
-                        </Box> */}
 
             {/* Progress Stages Selection */}
             <Box className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">

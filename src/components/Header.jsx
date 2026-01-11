@@ -31,7 +31,10 @@ function Header({ title, showBack = false, onBack, userInfo, currentTime }) {
         <Box className="flex items-center justify-between mb-6">
           <Box className="flex items-center space-x-4">
             <Avatar
-              src={userInfo?.avatar_url}
+              src={
+                userInfo?.avatar_url ||
+                "https://res.cloudinary.com/djiwsnmtq/image/upload/v1768035267/defaultUser_fldfhz.jpg"
+              }
               size={64}
               className="w-16 h-16 object-contain bg-white rounded-full shadow-lg"
             >
@@ -50,7 +53,7 @@ function Header({ title, showBack = false, onBack, userInfo, currentTime }) {
           {/* Check-in Quick Button */}
           <Box
             className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl hover:bg-white/30 transition-all duration-200 cursor-pointer border border-white/30 shadow-lg flex items-center space-x-2 hover:scale-105 transform relative"
-            onClick={() => navigate("/notifications")}
+            // onClick={() => navigate("/notifications")}
             title="Thông báo hệ thống"
           >
             <Icon icon="zi-notif" className="text-white" size={25} />
@@ -60,10 +63,11 @@ function Header({ title, showBack = false, onBack, userInfo, currentTime }) {
 
         {/* Status Overview Card */}
         <Box className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 shadow-lg">
-          <Box className="flex justify-between items-start mb-4">
-            <Box>
+          <Box className="flex justify-between items-start">
+            <Box className="flex items-center flex-row space-x-2">
+              <Box className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></Box>
               <Text size="small" className="text-blue-100">
-                Trạng thái hôm nay - {currentTime.toLocaleDateString("vi-VN")}
+                Trạng thái sẵn sàng - {currentTime.toLocaleDateString("vi-VN")}
               </Text>
             </Box>
             <Text size="small" className="text-blue-100 font-semibold">
@@ -76,12 +80,11 @@ function Header({ title, showBack = false, onBack, userInfo, currentTime }) {
           </Box>
 
           {/* Status Message */}
-          <Box className="flex items-center space-x-3 bg-white/5 rounded-xl p-2 border border-white/10">
-            <Box className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></Box>
+          {/* <Box className="flex items-center space-x-3 bg-white/5 rounded-xl p-2 border border-white/10">
             <Text size="small" className="text-blue-100 flex-1">
               Sẵn sàng thực hiện công việc
             </Text>
-          </Box>
+          </Box> */}
         </Box>
       </Box>
     </Box>

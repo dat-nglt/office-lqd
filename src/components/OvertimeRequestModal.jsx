@@ -25,10 +25,10 @@ function OvertimeRequestModal({
             <Box>
               {availableTechnicians.length > 0 && (
                 <>
-                  <Text className="text-sm font-semibold text-gray-700 mb-2">Kỹ thuật viên công tác</Text>
+                  <Text className="text-sm font-semibold text-gray-700 mb-2">Kỹ thuật viên cộng tác</Text>
                   <Box className="max-h-32 overflow-y-auto border rounded-lg p-2 bg-gray-50">
                     {availableTechnicians.map((tech) => (
-                      <Box key={tech.id} className="flex items-center mb-1 p-1">
+                      <Box key={tech.id} className="flex items-center mb-1 p-2">
                         <input
                           type="checkbox"
                           id={`tech-${tech.id}`}

@@ -1,4 +1,4 @@
-import { Box, Page } from "zmp-ui";
+import { Box, Page, Spinner, Text } from "zmp-ui";
 import { useState, useRef, useEffect, useContext } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ToastContext } from "../components/layout";
@@ -433,7 +433,7 @@ function CheckIn() {
           is_within_radius_check_out: isWithinRadius,
           violation_distance_check_out: locationStatus.violationDistance || 0,
           check_out_metadata: {
-            attendanceMode: 'out',
+            attendanceMode: "out",
             isAtHub: !!matchingDefaultLocation,
             locationType: matchingDefaultLocation?.type || checkinSelection.location?.type || null,
           },
@@ -466,7 +466,7 @@ function CheckIn() {
           is_within_radius: isWithinRadius,
           violation_distance: locationStatus.violationDistance || 0,
           check_in_metadata: {
-            attendanceMode: 'in',
+            attendanceMode: "in",
             isAtHub: !!matchingDefaultLocation,
             locationType: matchingDefaultLocation?.type || checkinSelection.location?.type || null,
           },
@@ -503,9 +503,10 @@ function CheckIn() {
           checkinSelection.location.type === "work" ? checkinSelection.location.name : "chưa xác định";
 
         // Xác định metadata chính xác dựa trên mode (check-in hoặc check-out)
-        const relevantMetadata = checkinSelection.mode === "out" 
-          ? attendanceRespData?.check_out_metadata 
-          : attendanceRespData?.check_in_metadata;
+        const relevantMetadata =
+          checkinSelection.mode === "out"
+            ? attendanceRespData?.check_out_metadata
+            : attendanceRespData?.check_in_metadata;
 
         const isAtHub = relevantMetadata?.isAtHub ?? false;
         const locationType = relevantMetadata?.locationType ?? checkinSelection.location?.type;
@@ -701,7 +702,7 @@ function CheckIn() {
   }, []);
 
   return (
-    <Page className="bg-gray-50 min-h-screen pb-20">
+    <Page className={`bg-gray-50 min-h-screen pb-20 relative ${submitting ? "pointer-events-none" : ""}`}>
       <CheckInHeader />
 
       <Box className="p-4 pb-20">
@@ -716,9 +717,13 @@ function CheckIn() {
             <Box className="space-y-4 mb-6">
               {checkinSelection.type && (
                 <>
-                  <LocationStatus currentLocation={currentLocation} />
+                  <LocationStatus
+                    currentLocation={currentLocation}
+                    onGetLocation={handleGetLocation}
+                    isCheckingLocation={isCheckingLocation}
+                  />
 
-                  <GetLocationButton onGetLocation={handleGetLocation} isCheckingLocation={isCheckingLocation} />
+                  
 
                   <LocationSelector
                     currentLocation={currentLocation}
@@ -773,6 +778,13 @@ function CheckIn() {
       </Box>
 
       <BottomNavigation />
+
+      {(submitting || isCheckingLocation) && (
+        <Box className="absolute inset-0 bg-white bg-opacity-75 flex flex-col items-center justify-center z-50">
+          <Spinner logo="https://res.cloudinary.com/djiwsnmtq/image/upload/v1768034655/lqd_l8z0wh.jpg" />
+          <Text className="mt-4 text-gray-600 text-sm">Đang xử lý chấm công cho bạn ...</Text>
+        </Box>
+      )}
     </Page>
   );
 }

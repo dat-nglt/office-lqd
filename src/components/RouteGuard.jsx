@@ -96,7 +96,7 @@ const RouteGuard = ({ children, redirectTo = "/login", requireAuth = true }) => 
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="text-center">
-          <Spinner />
+          <Spinner logo="https://res.cloudinary.com/djiwsnmtq/image/upload/v1768034655/lqd_l8z0wh.jpg" />
           <p className="mt-4 text-gray-600 text-sm">Đang kiểm tra quyền truy cập...</p>
         </div>
       </div>

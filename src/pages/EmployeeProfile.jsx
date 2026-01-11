@@ -1,4 +1,4 @@
-import { Box, Text, Icon, Button, Page } from "zmp-ui";
+import { Box, Text, Icon, Button, Page, Avatar } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import BottomNavigation from "../components/BottomNavigation";
@@ -65,16 +65,17 @@ function EmployeeProfile() {
         {/* User Profile Card */}
         <Box className="bg-white rounded-2xl shadow-md p-6 mb-4 border border-gray-100 -mt-12 relative z-10">
           <Box className="flex items-center space-x-4 mb-4">
-            <Box className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-              {userInfo.avatar_url ? (
-                <img
-                  src={userInfo.avatar_url}
-                  alt={userInfo.name}
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                userInfo.name.charAt(0)
-              )}
+            <Box className="rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+              <Avatar
+                src={
+                  userInfo?.avatar_url ||
+                  "https://res.cloudinary.com/djiwsnmtq/image/upload/v1768035267/defaultUser_fldfhz.jpg"
+                }
+                size={64}
+                className="w-20 h-20 object-contain bg-white rounded-full shadow-lg"
+              >
+                {userInfo?.name.charAt(0)}
+              </Avatar>
             </Box>
             <Box className="flex-1">
               <Text className="font-bold text-lg text-gray-900">{userInfo.name}</Text>

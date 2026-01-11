@@ -11,10 +11,14 @@ function CheckInModeSelector({
   if (!selectedAttendanceLocation || !currentLocation || !selectedAttendanceType) return null;
 
   return (
-    <Box className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-      <Text className="font-bold text-gray-900 mb-3 flex items-center capitalize">Lựa chọn trạng thái chấm công</Text>
+    <Box className="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <Box className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
+        <Box className="flex items-center justify-between ">
+          <Text className="font-bold text-gray-900 flex items-center capitalize ">Lựa Chọn Địa Điểm Chấm Công</Text>
+        </Box>
+      </Box>
 
-      <Box className="space-y-2">
+      <Box className="space-y-2 p-4">
         <button
           onClick={() => onSelectMode("in")}
           className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
@@ -24,7 +28,6 @@ function CheckInModeSelector({
           }`}
         >
           <Box className="flex items-center space-x-3">
-            <Icon icon="zi-arrow-right" className="text-blue-600" size={20} />
             <Box>
               <Text className="font-semibold text-blue-700">Chấm Công Vào</Text>
               <Text className="text-xs text-gray-600">Bắt đầu công việc tại {selectedAttendanceLocation.address}</Text>
@@ -44,13 +47,14 @@ function CheckInModeSelector({
           }`}
         >
           <Box className="flex items-center space-x-3">
-            <Icon icon="zi-arrow-left" className={canCheckOut() ? "text-blue-600" : "text-gray-400"} size={20} />
             <Box>
               <Text className={canCheckOut() ? "font-semibold text-blue-700" : "font-semibold text-gray-400"}>
                 Chấm Công Ra
               </Text>
               <Text className="text-xs text-gray-600">
-                {canCheckOut() ? `Kết thúc công việc tại ${selectedAttendanceLocation.address}` : "Không được chấm công ra tại Kho & Văn phòng. Chỉ có thể chấm công ra tại công việc được giao"}
+                {canCheckOut()
+                  ? `Kết thúc công việc tại ${selectedAttendanceLocation.address}`
+                  : "Không được chấm công ra tại Kho & Văn phòng. Chỉ có thể chấm công ra tại công việc được giao"}
               </Text>
             </Box>
           </Box>

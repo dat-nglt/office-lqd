@@ -17,7 +17,7 @@ function CheckInHeader() {
       <Box className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></Box>
       <Box className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16"></Box>
 
-      <Box className="px-4 pt-10 pb-4 relative z-10">
+      <Box className="px-4 pt-10 mt-5 pb-2 relative z-10">
         <Text.Title className="text-white font-bold" size="large">
           Chấm Công Công Việc
         </Text.Title>

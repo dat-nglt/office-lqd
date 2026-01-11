@@ -32,11 +32,13 @@ function ActionButtons({
         <>
           <Button
             onClick={onCancel}
+            disabled={submitting}
             className="w-full px-3 py-3 bg-gray-200 text-gray-800 rounded-lg text-sm font-semibold hover:bg-gray-300 transition-colors"
           >
             Hủy
           </Button>
           <Button
+            disabled={submitting}
             onClick={onRetakePhoto}
             className="w-full px-3 py-3 bg-blue-200 text-blue-800 rounded-lg text-sm font-semibold hover:bg-blue-300 transition-colors"
           >

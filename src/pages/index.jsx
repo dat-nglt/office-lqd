@@ -144,12 +144,14 @@ function HomePage() {
 
       <Box className="px-4 pt-4 pb-28">
         {/* Statistics Cards */}
-        <Box className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-gray-100">
-          <Text className="font-bold text-gray-900 mb-3 flex items-center">
-            <Icon icon="zi-reorder-solid" className="mr-2 text-blue-600" size={16} />
-            Thống Kê Hôm Nay
+        <Box className="p-4 border-b  rounded-t-xl border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100 flex items-center justify-between">
+          <Text className="font-bold text-gray-900 flex items-center">
+            Công Việc Hôm Nay
+            {/* ({todayAssignments.length}) */}
           </Text>
-
+          <Icon icon="zi-retry" className="mr-2 text-blue-600" size={16} onClick={handleRefreshData} />
+        </Box>
+        <Box className="bg-white rounded-b-xl shadow-sm p-4 mb-4 border border-gray-100">
           <Box className="grid grid-cols-2 gap-3 mb-3">
             <Box className="bg-blue-50 rounded-lg p-3 border border-blue-200 text-center">
               <Text className="text-2xl font-bold text-blue-600">{totalAssignedToday}</Text>
@@ -162,15 +164,15 @@ function HomePage() {
           </Box>
 
           <Box className="grid grid-cols-2 gap-3">
-            <Box className="bg-green-50 rounded-lg p-3 border border-green-200 text-center">
+            <Box className="bg-green-50 rounded-lg- p-3 border border-green-200 text-center">
               <Text className="text-2xl font-bold text-blue-600">{totalAssignedCompletedToday}</Text>
               <Text className="text-xs text-gray-600 mt-1">Công việc hoàn thành</Text>
             </Box>
             <Box
-              className="bg-purple-50 rounded-lg p-3 border border-purple-200 text-center cursor-pointer hover:bg-purple-100 transition-colors"
+              className="bg-orange-50 rounded-lg p-3 border border-orange-200 text-center cursor-pointer hover:bg-orange-100 transition-colors"
               onClick={() => navigate("/overtime-request")}
             >
-              <Text className="text-lg font-bold text-purple-600">Ca phát sinh</Text>
+              <Text className="text-lg font-bold text-orange-600">Ca phát sinh</Text>
               <Text className="text-xs text-gray-600 mt-1">Báo công việc phát sinh</Text>
             </Box>
           </Box>
@@ -180,7 +182,6 @@ function HomePage() {
         <Box className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <Box className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100 flex items-center justify-between">
             <Text className="font-bold text-gray-900 flex items-center">
-              <Icon icon="zi-list-1" className="mr-2 text-blue-600" size={16} />
               Công Việc Hôm Nay
               {/* ({todayAssignments.length}) */}
             </Text>

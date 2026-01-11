@@ -160,11 +160,11 @@ function WorkManagement() {
   const confirmOvertimeRequest = async () => {
     const hours = calculateOvertimeHours();
 
-    console.log("Submitting overtime request:", overtimeRequest);
-
     if (selectedWork && overtimeRequest.reason.trim() && hours > 0 && overtimeRequest.type) {
       const technicianNames = getTechnicianNames(overtimeRequest.technicians);
       const requestOverTimeResp = await requestOvertimeService(overtimeRequest);
+
+      console.log("Overtime request response:", requestOverTimeResp);
 
       if (requestOverTimeResp && requestOverTimeResp.success) {
         toast?.success({
@@ -427,7 +427,7 @@ function WorkManagement() {
                     >
                       Chi tiết
                     </button>
-                    {work.status !== "completed" && (
+                    {work.status == "in_progress" && (
                       <button
                         onClick={() => handleRequestOvertime(work)}
                         className="px-3 py-2 bg-green-600 text-white rounded text-xs font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-1 flex-1 min-w-fit"

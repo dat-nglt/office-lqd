@@ -64,35 +64,51 @@ function JobListItem({ job, onStartWork, onProgressReport, onShowDetail, sx = ""
       )}
 
       {/* Action Buttons */}
-      <Box className="flex gap-2 mt-3">
-        {job.status === "pending" && (
+      <Box className="flex gap-2 flex-col">
+        <Box className="flex gap-2 mt-3">
+          {job.assignedStatus === "pending" && (
+            <Button
+              size="small"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs"
+              onClick={() => onStartWork(job)}
+            >
+              <Icon icon="zi-send-solid" size={12} className="mr-1" />
+              Bắt đầu
+            </Button>
+          )}
+          {job.assignedStatus === "in_progress" && (
+            <>
+              <Button
+                size="small"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs"
+                onClick={() => onProgressReport(job)}
+              >
+                <Icon icon="zi-camera" size={12} className="mr-1" />
+                Báo cáo
+              </Button>
+            </>
+          )}
+          {job.assignedStatus === "in_progress" && (
+            <>
+              <Button
+                size="small"
+                className="flex-1 bg-orange-600 hover:bg-orange-700 text-white rounded text-xs"
+                onClick={() => onStartWork(job)}
+              >
+                <Icon icon="zi-leave" size={12} className="mr-1" />
+                Kết thúc
+              </Button>
+            </>
+          )}
           <Button
             size="small"
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs"
-            onClick={() => onStartWork(job)}
+            className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-xs"
+            onClick={() => onShowDetail(job)}
           >
-            <Icon icon="zi-send-solid" size={12} className="mr-1" />
-            Bắt đầu
+            <Icon icon="zi-info-circle" size={12} className="mr-1" />
+            Chi tiết
           </Button>
-        )}
-        {job.status === "in_progress" && (
-          <Button
-            size="small"
-            className="flex-1 bg-orange-600 hover:bg-orange-700 text-white rounded text-xs"
-            onClick={() => onProgressReport(job)}
-          >
-            <Icon icon="zi-camera" size={12} className="mr-1" />
-            Báo cáo tiến độ
-          </Button>
-        )}
-        <Button
-          size="small"
-          className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-xs"
-          onClick={() => onShowDetail(job)}
-        >
-          <Icon icon="zi-info-circle" size={12} className="mr-1" />
-          Chi tiết
-        </Button>
+        </Box>
       </Box>
     </Box>
   );

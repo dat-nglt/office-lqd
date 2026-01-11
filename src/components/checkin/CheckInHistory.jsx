@@ -6,16 +6,15 @@ function CheckInHistory({ todayAttendanceRecords }) {
 
   return (
     <Box className="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <Box className="p-4 border-b border-gray-200">
-        <Box className="flex items-center justify-between">
+      <Box className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
+        <Box className="flex items-center justify-between ">
           <Text className="font-bold text-gray-900 flex items-center">
-            <Icon icon="zi-list-1" className="mr-2 text-blue-600" size={16} />
             Lịch Sử Chấm Công Hôm Nay
           </Text>
           {todayAttendanceRecords.length > 0 && (
             <Button
               size="small"
-              className="text-xs bg-white/10 text-gray-700 hover:bg-white/20"
+              className="text-xs bg-white/50 text-gray-700 hover:bg-white/20"
               onClick={() => setExpanded((s) => !s)}
             >
               {/** use ternary to toggle label and icon */}

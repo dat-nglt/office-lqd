@@ -12,10 +12,14 @@ function LocationSelector({
   if (!currentLocation) return null;
 
   return (
-    <Box className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-      <Text className="font-bold text-gray-900 mb-3 flex items-center capitalize">Lựa chọn địa điểm chấm công</Text>
+    <Box className="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <Box className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
+        <Box className="flex items-center justify-between ">
+          <Text className="font-bold text-gray-900 flex items-center capitalize ">Lựa Chọn Địa Điểm Chấm Công</Text>
+        </Box>
+      </Box>
 
-      <Box className="space-y-2">
+      <Box className="space-y-2 p-4">
         {checkInLocations.map((location) => {
           const isWithin = isWithinLocation(location);
           const distance = getDistanceToLocation(location);

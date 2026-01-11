@@ -5,20 +5,14 @@ import { useRouter } from "../hooks/useRouter";
 
 function BottomNavigation() {
   const location = useLocation();
-  const {
-    goHome,
-    goToWorkList,
-    goToCheckIn,
-    goToWorkManagement,
-    goToProfile
-  } = useRouter();
+  const { goHome, goToWorkList, goToCheckIn, goToWorkManagement, goToProfile } = useRouter();
 
   const tabs = useMemo(
     () => [
       {
         id: "report",
         label: "Theo dõi",
-        icon: "zi-share-external-1",
+        icon: "zi-home",
         path: "/",
         badge: null,
       },
@@ -74,19 +68,19 @@ function BottomNavigation() {
 
   const handleTabClick = (tab) => {
     switch (tab.id) {
-      case 'report':
+      case "report":
         goHome();
         break;
-      case 'list':
+      case "list":
         goToWorkList();
         break;
-      case 'management':
+      case "management":
         goToCheckIn();
         break;
-      case 'notifications':
+      case "notifications":
         goToWorkManagement();
         break;
-      case 'profile':
+      case "profile":
         goToProfile();
         break;
       default:
@@ -116,9 +110,7 @@ function BottomNavigation() {
                 <Box className="relative mb-1">
                   <Icon
                     icon={tab.icon}
-                    className={`transition-colors duration-200 ${
-                      isActive ? "text-blue-600" : "text-gray-500"
-                    }`}
+                    className={`transition-colors duration-200 ${isActive ? "text-blue-600" : "text-gray-500"}`}
                     size={24}
                   />
 
@@ -144,10 +136,7 @@ function BottomNavigation() {
 
                 {/* Active Indicator Line */}
                 {isActive && (
-                  <Box
-                    className="absolute bottom-0 w-12 h-0.5 bg-blue-600 rounded-full"
-                    aria-hidden="true"
-                  />
+                  <Box className="absolute bottom-0 w-12 h-0.5 bg-blue-600 rounded-full" aria-hidden="true" />
                 )}
               </Box>
             </Box>
