@@ -48,7 +48,7 @@ function ProgressReport() {
     {
       id: "before",
       name: "Trước Khi Thực Hiện",
-      description: "Chụp ảnh trạng thái ban đầu của thiết bị",
+      description: "Chụp ảnh trạng thái ban đầu của công việc",
       icon: "zi-chevron-double-up",
       color: "from-blue-600 to-blue-700",
       bgColor: "bg-blue-50",
@@ -57,7 +57,7 @@ function ProgressReport() {
     {
       id: "during",
       name: "Trong Quá Trình Thực Hiện",
-      description: "Chụp ảnh quá trình làm việc (có thể chụp nhiều lần)",
+      description: "Chụp ảnh quá trình làm việc",
       icon: "zi-auto-solid",
       color: "from-amber-600 to-amber-700",
       bgColor: "bg-amber-50",
@@ -66,7 +66,7 @@ function ProgressReport() {
     {
       id: "after",
       name: "Sau Khi Hoàn Thành",
-      description: "Chụp ảnh kết quả cuối cùng của thiết bị",
+      description: "Chụp ảnh kết quả cuối cùng của công việc",
       icon: "zi-check-circle",
       color: "from-green-600 to-green-700",
       bgColor: "bg-green-50",

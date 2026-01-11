@@ -782,7 +782,7 @@ function CheckIn() {
       {(submitting || isCheckingLocation) && (
         <Box className="absolute inset-0 bg-white bg-opacity-75 flex flex-col items-center justify-center z-50">
           <Spinner logo="https://res.cloudinary.com/djiwsnmtq/image/upload/v1768034655/lqd_l8z0wh.jpg" />
-          <Text className="mt-4 text-gray-600 text-sm">Đang xử lý chấm công cho bạn ...</Text>
+          <Text className="mt-4 text-gray-600 text-sm">Đang xử lý yêu cầu    ...</Text>
         </Box>
       )}
     </Page>

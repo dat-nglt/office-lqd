@@ -15,64 +15,64 @@ const WorkReportDetail = lazy(() => import("../pages/WorkReportDetail"));
 const AttendanceHistory = lazy(() => import("../pages/AttendanceHistory"));
 
 export const routes = [
-    {
-        path: "/login",
-        component: Login,
-        protected: false,
-    },
-    {
-        path: "/",
-        component: HomePage,
-        protected: true,
-    },
-    {
-        path: "/report",
-        component: ProgressReport,
-        protected: true,
-    },
-    {
-        path: "/worklist",
-        component: WorkListPage,
-        protected: true,
-    },
-    {
-        path: "/notifications",
-        component: Notifications,
-        protected: true,
-    },
-    {
-        path: "/work-management",
-        component: WorkManagement,
-        protected: true,
-    },
-    {
-        path: "/profile",
-        component: EmployeeProfile,
-        protected: true,
-    },
-    {
-        path: "/checkin",
-        component: CheckIn,
-        protected: true,
-    },
-    {
-        path: "/overtime-request",
-        component: OvertimeRequest,
-        protected: true,
-    },
-    {
-        path: "/work-reports",
-        component: WorkReportList,
-        protected: true,
-    },
-    {
-        path: "/work-report/:id",
-        component: WorkReportDetail,
-        protected: true,
-    },
-    {
-        path: "/attendance-history",
-        component: AttendanceHistory,
-        protected: true,
-    },
+  {
+    path: "/login",
+    component: Login,
+    protected: false,
+  },
+  {
+    path: "/",
+    component: HomePage,
+    protected: true,
+  },
+  {
+    path: "/report",
+    component: ProgressReport,
+    protected: true,
+  },
+  {
+    path: "/worklist",
+    component: WorkListPage,
+    protected: true,
+  },
+  {
+    path: "/notifications",
+    component: Notifications,
+    protected: true,
+  },
+  {
+    path: "/work-management",
+    component: WorkManagement,
+    protected: true,
+  },
+  {
+    path: "/profile",
+    component: EmployeeProfile,
+    protected: true,
+  },
+  {
+    path: "/checkin",
+    component: CheckIn,
+    protected: true,
+  },
+  {
+    path: "/overtime-request",
+    component: OvertimeRequest,
+    protected: true,
+  },
+  {
+    path: "/work-reports",
+    component: WorkReportList,
+    protected: true,
+  },
+  {
+    path: "/work-detail/:id",
+    component: WorkReportDetail,
+    protected: true,
+  },
+  {
+    path: "/attendance-history",
+    component: AttendanceHistory,
+    protected: true,
+  },
 ];
