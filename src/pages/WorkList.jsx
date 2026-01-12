@@ -57,8 +57,9 @@ function WorkList() {
                 assignment.work?.required_time_minute || 0
               ).padStart(2, "0")}`,
               status: assignment.work.status?.toLowerCase() || "pending",
+              assignedStatus: assignment.assigned_status?.toLowerCase() || "pending",
               priority: assignment.work?.priority?.toLowerCase() || "medium",
-              service: assignment.work?.service_type || "Không xác định",
+              service: assignment.work?.service_type?.toLowerCase() || "Không xác định",
               serviceType: assignment.work?.service_type || "Không xác định",
               progress:
                 assignment.work?.status === "completed" ? 100 : assignment.work?.status === "in_progress" ? 50 : 0,
@@ -134,9 +135,9 @@ function WorkList() {
   }, [workList, selectedPeriod]);
 
   const getWorkStats = () => {
-    const completed = filteredWorkList.filter((w) => w.status === "completed").length;
-    const inProgress = filteredWorkList.filter((w) => w.status === "in_progress").length;
-    const pending = filteredWorkList.filter((w) => w.status === "pending").length;
+    const completed = filteredWorkList.filter((w) => w.assignedStatus === "completed").length;
+    const inProgress = filteredWorkList.filter((w) => w.assignedStatus === "in_progress").length;
+    const pending = filteredWorkList.filter((w) => w.assignedStatus === "pending").length;
 
     return { completed, inProgress, pending, total: filteredWorkList.length };
   };
@@ -169,22 +170,18 @@ function WorkList() {
           </Box>
 
           {/* Quick Stats */}
-          <Box className="grid grid-cols-4 gap-2 mb-3">
+          <Box className="grid grid-cols-3 gap-2 mb-3">
             <Box className="bg-white/15 backdrop-blur-md rounded-xl p-2 border border-white/20 text-center">
               <Text className="text-sm font-bold text-white">{stats.pending}</Text>
-              <Text className="text-xs text-blue-100/70">Chờ</Text>
+              <Text className="text-xs text-blue-100/70">Chờ thực hiện</Text>
             </Box>
             <Box className="bg-white/15 backdrop-blur-md rounded-xl p-2 border border-white/20 text-center">
               <Text className="text-sm font-bold text-white">{stats.inProgress}</Text>
-              <Text className="text-xs text-blue-100/70">Đang</Text>
+              <Text className="text-xs text-blue-100/70">Đang làm</Text>
             </Box>
             <Box className="bg-white/15 backdrop-blur-md rounded-xl p-2 border border-white/20 text-center">
               <Text className="text-sm font-bold text-white">{stats.completed}</Text>
-              <Text className="text-xs text-blue-100/70">Xong</Text>
-            </Box>
-            <Box className="bg-white/15 backdrop-blur-md rounded-xl p-2 border border-white/20 text-center">
-              <Text className="text-sm font-bold text-white">{stats.total}</Text>
-              <Text className="text-xs text-blue-100/70">Tổng</Text>
+              <Text className="text-xs text-blue-100/70">Hoàn thành</Text>
             </Box>
           </Box>
 

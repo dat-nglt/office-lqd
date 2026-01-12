@@ -26,7 +26,7 @@ export const routes = [
     protected: true,
   },
   {
-    path: "/report",
+    path: "/report/:id",
     component: ProgressReport,
     protected: true,
   },

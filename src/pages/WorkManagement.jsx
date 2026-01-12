@@ -1,10 +1,8 @@
-import { Box, Text, Icon, Button, Page, Modal, Input, DatePicker, Select } from "zmp-ui";
+import { Box, Text, Icon, Page, Modal, Input, DatePicker } from "zmp-ui";
 import { useState, useContext, useEffect, useRef } from "react";
 import { getPriorityColor, getPriorityLabel, getStatusColor, getStatusLabel } from "../hooks/useLabelColor";
 import { miniAppGetListOfWorkAssignmentsByID, miniAppGetProfileInfoByID } from "../services/user.service";
 import { clearTokens, getTokens, getUserInfoInStorage } from "../config/axiosConfig";
-import { useNavigate } from "react-router-dom";
-import { nativeStorage } from "zmp-sdk/apis";
 import BottomNavigation from "../components/BottomNavigation";
 import WorkDetailModal from "../components/WorkDetailModal";
 import OvertimeRequestModal from "../components/OvertimeRequestModal";
@@ -64,6 +62,7 @@ function WorkManagement() {
 
   // Filter only today's work
   const todayWorkList = workList.filter((w) => w.scheduledDate === today);
+  console.log("Today's work list:", todayWorkList);
 
   const handleReschedule = (work) => {
     setSelectedWork(work);
@@ -222,6 +221,7 @@ function WorkManagement() {
           const transformedWorkList = response.data.map((assignment) => ({
             id: assignment.work.id,
             title: assignment.work?.title || "Công việc không có tên",
+            assignedStatus: assignment.assigned_status || "pending",
             serviceType: assignment.work?.service_type || "Không xác định",
             equipment: assignment.work?.category?.name || "",
             company: assignment.work?.customer_name || "",
@@ -356,10 +356,10 @@ function WorkManagement() {
                     </Box>
                     <Box
                       className={`text-xs font-semibold  whitespace-nowrap flex-shrink-0 ${getStatusColor(
-                        work.status
+                        work.assignedStatus
                       )}`}
                     >
-                      {getStatusLabel(work.status)}
+                      {getStatusLabel(work.assignedStatus)}
                     </Box>
                   </Box>
 
@@ -405,7 +405,7 @@ function WorkManagement() {
 
                   {/* Action Buttons */}
                   <Box className="flex gap-2 flex-wrap">
-                    {work.status !== "completed" && (
+                    {work.assignedStatus !== "completed" && (
                       <>
                         <button
                           onClick={() => handleReschedule(work)}

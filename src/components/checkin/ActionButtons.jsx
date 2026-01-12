@@ -9,7 +9,7 @@ function ActionButtons({
   submitting = false,
 }) {
   return (
-    <Box className="flex gap-3">
+    <Box className="flex gap-3 mb-4">
       {!capturedPhoto ? (
         <>
           <Button

@@ -84,9 +84,11 @@ class ErrorBoundary extends Component {
           <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl w-full">
             <h2 className="text-2xl font-bold text-red-600 mb-3">Sự cố hệ thống</h2>
 
-            <p className="text-gray-600 mb-4 text-sm">Ứng dụng gặp sự cố. Vui lòng thử lại hoặc báo lỗi cho bộ phận kỹ thuật.</p>
+            <p className="text-gray-600 mb-4 text-sm">
+              Ứng dụng gặp sự cố. Vui lòng thử lại hoặc báo lỗi cho bộ phận kỹ thuật.
+            </p>
 
-            <div className="flex gap-3 mb-4">
+            <div className="grid grid-cols-2 gap-3 mb-4">
               <button
                 onClick={this.handleReset}
                 className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-semibold"
@@ -103,14 +105,14 @@ class ErrorBoundary extends Component {
 
               <button
                 onClick={this.copyError}
-                className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm"
               >
                 {copySuccess ? "Đã sao chép" : "Sao chép lỗi"}
               </button>
 
               <button
                 onClick={this.toggleDetails}
-                className="px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-sm"
+                className="px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-sm"
               >
                 {showDetails ? "Ẩn chi tiết" : "Xem chi tiết"}
               </button>
@@ -120,11 +122,10 @@ class ErrorBoundary extends Component {
               <div className="mt-2">
                 <div className="text-xs text-gray-500 mb-2">Thông tin lỗi (message + stack + component stack):</div>
                 <pre className="bg-gray-100 p-3 rounded text-xs overflow-auto whitespace-pre-wrap max-h-64">
-{`${error?.message || 'No message'}\n\n${error?.stack || ''}\n\n${errorInfo?.componentStack || ''}`}
+                  {`${error?.message || "No message"}\n\n${error?.stack || ""}\n\n${errorInfo?.componentStack || ""}`}
                 </pre>
               </div>
             )}
-
           </div>
         </div>
       );

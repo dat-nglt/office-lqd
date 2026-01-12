@@ -15,9 +15,9 @@ export const getTasks = async (params) => {
   }
 };
 
-export const getTaskById = async (id) => {
+export const getWorkByID = async (id) => {
   try {
-    const response = await axiosInstance.get(API_ENDPOINTS.WORK_MANAGEMENT.GET_TASK_BY_ID(id));
+    const response = await axiosInstance.get(API_ENDPOINTS.WORK_MANAGEMENT.GET_WORK_BY_ID(id));
     return response.data;
   } catch (error) {
     throw error.response?.data || error;

@@ -9,7 +9,6 @@ import CheckInTypeSelector from "../components/checkin/CheckInTypeSelector";
 import LocationStatus from "../components/checkin/LocationStatus";
 import LocationSelector from "../components/checkin/LocationSelector";
 import CheckInModeSelector from "../components/checkin/CheckInModeSelector";
-import GetLocationButton from "../components/checkin/GetLocationButton";
 import CameraView from "../components/checkin/CameraView";
 import PhotoInfo from "../components/checkin/PhotoInfo";
 import ActionButtons from "../components/checkin/ActionButtons";
@@ -723,8 +722,6 @@ function CheckIn() {
                     isCheckingLocation={isCheckingLocation}
                   />
 
-                  
-
                   <LocationSelector
                     currentLocation={currentLocation}
                     checkInLocations={attendanceLocations.workAssignments}
@@ -750,16 +747,6 @@ function CheckIn() {
           <>
             <CameraView capturedPhoto={cameraState.capturedPhoto} videoRef={videoRef} canvasRef={canvasRef} />
 
-            <PhotoInfo
-              capturedPhoto={cameraState.capturedPhoto}
-              selectedAttendanceMode={checkinSelection.mode}
-              currentLocation={currentLocation}
-              locationViolation={locationStatus.isViolation}
-              violationDistance={locationStatus.violationDistance}
-              notes={notes}
-              onNotesChange={setNotes}
-            />
-
             <ActionButtons
               capturedPhoto={cameraState.capturedPhoto}
               onCapturePhoto={capturePhoto}
@@ -771,6 +758,16 @@ function CheckIn() {
               }}
               submitting={submitting}
             />
+
+            <PhotoInfo
+              capturedPhoto={cameraState.capturedPhoto}
+              selectedAttendanceMode={checkinSelection.mode}
+              currentLocation={currentLocation}
+              locationViolation={locationStatus.isViolation}
+              violationDistance={locationStatus.violationDistance}
+              notes={notes}
+              onNotesChange={setNotes}
+            />
           </>
         )}
 
@@ -779,10 +776,17 @@ function CheckIn() {
 
       <BottomNavigation />
 
-      {(submitting || isCheckingLocation) && (
+      {submitting && (
         <Box className="absolute inset-0 bg-white bg-opacity-75 flex flex-col items-center justify-center z-50">
           <Spinner logo="https://res.cloudinary.com/djiwsnmtq/image/upload/v1768034655/lqd_l8z0wh.jpg" />
-          <Text className="mt-4 text-gray-600 text-sm">Đang xử lý yêu cầu    ...</Text>
+          <Text className="mt-4 text-gray-600 text-sm">Đang xử lý chấm công của bạn ...</Text>
+        </Box>
+      )}
+
+      {isCheckingLocation && (
+        <Box className="absolute inset-0 bg-white bg-opacity-75 flex flex-col items-center justify-center z-50">
+          <Spinner logo="https://res.cloudinary.com/djiwsnmtq/image/upload/v1768034655/lqd_l8z0wh.jpg" />
+          <Text className="mt-4 text-gray-600 text-sm">Đang xử lý vị trí của bạn ...</Text>
         </Box>
       )}
     </Page>

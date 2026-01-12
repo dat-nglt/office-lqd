@@ -44,7 +44,7 @@ function HomePage() {
   };
 
   const handleProgressReport = (job) => {
-    navigate(`/report`);
+    navigate(`/report/${job.workCode}`);
   };
 
   const getUserInfoMiniApp = async () => {
@@ -109,13 +109,13 @@ function HomePage() {
 
       const completedToday = (listOfWorkAssignmentsResp?.data || []).filter(
         (assign) =>
-          assign.work.status === "completed" &&
+          assign.assigned_status === "completed" &&
           new Date(assign.work.required_date).toISOString().split("T")[0] === today
       ).length;
 
       const pendingToday = (listOfWorkAssignmentsResp?.data || []).filter(
         (assign) =>
-          assign.work.status === "pending" && new Date(assign.work.required_date).toISOString().split("T")[0] === today
+          assign.assigned_status === "pending" && new Date(assign.work.required_date).toISOString().split("T")[0] === today
       ).length;
 
       setTotalAssignedCompletedToday(completedToday);
@@ -145,11 +145,10 @@ function HomePage() {
       <Box className="px-4 pt-4 pb-28">
         {/* Statistics Cards */}
         <Box className="p-4 border-b  rounded-t-xl border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100 flex items-center justify-between">
-          <Text className="font-bold text-gray-900 flex items-center">
-            Công Việc Hôm Nay
+          <Text className="font-bold text-gray-900 flex items-center capitalize">
+            Thống Kê Công Việc
             {/* ({todayAssignments.length}) */}
           </Text>
-          <Icon icon="zi-retry" className="mr-2 text-blue-600" size={16} onClick={handleRefreshData} />
         </Box>
         <Box className="bg-white rounded-b-xl shadow-sm p-4 mb-4 border border-gray-100">
           <Box className="grid grid-cols-2 gap-3 mb-3">
@@ -201,19 +200,6 @@ function HomePage() {
             ))}
           </Box>
         </Box>
-
-        {/* Submit Report Button */}
-        {/* <Box className="mt-4">
-                    <Button
-                        variant="primary"
-                        fullWidth
-                        onClick={() => navigate("/report")}
-                        className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-3 font-semibold"
-                    >
-                        <Icon icon="zi-send" className="mr-2" size={16} />
-                        Gửi Báo Cáo Công Việc
-                    </Button>
-                </Box> */}
       </Box>
 
       {/* Work Detail Modal */}

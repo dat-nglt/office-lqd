@@ -2,6 +2,7 @@ import { Box, Button, Icon, Text } from "zmp-ui";
 import { getPriorityColor, getPriorityLabel, getStatusColor, getStatusLabel } from "../hooks/useLabelColor";
 
 function JobListItem({ job, onStartWork, onProgressReport, onShowDetail, sx = "" }) {
+  console.log("Rendering JobListItem for job:", job);
   return (
     <Box className={`p-4 hover:bg-gray-50 transition-colors ${sx}`}>
       {/* Job Header */}
@@ -12,7 +13,7 @@ function JobListItem({ job, onStartWork, onProgressReport, onShowDetail, sx = ""
           </Box>
           <Text className="text-xs text-gray-600">{job.company}</Text>
         </Box>
-        <Box className={`text-xs font-semibold ${getStatusColor(job.status)}`}>{getStatusLabel(job.status)}</Box>
+        <Box className={`text-xs font-semibold ${getStatusColor(job.assignedStatus)}`}>{getStatusLabel(job.assignedStatus)}</Box>
       </Box>
 
       {/* Service & Equipment Info */}
