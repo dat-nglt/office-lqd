@@ -29,7 +29,7 @@ function Notifications() {
       id: "assignment",
       label: "Phân bổ công việc",
       icon: "zi-list-1",
-      color: "bg-blue-100 text-blue-700 border-blue-300",
+      color: "bg-green-100 text-green-700 border-green-300",
     },
     {
       id: "change",
@@ -189,7 +189,7 @@ function Notifications() {
   return (
     <Page className="bg-gray-50 min-h-screen pb-20">
       {/* Enhanced Header */}
-      <Box className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-lg pb-4 relative overflow-hidden">
+      <Box className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 shadow-lg pb-4 relative overflow-hidden">
         <Box className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></Box>
         <Box className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16"></Box>
 
@@ -204,17 +204,17 @@ function Notifications() {
           <Box className="flex gap-2">
             <Box className="flex-1 bg-white/15 rounded-lg px-3 py-2 text-center border border-white/20">
               <Text className="text-white font-bold text-sm">{notifications.length}</Text>
-              <Text className="text-blue-100 text-xs">Tổng</Text>
+              <Text className="text-green-100 text-xs">Tổng</Text>
             </Box>
             <Box className="flex-1 bg-white/15 rounded-lg px-3 py-2 text-center border border-white/20">
               <Text className="text-white font-bold text-sm">{unreadCount}</Text>
-              <Text className="text-blue-100 text-xs">Mới</Text>
+              <Text className="text-green-100 text-xs">Mới</Text>
             </Box>
             <Box className="flex-1 bg-white/15 rounded-lg px-3 py-2 text-center border border-white/20">
               <Text className="text-white font-bold text-sm">
                 {notifications.filter((n) => n.priority === "Cao").length}
               </Text>
-              <Text className="text-blue-100 text-xs">Ưu tiên</Text>
+              <Text className="text-green-100 text-xs">Ưu tiên</Text>
             </Box>
           </Box>
         </Box>
@@ -223,9 +223,9 @@ function Notifications() {
       <Box className="px-4 py-4 pb-20">
         {/* Action Bar */}
         {unreadCount > 0 && (
-          <Box className="flex justify-between items-center mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-            <Text className="text-sm text-blue-700 font-semibold">{unreadCount} thông báo chưa đọc</Text>
-            <button onClick={handleMarkAllAsRead} className="text-blue-600 hover:text-blue-800 text-xs font-bold">
+          <Box className="flex justify-between items-center mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+            <Text className="text-sm text-green-700 font-semibold">{unreadCount} thông báo chưa đọc</Text>
+            <button onClick={handleMarkAllAsRead} className="text-green-600 hover:text-green-800 text-xs font-bold">
               Đánh dấu tất cả
             </button>
           </Box>
@@ -239,8 +239,8 @@ function Notifications() {
               onClick={() => setSelectedType(null)}
               className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-all ${
                 selectedType === null
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-gray-700 border-gray-300 hover:border-blue-300"
+                  ? "bg-green-600 text-white border-green-600"
+                  : "bg-white text-gray-700 border-gray-300 hover:border-green-300"
               }`}
             >
               Tất cả
@@ -252,7 +252,7 @@ function Notifications() {
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-all flex items-center gap-1 ${
                   selectedType === type.id
                     ? `${type.color} bg-opacity-20 border-2`
-                    : "bg-white text-gray-700 border-gray-300 hover:border-blue-300"
+                    : "bg-white text-gray-700 border-gray-300 hover:border-green-300"
                 }`}
               >
                 <Icon icon={type.icon} size={12} />
@@ -272,15 +272,15 @@ function Notifications() {
                   key={notif.id}
                   className={`rounded-lg p-4 border transition-all ${
                     notif.read
-                      ? "bg-white border-gray-200 hover:border-blue-300"
-                      : "bg-blue-50 border-blue-300 shadow-sm"
+                      ? "bg-white border-gray-200 hover:border-green-300"
+                      : "bg-green-50 border-green-300 shadow-sm"
                   }`}
                 >
                   {/* Header Row */}
                   <Box className="flex items-start justify-between gap-2 mb-2">
                     <Box className="flex-1 min-w-0">
                       <Box className="flex items-center gap-2">
-                        {!notif.read && <Box className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 mt-1"></Box>}
+                        {!notif.read && <Box className="w-2 h-2 bg-green-600 rounded-full flex-shrink-0 mt-1"></Box>}
                         <Box
                           className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs ${typeInfo?.color}`}
                         >
@@ -314,8 +314,8 @@ function Notifications() {
 
                   {/* Work Info Card */}
                   {notif.work && (
-                    <Box className=" mb-3 p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-                      <Text className="text-xs text-blue-700 font-bold mb-2">Thông Tin Công Việc</Text>
+                    <Box className=" mb-3 p-3 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border border-green-200">
+                      <Text className="text-xs text-green-700 font-bold mb-2">Thông Tin Công Việc</Text>
 
                       {/* Work Title */}
                       <Text className="text-xs font-semibold text-gray-900 mb-1">{notif.work.title}</Text>
@@ -337,7 +337,7 @@ function Notifications() {
                       </Box>
 
                       {/* Time Info */}
-                      <Box className="space-y-1 mb-2 text-xs text-gray-700 border-t border-blue-200 pt-2">
+                      <Box className="space-y-1 mb-2 text-xs text-gray-700 border-t border-green-200 pt-2">
                         {notif.work.scheduledTime && (
                           <Box className="flex items-center gap-1">
                             <Icon icon="zi-clock-1" size={12} className="text-gray-500" />
@@ -369,7 +369,7 @@ function Notifications() {
 
                       {/* Customer Info */}
                       {(notif.work.customer || notif.work.phone) && (
-                        <Box className="border-t border-blue-200 pt-2 flex items-center justify-between">
+                        <Box className="border-t border-green-200 pt-2 flex items-center justify-between">
                           <Box className="text-xs">
                             {notif.work.customer && (
                               <Text className="text-gray-700">
@@ -389,7 +389,7 @@ function Notifications() {
                               onClick={() => {
                                 window.location.href = `tel:${notif.work.phone}`;
                               }}
-                              className="text-blue-600 hover:text-blue-800 p-1"
+                              className="text-green-600 hover:text-green-800 p-1"
                             >
                               <Icon icon="zi-call" size={16} />
                             </button>
@@ -413,7 +413,7 @@ function Notifications() {
                     {notif.type === "assignment" && (
                       <button
                         onClick={() => navigate("/work-management")}
-                        className="flex-1 text-xs px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold transition-colors flex items-center justify-center gap-1"
+                        className="flex-1 text-xs px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded font-semibold transition-colors flex items-center justify-center gap-1"
                       >
                         <Icon icon="zi-list-1" size={12} />
                         Xem Chi Tiết
@@ -422,7 +422,7 @@ function Notifications() {
                     {!notif.read && (
                       <button
                         onClick={() => handleMarkAsRead(notif.id)}
-                        className="text-xs text-blue-600 hover:text-blue-800 font-semibold px-2 py-1.5 rounded hover:bg-blue-100 transition-colors"
+                        className="text-xs text-green-600 hover:text-green-800 font-semibold px-2 py-1.5 rounded hover:bg-green-100 transition-colors"
                       >
                         Đã đọc
                       </button>
@@ -433,7 +433,7 @@ function Notifications() {
             })
           ) : (
             <Box className="text-center py-12">
-              <Icon icon="zi-check-circle" className="text-blue-400 text-5xl mb-3" />
+              <Icon icon="zi-check-circle" className="text-green-400 text-5xl mb-3" />
               <Text className="text-gray-600 font-semibold">
                 {selectedType ? "Không có thông báo loại này" : "Không có thông báo mới"}
               </Text>

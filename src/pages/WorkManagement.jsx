@@ -277,7 +277,7 @@ function WorkManagement() {
   return (
     <Page className="bg-gray-50 min-h-screen pb-20">
       {/* Enhanced Header */}
-      <Box className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-lg pb-4 relative overflow-hidden">
+      <Box className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 shadow-lg pb-4 relative overflow-hidden">
         {/* Background Effects */}
         <Box className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></Box>
         <Box className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16"></Box>
@@ -288,7 +288,7 @@ function WorkManagement() {
             <Text.Title className="text-white font-bold" size="large">
               Quản Lý Công Việc
             </Text.Title>
-            <Box className="flex items-center space-x-2 text-sm text-blue-100">
+            <Box className="flex items-center space-x-2 text-sm text-green-100">
               <Icon icon="zi-clock-1" size={16} />
               <Text>{today}</Text>
             </Box>
@@ -297,22 +297,22 @@ function WorkManagement() {
           {/* Quick Stats */}
           <Box className="grid grid-cols-3 gap-2 mb-3">
             <Box className="bg-white/10 backdrop-blur-md rounded-xl p-2 border border-white/20 text-center">
-              <Text className="text-sm font-bold text-blue-100">{stats.total}</Text>
-              <Text className="text-xs text-blue-100/70">Tổng công việc</Text>
+              <Text className="text-sm font-bold text-green-100">{stats.total}</Text>
+              <Text className="text-xs text-green-100/70">Tổng công việc</Text>
             </Box>
             <Box className="bg-white/10 backdrop-blur-md rounded-xl p-2 border border-white/20 text-center">
-              <Text className="text-sm font-bold text-blue-100">{stats.inProgress}</Text>
-              <Text className="text-xs text-blue-100/70">Đang làm</Text>
+              <Text className="text-sm font-bold text-green-100">{stats.inProgress}</Text>
+              <Text className="text-xs text-green-100/70">Đang làm</Text>
             </Box>
             <Box className="bg-white/10 backdrop-blur-md rounded-xl p-2 border border-white/20 text-center">
-              <Text className="text-sm font-bold text-blue-100">{stats.pending}</Text>
-              <Text className="text-xs text-blue-100/70">Chờ thực hiện</Text>
+              <Text className="text-sm font-bold text-green-100">{stats.pending}</Text>
+              <Text className="text-xs text-green-100/70">Chờ thực hiện</Text>
             </Box>
           </Box>
 
           {/* Info Message */}
           <Box className="bg-white/10 backdrop-blur-md rounded-lg p-2 border border-white/20">
-            <Text size="small" className="text-blue-100 flex items-center">
+            <Text size="small" className="text-green-100 flex items-center">
               <Icon icon="zi-info-circle" className="mr-1" size={14} />
               Việc thay đổi sẽ được thông báo đến các quản lý
             </Text>
@@ -323,18 +323,18 @@ function WorkManagement() {
       <Box className="px-4 pt-4 pb-28">
         {/* Work List */}
         <Box className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <Box className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100 flex items-center justify-between">
+          <Box className="p-4 border-b border-gray-200 bg-gradient-to-r from-green-50 to-green-100 flex items-center justify-between">
             <Text className="font-bold text-gray-900 flex items-center">
-              <Icon icon="zi-list-1" className="mr-2 text-blue-600" size={16} />
+              <Icon icon="zi-list-1" className="mr-2 text-green-600" size={16} />
               Danh Sách Công Việc Hôm Nay
             </Text>
-            <Icon icon="zi-retry" className="mr-2 text-blue-600" size={16} onClick={handleRefreshData} />
+            <Icon icon="zi-retry" className="mr-2 text-green-600" size={16} onClick={handleRefreshData} />
           </Box>
 
           <Box className="divide-y divide-gray-200">
             {loading ? (
               <Box className="text-center py-12">
-                <Icon icon="zi-spinner" className="text-blue-600 text-5xl mb-4 animate-spin" />
+                <Icon icon="zi-spinner" className="text-green-600 text-5xl mb-4 animate-spin" />
                 <Text className="text-gray-600 font-semibold">Đang tải danh sách công việc...</Text>
               </Box>
             ) : error ? (
@@ -409,7 +409,7 @@ function WorkManagement() {
                       <>
                         <button
                           onClick={() => handleReschedule(work)}
-                          className="px-3 py-2 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-1 flex-1 min-w-fit"
+                          className="px-3 py-2 bg-green-600 text-white rounded text-xs font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-1 flex-1 min-w-fit"
                         >
                           Thay đổi lịch
                         </button>
@@ -454,8 +454,8 @@ function WorkManagement() {
         <Box className="p-0 space-y-4">
           {selectedWork && (
             <>
-              <Box className="bg-blue-50 rounded p-3 border border-blue-200">
-                <Text className="text-xs text-blue-700 mb-1 font-semibold">Yêu cầu thay đổi lịch công việc:</Text>
+              <Box className="bg-green-50 rounded p-3 border border-green-200">
+                <Text className="text-xs text-green-700 mb-1 font-semibold">Yêu cầu thay đổi lịch công việc:</Text>
                 <Text className="font-semibold text-gray-900 text-sm">{selectedWork.title}</Text>
               </Box>
 
@@ -483,7 +483,7 @@ function WorkManagement() {
                 </button>
                 <button
                   onClick={confirmReschedule}
-                  className="flex-1 px-3 py-2 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700 transition-colors text-sm"
+                  className="flex-1 px-3 py-2 bg-green-600 text-white rounded font-semibold hover:bg-green-700 transition-colors text-sm"
                 >
                   Xác nhận
                 </button>

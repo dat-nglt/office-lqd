@@ -59,3 +59,12 @@ export const getAllTechniciansService = async () => {
     throw error.response?.data || error;
   }
 };
+
+export const getAllWorkCategoriesService = async () => {
+  try {
+    const response = await axiosInstance.get(API_ENDPOINTS.WORK_MANAGEMENT.GET_ALL_WORK_CATEGORIES);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};

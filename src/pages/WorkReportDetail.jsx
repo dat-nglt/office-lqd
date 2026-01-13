@@ -78,7 +78,7 @@ function WorkReportDetail() {
       case "completed":
         return "bg-green-100 text-green-800";
       case "in_progress":
-        return "bg-blue-100 text-blue-800";
+        return "bg-green-100 text-green-800";
       case "pending":
         return "bg-yellow-100 text-yellow-800";
       default:
@@ -106,7 +106,7 @@ function WorkReportDetail() {
       case "medium":
         return "bg-yellow-100 text-yellow-800";
       case "low":
-        return "bg-blue-100 text-blue-800";
+        return "bg-green-100 text-green-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -129,29 +129,26 @@ function WorkReportDetail() {
     <Page className="bg-gray-50 min-h-screen">
       {/* Image Modal Dialog */}
       {selectedImage && (
-        <Box className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setSelectedImage(null)}>
-          <Box className="bg-white rounded-lg p-4 max-w-2xl max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+        <Box
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <Box
+            className="bg-white rounded-lg p-4 max-w-2xl max-h-[90vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <Box className="flex items-center justify-between mb-3">
               <Text className="font-semibold text-gray-900">{selectedImage.caption}</Text>
-              <Button
-                variant="secondary"
-                size="small"
-                onClick={() => setSelectedImage(null)}
-                className="!p-1"
-              >
+              <Button variant="secondary" size="small" onClick={() => setSelectedImage(null)} className="!p-1">
                 <Icon icon="zi-close" size={18} />
               </Button>
             </Box>
-            <img
-              src={selectedImage.url}
-              alt={selectedImage.caption}
-              className="w-full h-auto rounded-lg"
-            />
+            <img src={selectedImage.url} alt={selectedImage.caption} className="w-full h-auto rounded-lg" />
           </Box>
         </Box>
       )}
       {/* Header */}
-      <Box className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-lg pb-4 relative overflow-hidden">
+      <Box className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 shadow-lg pb-4 relative overflow-hidden">
         <Box className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></Box>
         <Box className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16"></Box>
 
@@ -175,7 +172,7 @@ function WorkReportDetail() {
           {/* Work */}
           <Box className="flex items-center justify-between">
             <Box className="flex items-center space-x-2">
-              <Icon icon="zi-info-circle" className="text-blue-600" size={14} />
+              <Icon icon="zi-info-circle" className="text-green-600" size={14} />
               <Text className="text-xs text-gray-600 min-w-[80px]">Công việc:</Text>
             </Box>
             <Text className="text-xs  text-gray-900">{workReport.title}</Text>
@@ -223,7 +220,7 @@ function WorkReportDetail() {
         {/* Images Section */}
         <Box className="mb-4">
           <Text className="font-semibold text-gray-800 text-sm mb-3 flex items-center">
-            <Icon icon="zi-gallery" className="mr-2 text-blue-600" size={16} />
+            <Icon icon="zi-gallery" className="mr-2 text-green-600" size={16} />
             Hình Ảnh Báo Cáo
           </Text>
 

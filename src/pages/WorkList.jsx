@@ -152,7 +152,7 @@ function WorkList() {
   return (
     <Page className="bg-gray-50 min-h-screen pb-20">
       {/* Enhanced Header */}
-      <Box className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-lg pb-4 relative overflow-hidden">
+      <Box className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 shadow-lg pb-4 relative overflow-hidden">
         {/* Background Effects */}
         <Box className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></Box>
         <Box className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16"></Box>
@@ -163,7 +163,7 @@ function WorkList() {
             <Text.Title className="text-white font-bold" size="large">
               Lịch Công Việc
             </Text.Title>
-            <Box className="flex items-center space-x-2 text-sm text-blue-100">
+            <Box className="flex items-center space-x-2 text-sm text-green-100">
               <Icon icon="zi-clock-1" size={16} />
               <Text>{new Date().toLocaleDateString("vi-VN")}</Text>
             </Box>
@@ -173,15 +173,15 @@ function WorkList() {
           <Box className="grid grid-cols-3 gap-2 mb-3">
             <Box className="bg-white/15 backdrop-blur-md rounded-xl p-2 border border-white/20 text-center">
               <Text className="text-sm font-bold text-white">{stats.pending}</Text>
-              <Text className="text-xs text-blue-100/70">Chờ thực hiện</Text>
+              <Text className="text-xs text-green-100/70">Chờ thực hiện</Text>
             </Box>
             <Box className="bg-white/15 backdrop-blur-md rounded-xl p-2 border border-white/20 text-center">
               <Text className="text-sm font-bold text-white">{stats.inProgress}</Text>
-              <Text className="text-xs text-blue-100/70">Đang làm</Text>
+              <Text className="text-xs text-green-100/70">Đang làm</Text>
             </Box>
             <Box className="bg-white/15 backdrop-blur-md rounded-xl p-2 border border-white/20 text-center">
               <Text className="text-sm font-bold text-white">{stats.completed}</Text>
-              <Text className="text-xs text-blue-100/70">Hoàn thành</Text>
+              <Text className="text-xs text-green-100/70">Hoàn thành</Text>
             </Box>
           </Box>
 
@@ -192,7 +192,7 @@ function WorkList() {
                 size="small"
                 variant={selectedPeriod === option.value ? "primary" : "secondary"}
                 className={`flex-1 rounded-lg text-xs ${
-                  selectedPeriod === option.value ? "bg-white text-blue-600" : "bg-white/20 text-white"
+                  selectedPeriod === option.value ? "bg-white text-green-600" : "bg-white/20 text-white"
                 }`}
                 onClick={() => setSelectedPeriod(option.value)}
               >
@@ -208,7 +208,7 @@ function WorkList() {
         <Box className="space-y-3">
           {loading ? (
             <Box className="text-center py-12">
-              <Icon icon="zi-spinner" className="text-blue-600 text-5xl mb-4 animate-spin" />
+              <Icon icon="zi-spinner" className="text-green-600 text-5xl mb-4 animate-spin" />
               <Text className="text-gray-600 font-semibold">Đang tải danh sách công việc...</Text>
             </Box>
           ) : error ? (

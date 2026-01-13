@@ -110,7 +110,7 @@ function BottomNavigation() {
                 <Box className="relative mb-1">
                   <Icon
                     icon={tab.icon}
-                    className={`transition-colors duration-200 ${isActive ? "text-blue-600" : "text-gray-500"}`}
+                    className={`transition-colors duration-200 ${isActive ? "text-green-600" : "text-gray-500"}`}
                     size={24}
                   />
 
@@ -128,7 +128,7 @@ function BottomNavigation() {
                 {/* Label */}
                 <Text
                   className={`text-xs font-semibold transition-colors duration-200 whitespace-nowrap ${
-                    isActive ? "text-blue-600" : "text-gray-600"
+                    isActive ? "text-green-600" : "text-gray-600"
                   }`}
                 >
                   {tab.label}
@@ -136,7 +136,7 @@ function BottomNavigation() {
 
                 {/* Active Indicator Line */}
                 {isActive && (
-                  <Box className="absolute bottom-0 w-12 h-0.5 bg-blue-600 rounded-full" aria-hidden="true" />
+                  <Box className="absolute bottom-0 w-12 h-0.5 bg-green-600 rounded-full" aria-hidden="true" />
                 )}
               </Box>
             </Box>

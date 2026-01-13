@@ -13,6 +13,7 @@ const OvertimeRequest = lazy(() => import("../pages/OvertimeRequest"));
 const WorkReportList = lazy(() => import("../pages/WorkReportList"));
 const WorkReportDetail = lazy(() => import("../pages/WorkReportDetail"));
 const AttendanceHistory = lazy(() => import("../pages/AttendanceHistory"));
+const CoordinatesGuide = lazy(() => import("../pages/CoordinatesGuide"));
 
 export const routes = [
   {
@@ -73,6 +74,11 @@ export const routes = [
   {
     path: "/attendance-history",
     component: AttendanceHistory,
+    protected: true,
+  },
+  {
+    path: "/coordinates-guide",
+    component: CoordinatesGuide,
     protected: true,
   },
 ];

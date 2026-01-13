@@ -7,7 +7,7 @@ export const formatDate = (date) => {
   const days = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
   const dayName = days[date.getDay()];
   const formattedDate = date.toLocaleDateString("vi-VN");
-  return `${formattedDate} - ${dayName}`;
+  return `${formattedDate}  ${dayName}`;
 };
 
 /**

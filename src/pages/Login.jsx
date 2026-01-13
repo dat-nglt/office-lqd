@@ -153,16 +153,16 @@ const Login = () => {
   return (
     <Page className="bg-gray-50 min-h-screen flex flex-col">
       {/* Header */}
-      <Box className="bg-gradient-to-r from-blue-600 to-blue-800 pb-6 px-4 pt-12">
+      <Box className="bg-gradient-to-r from-green-600 to-green-800 pb-6 px-4 pt-12">
         <Text.Title className="text-white font-bold text-xl">Hệ Thống Chấm Công IMS</Text.Title>
-        <Text className="text-blue-100 text-sm">Đăng nhập nội bộ cho kỹ thuật viên Lâm Quang Đại</Text>
+        <Text className="text-green-100 text-sm">Đăng nhập nội bộ nhân viên văn phòng Lâm Quang Đại</Text>
       </Box>
 
       {/* Main Content */}
       <Box className="flex-1 p-6 space-y-6">
         {/* Info Box */}
-        <Box className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <Text className="text-blue-800 text-sm ">
+        <Box className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <Text className="text-green-800 text-sm ">
             Đảm bảo bạn đã đăng nhập tài khoản Zalo trước khi sử dụng Mini App này. Hệ thống sẽ gửi yêu cầu cấp quyền để
             lấy thông tin cần thiết cho việc sử dụng Mini App. Vui lòng đồng ý để tiếp tục.
           </Text>
@@ -202,13 +202,13 @@ const Login = () => {
             </Text>
 
             {loading ? (
-              <Box className="bg-blue-50 rounded-lg p-3 py-3">
-                <Icon icon="zi-auto" className="animate-spin text-blue-600" />
+              <Box className="bg-green-50 rounded-lg p-3 py-3">
+                <Icon icon="zi-auto" className="animate-spin text-green-600" />
               </Box>
             ) : (
               <Button
                 onClick={handleZaloLogin}
-                className="w-full py-3 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700"
+                className="w-full py-3 rounded-lg font-semibold text-white bg-green-600 hover:bg-green-700"
               >
                 Đăng nhập bằng Zalo
               </Button>
@@ -222,7 +222,7 @@ const Login = () => {
           <Box className="space-y-2">
             {FEATURES.map((feature, index) => (
               <Box key={index} className="flex items-center gap-2">
-                <Icon icon={feature.icon} className="text-blue-600" size={16} />
+                <Icon icon={feature.icon} className="text-green-600" size={16} />
                 <Text className="text-gray-600 text-sm">{feature.text}</Text>
               </Box>
             ))}
@@ -231,17 +231,17 @@ const Login = () => {
 
         {/* Support */}
         <Box
-          className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md p-5 cursor-pointer hover:shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
+          className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-md p-5 cursor-pointer hover:shadow-lg hover:from-green-600 hover:to-green-700 transition-all duration-300"
           onClick={handleCallSupport}
         >
           <Box className="flex items-start gap-3">
             <Box className="flex-1">
               <Text className="text-white text-sm font-bold mb-1">Cần hỗ trợ?</Text>
-              <Text className="text-blue-100 text-xs mb-2">Gọi ngay để được hỗ trợ nhanh nhất</Text>
+              <Text className="text-green-100 text-xs mb-2">Gọi ngay để được hỗ trợ nhanh nhất</Text>
               <Box className="flex items-center gap-1">
                 <Text className="text-white text-sm font-semibold">0397.364.664</Text>
               </Box>
-              <Text className="text-blue-100 text-xs mt-1">Nguyễn Lê Tấn Đạt</Text>
+              <Text className="text-green-100 text-xs mt-1">Nguyễn Lê Tấn Đạt</Text>
             </Box>
             <Box className="flex-shrink-0 opacity-80">
               <Icon icon="zi-arrow-right" className="text-white" size={24} />

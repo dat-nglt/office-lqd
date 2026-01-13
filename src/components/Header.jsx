@@ -3,11 +3,11 @@ import { Box, Text, Icon, Avatar, useNavigate } from "zmp-ui";
 function Header({ title, showBack = false, onBack, userInfo, currentTime }) {
   const navigate = useNavigate();
   return (
-    <Box className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 dark:from-gray-800 dark:via-gray-900 dark:to-gray-950 rounded-b-3xl shadow-xl pb-6 relative overflow-hidden">
+    <Box className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 dark:from-gray-800 dark:via-gray-900 dark:to-gray-950 rounded-b-3xl shadow-xl pb-6 relative overflow-hidden">
       {/* Background Effects */}
       <Box className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></Box>
       <Box className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full -ml-24 -mb-24"></Box>
-      <Box className="absolute top-1/2 left-1/4 w-32 h-32 bg-blue-400/10 rounded-full -translate-y-1/2"></Box>
+      <Box className="absolute top-1/2 left-1/4 w-32 h-32 bg-green-400/10 rounded-full -translate-y-1/2"></Box>
 
       <Box className="px-4 pt-12 pb-2 relative z-10">
         {/* Header Controls */}
@@ -44,7 +44,7 @@ function Header({ title, showBack = false, onBack, userInfo, currentTime }) {
               <Text.Title size="large" className="text-white mb-0.5 font-bold">
                 {userInfo?.name}
               </Text.Title>
-              <Text size="small" className="text-blue-100">
+              <Text size="small" className="text-green-100">
                 {userInfo.position?.name || "Nhân sự vừa tham gia"}
               </Text>
             </Box>
@@ -53,10 +53,10 @@ function Header({ title, showBack = false, onBack, userInfo, currentTime }) {
           {/* Check-in Quick Button */}
           <Box
             className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl hover:bg-white/30 transition-all duration-200 cursor-pointer border border-white/30 shadow-lg flex items-center space-x-2 hover:scale-105 transform relative"
-            // onClick={() => navigate("/notifications")}
+            onClick={() => navigate("/coordinates-guide")}
             title="Thông báo hệ thống"
           >
-            <Icon icon="zi-notif" className="text-white" size={25} />
+            <Icon icon="zi-info-circle" className="text-white" size={25} />
             <Box className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full shadow-lg"></Box>
           </Box>
         </Box>
@@ -66,11 +66,11 @@ function Header({ title, showBack = false, onBack, userInfo, currentTime }) {
           <Box className="flex justify-between items-start">
             <Box className="flex items-center flex-row space-x-2">
               <Box className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></Box>
-              <Text size="small" className="text-blue-100">
+              <Text size="small" className="text-green-100">
                 Trạng thái sẵn sàng - {currentTime.toLocaleDateString("vi-VN")}
               </Text>
             </Box>
-            <Text size="small" className="text-blue-100 font-semibold">
+            <Text size="small" className="text-green-100 font-semibold">
               {currentTime.toLocaleTimeString("vi-VN", {
                 hour: "2-digit",
                 minute: "2-digit",
@@ -81,7 +81,7 @@ function Header({ title, showBack = false, onBack, userInfo, currentTime }) {
 
           {/* Status Message */}
           {/* <Box className="flex items-center space-x-3 bg-white/5 rounded-xl p-2 border border-white/10">
-            <Text size="small" className="text-blue-100 flex-1">
+            <Text size="small" className="text-green-100 flex-1">
               Sẵn sàng thực hiện công việc
             </Text>
           </Box> */}

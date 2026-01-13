@@ -49,8 +49,8 @@ function JobListItem({ job, onStartWork, onProgressReport, onShowDetail, sx = ""
 
       {/* Notes */}
       {job.content && (
-        <Box className="p-2 bg-blue-50 rounded border border-blue-200 mb-2">
-          <Text className="text-xs text-blue-800">
+        <Box className="p-2 bg-green-50 rounded border border-green-200 mb-2">
+          <Text className="text-xs text-green-800">
             <span className="font-semibold">Nội dung:</span> {job.content}
           </Text>
         </Box>
@@ -70,7 +70,7 @@ function JobListItem({ job, onStartWork, onProgressReport, onShowDetail, sx = ""
           {job.assignedStatus === "pending" && (
             <Button
               size="small"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs"
               onClick={() => onStartWork(job)}
             >
               <Icon icon="zi-send-solid" size={12} className="mr-1" />

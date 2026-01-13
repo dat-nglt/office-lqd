@@ -5,7 +5,7 @@ function CheckInTypeSelector({ checkInTypes, selectedAttendanceType, onSelectTyp
 
   return (
     <>
-      <Box className="p-4 border-b  rounded-t-xl border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100 flex items-center justify-between">
+      <Box className="p-4 border-b  rounded-t-xl border-gray-200 bg-gradient-to-r from-green-50 to-green-100 flex items-center justify-between">
         <Text className="font-bold text-gray-900 flex items-center">
           Chọn ca chấm công
           {/* ({todayAssignments.length}) */}
@@ -17,7 +17,7 @@ function CheckInTypeSelector({ checkInTypes, selectedAttendanceType, onSelectTyp
             <button
               key={type.id}
               onClick={() => onSelectType(type)}
-              className="w-full p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg border-2 border-gray-200 hover:border-blue-300 transition-all text-left"
+              className="w-full p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg border-2 border-gray-200 hover:border-green-300 transition-all text-left"
             >
               <Box className="flex items-center justify-between">
                 <Box className="flex items-center space-x-3">

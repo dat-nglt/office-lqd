@@ -48,7 +48,7 @@ function EmployeeProfile() {
   return (
     <Page className="bg-gray-50 min-h-screen pb-20">
       {/* Enhanced Header */}
-      <Box className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-lg pb-6 relative overflow-hidden">
+      <Box className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 shadow-lg pb-6 relative overflow-hidden">
         {/* Background Effects */}
         <Box className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></Box>
         <Box className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16"></Box>
@@ -65,7 +65,7 @@ function EmployeeProfile() {
         {/* User Profile Card */}
         <Box className="bg-white rounded-2xl shadow-md p-6 mb-4 border border-gray-100 -mt-12 relative z-10">
           <Box className="flex items-center space-x-4 mb-4">
-            <Box className="rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+            <Box className="rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
               <Avatar
                 src={
                   userInfo?.avatar_url ||
@@ -93,7 +93,7 @@ function EmployeeProfile() {
         {/* Employee Details */}
         <Box className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-gray-100">
           <Text className="font-bold text-gray-900 mb-3 flex items-center">
-            <Icon icon="zi-info-circle" className="mr-2 text-blue-600" size={16} />
+            <Icon icon="zi-info-circle" className="mr-2 text-green-600" size={16} />
             Thông Tin Chi Tiết
           </Text>
 
@@ -144,7 +144,7 @@ function EmployeeProfile() {
 
         <Box className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-gray-100">
           <Text className="font-bold text-gray-900 mb-3 flex items-center">
-            <Icon icon="zi-share-external-2" className="mr-2 text-blue-600" size={16} />
+            <Icon icon="zi-share-external-2" className="mr-2 text-green-600" size={16} />
             Lịch sử chấm công
           </Text>
 
@@ -153,7 +153,7 @@ function EmployeeProfile() {
             <Button
               variant="primary"
               onClick={() => navigate("/attendance-history")}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-3 font-semibold"
+              className="w-full bg-green-600 hover:bg-green-700 text-white rounded-lg py-3 font-semibold"
             >
               <Icon icon="zi-list-1" className="mr-2" size={16} />
               Xem Danh Sách Chấm Công
@@ -164,7 +164,7 @@ function EmployeeProfile() {
         {/* Work Reports Section */}
         <Box className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-gray-100">
           <Text className="font-bold text-gray-900 mb-3 flex items-center">
-            <Icon icon="zi-share-external-2" className="mr-2 text-blue-600" size={16} />
+            <Icon icon="zi-share-external-2" className="mr-2 text-green-600" size={16} />
             Báo Cáo Công Việc
           </Text>
 
@@ -173,7 +173,7 @@ function EmployeeProfile() {
             <Button
               variant="primary"
               onClick={() => navigate("/work-reports")}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-3 font-semibold"
+              className="w-full bg-green-600 hover:bg-green-700 text-white rounded-lg py-3 font-semibold"
             >
               <Icon icon="zi-list-1" className="mr-2" size={16} />
               Xem Danh Sách Báo Cáo

@@ -48,9 +48,9 @@ function ProgressReport() {
       name: "Trước Khi Thực Hiện",
       description: "Chụp ảnh trạng thái ban đầu của công việc",
       icon: "zi-chevron-double-up",
-      color: "from-blue-600 to-blue-700",
-      bgColor: "bg-blue-50",
-      badgeColor: "bg-blue-100 text-blue-800",
+      color: "from-green-600 to-green-700",
+      bgColor: "bg-green-50",
+      badgeColor: "bg-green-100 text-green-800",
     },
     {
       id: "during",
@@ -441,7 +441,7 @@ function ProgressReport() {
 
 function PageHeader({ currentTime }) {
   return (
-    <Box className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-lg pb-4 relative overflow-hidden">
+    <Box className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 shadow-lg pb-4 relative overflow-hidden">
       <Box className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></Box>
       <Box className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16"></Box>
 
@@ -449,7 +449,7 @@ function PageHeader({ currentTime }) {
         <Text.Title className="text-white font-bold" size="large">
           Báo Cáo Tiến Độ
         </Text.Title>
-        <Text className="text-blue-100 text-sm mt-1">
+        <Text className="text-green-100 text-sm mt-1">
           {currentTime.toLocaleDateString("vi-VN")} -{" "}
           {currentTime.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
         </Text>

@@ -26,6 +26,10 @@ const API_ENDPOINTS = {
     GET_ATTENDANCE_HISTORY: "/users/attendance/history",
   },
 
+  CUSTOMERS: {
+    GET_ALL_CUSTOMERS: "/customers",
+  },
+
   // ============================================
   // Work Report Endpoints
   // ============================================
@@ -49,6 +53,7 @@ const API_ENDPOINTS = {
     CANCEL_TASK: (id) => `/work-management/tasks/${id}/cancel`,
     REQUEST_OVERTIME: "/overtime-requests",
     GET_ALL_TECHNICIANS: "/works/technicians-list-to-assign",
+    GET_ALL_WORK_CATEGORIES: "/work-categories",
   },
 
   // ============================================

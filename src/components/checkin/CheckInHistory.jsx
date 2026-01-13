@@ -6,11 +6,9 @@ function CheckInHistory({ todayAttendanceRecords }) {
 
   return (
     <Box className="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <Box className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
+      <Box className="p-4 border-b border-gray-200 bg-gradient-to-r from-green-50 to-green-100">
         <Box className="flex items-center justify-between ">
-          <Text className="font-bold text-gray-900 flex items-center">
-            Lịch Sử Chấm Công Hôm Nay
-          </Text>
+          <Text className="font-bold text-gray-900 flex items-center">Lịch Sử Chấm Công Hôm Nay</Text>
           {todayAttendanceRecords.length > 0 && (
             <Button
               size="small"
@@ -79,7 +77,7 @@ function CheckInHistory({ todayAttendanceRecords }) {
 
             {!expanded && todayAttendanceRecords.length > 2 && (
               <Box className="p-3 text-center">
-                <Text className="text-xs text-blue-600 " onClick={() => setExpanded(true)}>
+                <Text className="text-xs text-green-600 " onClick={() => setExpanded(true)}>
                   Nhấn để xem thêm {todayAttendanceRecords.length - 1} bản ghi chấm công
                 </Text>
               </Box>
