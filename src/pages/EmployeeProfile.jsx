@@ -56,7 +56,7 @@ function EmployeeProfile() {
         <Box className="px-4 pt-10 mt-5 pb-10 relative z-10">
           {/* Title */}
           <Text.Title className="text-white font-bold" size="large">
-            Thông Tin Kỹ Thuật Viên
+            Thông Tin Nhân Viên
           </Text.Title>
         </Box>
       </Box>

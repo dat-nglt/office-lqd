@@ -5,7 +5,7 @@ import { useRouter } from "../hooks/useRouter";
 
 function BottomNavigation() {
   const location = useLocation();
-  const { goHome, goToWorkList, goToCheckIn, goToWorkManagement, goToProfile } = useRouter();
+  const { goHome, goToWorkList, goToCheckIn, goToCustomers, goToProfile } = useRouter();
 
   const tabs = useMemo(
     () => [
@@ -31,10 +31,10 @@ function BottomNavigation() {
         badge: null,
       },
       {
-        id: "notifications",
-        label: "Quản Lý",
-        icon: "zi-setting",
-        path: "/work-management",
+        id: "customer",
+        label: "Khách hàng",
+        icon: "zi-members",
+        path: "/customers",
         badge: 2,
       },
       {
@@ -56,8 +56,8 @@ function BottomNavigation() {
       return "list";
     } else if (currentPath === "/checkin") {
       return "management";
-    } else if (currentPath === "/work-management") {
-      return "notifications";
+    } else if (currentPath === "/customers") {
+      return "customer";
     } else if (currentPath === "/profile") {
       return "profile";
     }
@@ -77,8 +77,8 @@ function BottomNavigation() {
       case "management":
         goToCheckIn();
         break;
-      case "notifications":
-        goToWorkManagement();
+      case "customer":
+        goToCustomers();
         break;
       case "profile":
         goToProfile();

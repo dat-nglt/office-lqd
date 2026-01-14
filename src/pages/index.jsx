@@ -9,7 +9,7 @@ import { ToastContext } from "../components/layout";
 import { miniAppGetListOfWorkAssignmentsInCurrentDayByZAID, miniAppGetProfileInfoByID } from "../services/user.service";
 import { getUserInfoInStorage } from "../config/axiosConfig";
 import { calculateWorkHours, formatDate, validateFormFields } from "../utils/helpers";
-import { getAllWorkCategoriesService } from "../services/work-management.service";
+import { getAllWorkCategoriesService, creatNewWorkService } from "../services/work-management.service";
 import { getAllCustomersService } from "../services/customers.service";
 
 function HomePage() {
@@ -315,17 +315,17 @@ function HomePage() {
       "content",
       "work_category",
       "phoneNumber",
-      "estimated_hours",
     ]);
   };
 
   const handleSubmitOvertime = async () => {
     if (isSubmitting) return;
 
-    if (!validateFormOvertime()) {
+    const validationResult = validateFormOvertime();
+    if (!validationResult.isValid) {
       toast?.error({
         title: "Lỗi nhập liệu",
-        message: "Vui lòng điền đầy đủ thông tin bắt buộc!",
+        message: `Vui lòng điền đầy đủ thông tin bắt buộc: ${validationResult.failedFields.join(", ")}`,
         duration: 3000,
       });
       return;
@@ -334,41 +334,35 @@ function HomePage() {
     setIsSubmitting(true);
 
     try {
-      const messageText = `
-YÊU CẦU CA PHÁT SINH:
-- Mã công việc: ${overtimeInfo.work_code}
-- Tiêu đề: ${overtimeInfo.title}
-- Danh mục công việc: ${overtimeInfo.work_category}
-- Mức độ ưu tiên: ${overtimeInfo.priority}
-- Ngày: ${new Date(overtimeInfo.date).toLocaleDateString("vi-VN")}
-- Giờ bắt đầu: ${overtimeInfo.estimatedStartTime}
-- Giờ kết thúc: ${overtimeInfo.estimatedEndTime}
-- Giờ ước tính: ${overtimeInfo.estimated_hours}
-- Khách hàng: ${overtimeInfo.customerName}
-- SĐT: ${overtimeInfo.phoneNumber}
-- Địa chỉ: ${overtimeInfo.address}
-- Tọa độ: ${overtimeInfo.location_lat ? `${overtimeInfo.location_lat}, ${overtimeInfo.location_lng}` : "Không có"}
-- Nội dung: ${overtimeInfo.content}
-- Ghi chú: ${overtimeInfo.notes || "Không có"}
-- Customer ID: ${overtimeInfo.customer_id || "Không có"}
-      `;
+      // Tính toán giờ ước tính
+      const [startHour, startMin] = overtimeInfo.estimatedStartTime.split(":").map(Number);
+      const [endHour, endMin] = overtimeInfo.estimatedEndTime.split(":").map(Number);
+      const startMinutes = startHour * 60 + startMin;
+      const endMinutes = endHour * 60 + endMin;
+      const durationMinutes = Math.max(0, endMinutes - startMinutes);
 
-      const response = await fetch("https://lamquangdai.vn/api/overtime-request/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: messageText.trim(),
-          customer_id: overtimeInfo.customer_id,
-          work_category_id: overtimeInfo.work_category,
-        }),
-      });
+      const workPayload = {
+        title: overtimeInfo.title,
+        description: overtimeInfo.content,
+        customer_id: overtimeInfo.customer_id,
+        work_category_id: overtimeInfo.work_category,
+        priority: overtimeInfo.priority,
+        scheduled_date: new Date(overtimeInfo.date).toISOString().split("T")[0],
+        start_time: overtimeInfo.estimatedStartTime,
+        end_time: overtimeInfo.estimatedEndTime,
+        estimated_hours: Number(overtimeInfo.estimated_hours) || durationMinutes / 60,
+        location: overtimeInfo.address,
+        location_lat: overtimeInfo.location_lat ? parseFloat(overtimeInfo.location_lat) : null,
+        location_lng: overtimeInfo.location_lng ? parseFloat(overtimeInfo.location_lng) : null,
+        notes: overtimeInfo.notes || null,
+      };
 
-      if (response.ok) {
+      const response = await creatNewWorkService(workPayload);
+
+      if (response.success || response.status === "success") {
         toast?.success({
           title: "Thành công",
-          message: "Yêu cầu ca phát sinh đã được gửi!",
+          message: "Yêu cầu ca phát sinh đã được tạo!",
           duration: 3000,
         });
         // Reset form
@@ -397,13 +391,13 @@ YÊU CẦU CA PHÁT SINH:
         setUseSystemCustomer(false);
         setUseManualCustomer(false);
       } else {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(response.message || "Không thể tạo công việc");
       }
     } catch (error) {
-      console.error("Lỗi khi gửi yêu cầu:", error);
+      console.error("Lỗi khi tạo công việc:", error);
       toast?.error({
-        title: "Lỗi gửi yêu cầu",
-        message: "Có lỗi xảy ra khi gửi yêu cầu. Vui lòng thử lại!",
+        title: "Lỗi tạo công việc",
+        message: error.message || "Có lỗi xảy ra. Vui lòng thử lại!",
         duration: 3000,
       });
     } finally {
@@ -512,7 +506,7 @@ YÊU CẦU CA PHÁT SINH:
                   Thông Tin Công Việc
                 </Text>
 
-                <Box className="space-y-3">
+                <Box className="space-y-4">
                   {/* Work Code (Read-only) */}
                   <Box>
                     <Text className="text-xs text-gray-700 font-medium mb-1 px-1">Mã công việc</Text>
@@ -558,41 +552,37 @@ YÊU CẦU CA PHÁT SINH:
                   </Box>
 
                   {/* Work Category & Priority - Grid */}
-                  <Box className="grid grid-rows-2 gap-2">
-                    <Box>
-                      <Text className="text-xs text-gray-700 font-medium mb-1 px-1">Danh mục công việc *</Text>
-                      <select
-                        value={overtimeInfo.work_category}
-                        onChange={(e) => handleInputChange("work_category", e.target.value)}
-                        className="w-full bg-transparent px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-orange-600 h-[50px]"
-                        disabled={categoriesLoading}
-                      >
-                        {/* <option value="">Chọn danh mục công việc</option> */}
-                        {workCategories.map((category) => (
-                          <option key={category.id} value={category.id}>
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                    </Box>
-                    <Box>
-                      <Text className="text-xs text-gray-700 font-medium mb-1 px-1">Mức độ ưu tiên</Text>
-                      <select
-                        value={overtimeInfo.priority}
-                        onChange={(e) => handleInputChange("priority", e.target.value)}
-                        className="w-full bg-transparent px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-orange-600 h-[50px]"
-                      >
-                        <option value="low">Thấp</option>
-                        <option value="medium">Trung bình</option>
-                        <option value="high">Cao</option>
-                        <option value="urgent">Khẩn cấp</option>
-                      </select>
-                    </Box>
+                  <Box>
+                    <Text className="text-xs text-gray-700 font-medium mb-1 px-1">Danh mục công việc *</Text>
+                    <select
+                      value={overtimeInfo.work_category}
+                      onChange={(e) => handleInputChange("work_category", e.target.value)}
+                      className="w-full bg-transparent px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-orange-600 h-[50px]"
+                      disabled={categoriesLoading}
+                    >
+                      {/* <option value="">Chọn danh mục công việc</option> */}
+                      {workCategories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </Box>
+                  <Box>
+                    <Text className="text-xs text-gray-700 font-medium mb-1 px-1">Mức độ ưu tiên</Text>
+                    <select
+                      value={overtimeInfo.priority}
+                      onChange={(e) => handleInputChange("priority", e.target.value)}
+                      className="w-full bg-transparent px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-orange-600 h-[50px]"
+                    >
+                      <option value="low">Thấp</option>
+                      <option value="medium">Trung bình</option>
+                      <option value="high">Cao</option>
+                      <option value="urgent">Khẩn cấp</option>
+                    </select>
                   </Box>
                 </Box>
               </Box>
-
-              <Box className="border-t border-gray-200"></Box>
 
               {/* Section 1: Date & Time */}
               <Box>
@@ -638,23 +628,8 @@ YÊU CẦU CA PHÁT SINH:
                     {formatDate(overtimeInfo.date)} - Từ {overtimeInfo.estimatedStartTime} đến{" "}
                     {overtimeInfo.estimatedEndTime}{" "}
                   </Text>
-
-                  {/* Work Hours Badge */}
-                  <Box className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-3 border border-orange-200">
-                    <Text className="text-sm text-orange-700 font-semibold text-center">
-                      {calculateWorkHours(overtimeInfo.estimatedStartTime, overtimeInfo.estimatedEndTime).total > 0
-                        ? `${
-                            calculateWorkHours(overtimeInfo.estimatedStartTime, overtimeInfo.estimatedEndTime).hours
-                          } giờ ${
-                            calculateWorkHours(overtimeInfo.estimatedStartTime, overtimeInfo.estimatedEndTime).mins
-                          } phút`
-                        : "Thời gian không hợp lệ"}
-                    </Text>
-                  </Box>
                 </Box>
               </Box>
-
-              <Box className="border-t border-gray-200"></Box>
 
               {/* Section 2b: Project Selection */}
               <Box>
@@ -689,7 +664,7 @@ YÊU CẦU CA PHÁT SINH:
                   <Box className="space-y-2 mb-3">
                     <button
                       onClick={() => setShowProjectList(!showProjectList)}
-                      className="w-full px-3 py-3 border-2 border-orange-400 text-orange-600 rounded-lg font-semibold hover:bg-orange-50 active:bg-orange-100 transition-colors flex items-center justify-center gap-2"
+                      className="w-full px-3 py-3 border border-green-400 text-green-600 rounded-lg font-semibold hover:bg-green-50 active:bg-green-100 transition-colors flex items-center justify-center gap-2"
                     >
                       Chọn dự án có sẵn
                     </button>
@@ -721,8 +696,6 @@ YÊU CẦU CA PHÁT SINH:
                 )}
               </Box>
 
-              <Box className="border-t border-gray-200"></Box>
-
               {/* Section 2: Customer Selection */}
               <Box>
                 <Text className="font-semibold text-gray-900 text-sm mb-3">
@@ -738,8 +711,8 @@ YÊU CẦU CA PHÁT SINH:
                         handleToggleManualCustomer();
                       }
                     }}
-                    className={`flex-1 px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
-                      !useManualCustomer ? "bg-orange-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm transition-colors ${
+                      !useManualCustomer ? "bg-green-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                     }`}
                   >
                     Chọn từ hệ thống
@@ -750,8 +723,8 @@ YÊU CẦU CA PHÁT SINH:
                         handleToggleManualCustomer();
                       }
                     }}
-                    className={`flex-1 px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
-                      useManualCustomer ? "bg-orange-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm transition-colors ${
+                      useManualCustomer ? "bg-green-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                     }`}
                   >
                     Nhập thủ công
@@ -784,7 +757,7 @@ YÊU CẦU CA PHÁT SINH:
                       <>
                         <button
                           onClick={() => setShowCustomerList(!showCustomerList)}
-                          className="w-full px-3 py-3 border-2 border-orange-400 text-orange-600 rounded-lg font-semibold hover:bg-orange-50 active:bg-orange-100 transition-colors flex items-center justify-center gap-2"
+                          className="w-full px-3 py-3 border border-green-400 text-green-600 rounded-lg font-semibold hover:bg-green-50 active:bg-green-100 transition-colors flex items-center justify-center gap-2"
                           disabled={customersLoading}
                         >
                           {customersLoading ? "Đang tải..." : "Chọn khách hàng"}
@@ -902,12 +875,12 @@ YÊU CẦU CA PHÁT SINH:
                       <Text className="text-xs text-gray-500 mt-1 px-1">Tự động từ khách hàng</Text>
                     )}
 
-                    <Text
+                    {/* <Text
                       onClick={() => navigate("/coordinates-guide")}
                       className="font-semibold text-right text-yellow-600 text-xs mt-3 cursor-pointer hover:text-yellow-700 hover:underline transition-colors"
                     >
                       Ấn để xem hướng dẫn lấy toạ độ
-                    </Text>
+                    </Text> */}
                   </Box>
                 </Box>
               </Box>
@@ -955,7 +928,7 @@ YÊU CẦU CA PHÁT SINH:
               disabled={isSubmitting}
               className="px-3 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-1 disabled:opacity-50"
             >
-              {isSubmitting ? "Đang gửi..." : "Xác nhận"}
+              {isSubmitting ? "Đang gửi..." : "Báo cáo"}
             </Button>
           </Box>
         </Box>

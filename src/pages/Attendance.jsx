@@ -702,7 +702,7 @@ function CheckIn() {
 
   return (
     <Page className={`bg-gray-50 min-h-screen pb-20 relative ${submitting ? "pointer-events-none" : ""}`}>
-      <CheckInHeader />
+      <CheckInHeader title={"Chấm công công việc"}/>
 
       <Box className="p-4 pb-20">
         {!cameraState.isOpen ? (

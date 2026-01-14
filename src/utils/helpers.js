@@ -32,16 +32,27 @@ export const calculateWorkHours = (startTime, endTime) => {
 };
 
 /**
- * Validate required form fields
+ * Validate required form fields and return validation result with failed fields
  * @param {Object} formData
- * @param {string[]} requiredFields
- * @returns {boolean}
+ * @param {string[]} 
+ * @returns {Object} {isValid: boolean, failedFields: string[]}
  */
 export const validateFormFields = (formData, requiredFields) => {
-  return requiredFields.every((field) => {
+  const failedFields = [];
+  
+  requiredFields.forEach((field) => {
     const value = formData[field];
-    return typeof value === "string" ? value.trim() !== "" : value !== "" && value !== null;
+    const isValid = typeof value === "string" ? value.trim() !== "" : value !== "" && value !== null;
+    
+    if (!isValid) {
+      failedFields.push(field);
+    }
   });
+  
+  return {
+    isValid: failedFields.length === 0,
+    failedFields,
+  };
 };
 
 /**

@@ -47,6 +47,7 @@ const API_ENDPOINTS = {
   // Work Management Endpoints
   // ============================================
   WORK_MANAGEMENT: {
+    CREATE_NEW_WORK: "/works",
     GET_WORK_BY_ID: (id) => `/works/${id}`,
     GET_TASK_BY_ID: (id) => `/s-management/tasks/${id}`,
     RESCHEDULE_TASK: (id) => `/work-management/tasks/${id}/reschedule`,

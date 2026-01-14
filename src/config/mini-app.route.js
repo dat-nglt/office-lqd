@@ -6,6 +6,7 @@ const Login = lazy(() => import("../pages/Login"));
 const WorkListPage = lazy(() => import("../pages/WorkList"));
 const Notifications = lazy(() => import("../pages/Notifications"));
 const WorkManagement = lazy(() => import("../pages/WorkManagement"));
+const Customer = lazy(() => import("../pages/Customer"));
 const EmployeeProfile = lazy(() => import("../pages/EmployeeProfile"));
 const CheckIn = lazy(() => import("../pages/Attendance"));
 const ProgressReport = lazy(() => import("../pages/ProgressReport"));
@@ -44,6 +45,11 @@ export const routes = [
   {
     path: "/work-management",
     component: WorkManagement,
+    protected: true,
+  },
+  {
+    path: "/customers",
+    component: Customer,
     protected: true,
   },
   {

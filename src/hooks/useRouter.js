@@ -1,5 +1,5 @@
-import { useContext } from 'react';
-import { useNavigate } from 'zmp-ui';
+import { useContext } from "react";
+import { useNavigate } from "zmp-ui";
 
 /**
  * Custom hook để sử dụng router instance theo ZMP best practices
@@ -14,12 +14,10 @@ export const useRouter = () => {
    * @param {Object} options - Tùy chọn navigation
    */
   const goTo = (path, options = {}) => {
-    if (typeof path === 'string') {
+    if (typeof path === "string") {
       navigate(path, options);
-    } else if (typeof path === 'object' && path.path) {
-      const url = path.query
-        ? `${path.path}?${new URLSearchParams(path.query).toString()}`
-        : path.path;
+    } else if (typeof path === "object" && path.path) {
+      const url = path.query ? `${path.path}?${new URLSearchParams(path.query).toString()}` : path.path;
       navigate(url, options);
     }
   };
@@ -36,56 +34,56 @@ export const useRouter = () => {
    * Navigate đến trang chủ
    */
   const goHome = () => {
-    navigate('/', { replace: true });
+    navigate("/", { replace: true });
   };
 
   /**
    * Navigate đến trang login
    */
   const goToLogin = () => {
-    navigate('/login', { replace: true });
+    navigate("/login", { replace: true });
   };
 
   /**
    * Navigate đến trang profile
    */
   const goToProfile = () => {
-    navigate('/profile');
+    navigate("/profile");
   };
 
   /**
    * Navigate đến trang work list
    */
   const goToWorkList = () => {
-    navigate('/worklist');
+    navigate("/worklist");
   };
 
   /**
    * Navigate đến trang check-in
    */
   const goToCheckIn = () => {
-    navigate('/checkin');
+    navigate("/checkin");
   };
 
   /**
    * Navigate đến trang work management
    */
   const goToWorkManagement = () => {
-    navigate('/work-management');
+    navigate("/work-management");
   };
 
   /**
    * Navigate đến trang notifications
    */
   const goToNotifications = () => {
-    navigate('/notifications');
+    navigate("/notifications");
   };
 
   /**
    * Navigate đến trang work reports
    */
   const goToWorkReports = () => {
-    navigate('/work-reports');
+    navigate("/work-reports");
   };
 
   /**
@@ -100,21 +98,25 @@ export const useRouter = () => {
    * Navigate đến trang attendance history
    */
   const goToAttendanceHistory = () => {
-    navigate('/attendance-history');
+    navigate("/attendance-history");
   };
 
   /**
    * Navigate đến trang progress report
    */
   const goToProgressReport = () => {
-    navigate('/report');
+    navigate("/report");
   };
 
   /**
    * Navigate đến trang overtime request
    */
   const goToOvertimeRequest = () => {
-    navigate('/overtime-request');
+    navigate("/overtime-request");
+  };
+
+  const goToCustomers = () => {
+    navigate("/customers");
   };
 
   return {
@@ -122,6 +124,7 @@ export const useRouter = () => {
     goBack,
     goHome,
     goToLogin,
+    goToCustomers,
     goToProfile,
     goToWorkList,
     goToCheckIn,

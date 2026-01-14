@@ -68,3 +68,12 @@ export const getAllWorkCategoriesService = async () => {
     throw error.response?.data || error;
   }
 };
+
+export const creatNewWorkService = async (workData) => {
+  try {
+    const response = await axiosInstance.post(API_ENDPOINTS.WORK_MANAGEMENT.CREATE_NEW_WORK, workData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};

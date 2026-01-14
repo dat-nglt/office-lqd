@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Box, Text, Icon } from "zmp-ui";
 
-function CheckInHeader() {
+function CheckInHeader({ title }) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -19,7 +19,7 @@ function CheckInHeader() {
 
       <Box className="px-4 pt-10 mt-5 pb-2 relative z-10">
         <Text.Title className="text-white font-bold" size="large">
-          Chấm Công Công Việc
+          {title}
         </Text.Title>
         <Text className="text-green-100 text-sm mt-1">
           {currentTime.toLocaleDateString("vi-VN")} - {currentTime.toLocaleTimeString("vi-VN")}
