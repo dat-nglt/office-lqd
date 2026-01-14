@@ -1,27 +1,17 @@
 import { Box, Button, Icon, Page, Text, Input, DatePicker } from "zmp-ui";
 import { useState, useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
-import WorkDetailModal from "../components/WorkDetailModal";
 import BottomNavigation from "../components/BottomNavigation";
-import MapPickerModal from "../components/MapPickerModal";
 import { ToastContext } from "../components/layout";
-import { miniAppGetListOfWorkAssignmentsInCurrentDayByZAID, miniAppGetProfileInfoByID } from "../services/user.service";
+import { miniAppGetProfileInfoByID } from "../services/user.service";
 import { getUserInfoInStorage } from "../config/axiosConfig";
-import { calculateWorkHours, formatDate, validateFormFields } from "../utils/helpers";
+import { validateFormFields } from "../utils/helpers";
 import { getAllWorkCategoriesService, creatNewWorkService } from "../services/work-management.service";
 import { getAllCustomersService } from "../services/customers.service";
 
 function HomePage() {
-  const navigate = useNavigate();
   const toast = useContext(ToastContext);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedWork, setSelectedWork] = useState(null);
-  const [totalAssignedToday, setTotalAssignedToday] = useState(0);
-  const [totalAssignedCompletedToday, setTotalAssignedCompletedToday] = useState(0);
-  const [totalAssignedPendingToday, setTotalAssignedPendingToday] = useState(0);
-  const [todayAssignments, setTodayAssignments] = useState([]);
   const [userInfo, setUserInfo] = useState({
     name: "",
     employee_id: "",
@@ -30,113 +20,45 @@ function HomePage() {
     email: null,
     phone: null,
     zalo_id: "",
-    profile: {
-      departmentInfo: null,
-      specialization: [],
-      dailySalary: "0",
-    },
-    assignments: [],
-    reports: [],
   });
 
-  const handleShowDetail = (job) => {
-    setSelectedWork(job);
-    setShowDetailModal(true);
-  };
-
-  const handleStartWork = (job) => {
-    navigate(`/checkin?work_id=${job.id}`);
-  };
-
-  const handleProgressReport = (job) => {
-    navigate(`/report/${job.workCode}`);
-  };
-
   const getUserInfoMiniApp = async () => {
-    const userInfo = getUserInfoInStorage(); // Lấy thông tin người dùng từ storage
-    const ZAID = userInfo.id;
+    try {
+      const userInfoStorage = getUserInfoInStorage();
+      const ZAID = userInfoStorage.id;
+      const userInfoResp = await miniAppGetProfileInfoByID(ZAID);
 
-    const userInfoResp = await miniAppGetProfileInfoByID(ZAID);
-    const listOfWorkAssignmentsResp = await miniAppGetListOfWorkAssignmentsInCurrentDayByZAID(ZAID);
-
-    if (userInfoResp.success) {
-      // Kiểm tra nếu lấy thông tin người dùng thành công
-      setUserInfo(userInfoResp.data);
-      const today = new Date().toISOString().split("T")[0];
-      // Map assignments từ listOfWorkAssignmentsResp sang todayAssignments
-      const mappedAssignments = (listOfWorkAssignmentsResp?.data || []).map((assign) => ({
-        id: assign.work.id,
-        assignmentId: assign.id,
-        title: assign.work.title,
-        workName: assign.work.title,
-        serviceType: assign.work.service_type,
-        service: assign.work.service_type,
-        equipment: assign.work.category?.name || "",
-        location: assign.work.location,
-        address: assign.work.customer_address,
-        coordinates: {
-          lat: parseFloat(assign.work.location_lat),
-          lng: parseFloat(assign.work.location_lng),
-        },
-        company: assign.work.customer_name,
-        customerName: assign.work.customer_name,
-        phoneNumber: assign.work.customer_phone,
-        scheduledDate: new Date(assign.work.required_date).toLocaleDateString("vi-VN"),
-        scheduledTime: `${assign.work.required_time_hour}:${String(assign.work.required_time_minute).padStart(2, "0")}`,
-        status: assign.work.status,
-        priority: assign.work.priority,
-        notes: assign.work.notes || "Không có ghi chú nào",
-        content: assign.work.description,
-        workType: "service",
-        technicians:
-          assign.work.assignments?.map((tech) => ({
-            id: tech.technician?.id,
-            name: tech.technician?.name,
-            email: tech.technician?.email,
-            phone: tech.technician?.phone,
-            avatar_url: tech.technician?.avatar_url,
-            position_id: tech.technician?.position_id,
-          })) || [],
-        workCode: assign.work.work_code,
-        estimatedHours: assign.work.estimated_hours,
-        requiredDate: assign.work.required_date,
-        assignedStatus: assign.assigned_status,
-        assignedBy: assign.assignedByUser,
-      }));
-
-      // Filter assignments for today
-      const todayAssignmentsList = mappedAssignments.filter(
-        (assign) => assign.scheduledDate === new Date().toLocaleDateString("vi-VN")
-      );
-
-      setTodayAssignments(todayAssignmentsList);
-      setTotalAssignedToday(todayAssignmentsList.length);
-
-      const completedToday = (listOfWorkAssignmentsResp?.data || []).filter(
-        (assign) =>
-          assign.assigned_status === "completed" &&
-          new Date(assign.work.required_date).toISOString().split("T")[0] === today
-      ).length;
-
-      const pendingToday = (listOfWorkAssignmentsResp?.data || []).filter(
-        (assign) =>
-          assign.assigned_status === "pending" &&
-          new Date(assign.work.required_date).toISOString().split("T")[0] === today
-      ).length;
-
-      setTotalAssignedCompletedToday(completedToday);
-      setTotalAssignedPendingToday(pendingToday);
-    } else {
-      clearTokens();
+      if (userInfoResp.success) {
+        setUserInfo(userInfoResp.data);
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy thông tin người dùng:", error);
     }
   };
 
-  const handleRefreshData = () => {
-    getUserInfoMiniApp();
-  };
-
   // Overtime Request State
-  const [existingProjects] = useState([
+  const [overtimeInfo, setOvertimeInfo] = useState({
+    date: new Date(),
+    customer_id: null,
+    company: "",
+    address: "",
+    content: "Thực hiện công việc mới",
+    customerName: "",
+    phoneNumber: "",
+    notes: "",
+    estimatedStartTime: "17:00",
+    estimatedEndTime: "21:00",
+    title: "Công việc mới",
+    work_category: null,
+    priority: "medium",
+    estimated_hours: "",
+    estimated_cost: "",
+    location_lat: "",
+    location_lng: "",
+    project_id: null,
+  });
+
+  const PROJECTS_LIST = [
     {
       id: "p1",
       name: "NEXUS HOUSE - Lắp đặt hệ thống điện",
@@ -158,29 +80,7 @@ function HomePage() {
       address: "789 Võ Văn Ngân, Thủ Đức, TP.HCM",
       coordinates: { lat: 10.8505, lng: 106.7717 },
     },
-  ]);
-
-  const [overtimeInfo, setOvertimeInfo] = useState({
-    date: new Date(),
-    customer_id: null,
-    company: "",
-    address: "",
-    content: "Lắp đặt máy lạnh VRV",
-    customerName: "",
-    phoneNumber: "",
-    notes: "",
-    estimatedStartTime: "17:00",
-    estimatedEndTime: "21:00",
-    title: "Lắp đặt máy lạnh VRV",
-    work_code: `WK${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 100)
-      .toString()
-      .padStart(2, "0")}`,
-    work_category: "",
-    priority: "medium",
-    estimated_hours: "",
-    location_lat: "",
-    location_lng: "",
-  });
+  ];
 
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [showProjectList, setShowProjectList] = useState(false);
@@ -307,86 +207,186 @@ function HomePage() {
     });
   };
 
-  const validateFormOvertime = () => {
-    return validateFormFields(overtimeInfo, [
-      "title",
-      "customer_id",
-      "address",
-      "content",
-      "work_category",
-      "phoneNumber",
-    ]);
-  };
+  const resetFormData = () => ({
+    date: new Date(),
+    customer_id: null,
+    company: "",
+    address: "",
+    content: "",
+    customerName: "",
+    phoneNumber: "",
+    notes: "",
+    estimatedStartTime: "17:00",
+    estimatedEndTime: "21:00",
+    title: "",
+    work_category: "",
+    priority: "medium",
+    estimated_hours: "",
+    estimated_cost: "",
+    location_lat: "",
+    location_lng: "",
+    project_id: null,
+  });
 
   const handleSubmitOvertime = async () => {
     if (isSubmitting) return;
 
-    const validationResult = validateFormOvertime();
-    if (!validationResult.isValid) {
+    // Validate bắt buộc theo createWorkService
+    const requiredFields = [
+      { field: "title", label: "Tiêu đề công việc" },
+      { field: "content", label: "Nội dung công việc" },
+      { field: "work_category", label: "Danh mục công việc" },
+      { field: "customerName", label: "Tên khách hàng" },
+      { field: "phoneNumber", label: "Số điện thoại" },
+      { field: "address", label: "Địa chỉ" },
+      { field: "location_lat", label: "Vĩ độ (latitude)" },
+      { field: "location_lng", label: "Kinh độ (longitude)" },
+      // { field: "estimated_hours", label: "Giờ ước tính" },
+    ];
+
+    const missingFields = requiredFields
+      .filter(({ field }) => {
+        const value = overtimeInfo[field];
+        return !value || (typeof value === "string" && value.trim() === "");
+      })
+      .map(({ label }) => label);
+
+    if (missingFields.length > 0) {
       toast?.error({
         title: "Lỗi nhập liệu",
-        message: `Vui lòng điền đầy đủ thông tin bắt buộc: ${validationResult.failedFields.join(", ")}`,
+        message: `Vui lòng điền đầy đủ: ${missingFields.join(", ")}`,
         duration: 3000,
       });
       return;
     }
 
+    // Validate số điện thoại
+    if (overtimeInfo.phoneNumber.length > 20) {
+      toast?.error({
+        title: "Lỗi nhập liệu",
+        message: "Số điện thoại tối đa 20 ký tự",
+        duration: 3000,
+      });
+      return;
+    }
+
+    // Validate GPS coordinates
+    const lat = parseFloat(overtimeInfo.location_lat);
+    const lng = parseFloat(overtimeInfo.location_lng);
+    if (isNaN(lat) || lat < -90 || lat > 90) {
+      toast?.error({
+        title: "Lỗi nhập liệu",
+        message: "Vĩ độ phải nằm trong khoảng [-90, 90]",
+        duration: 3000,
+      });
+      return;
+    }
+    if (isNaN(lng) || lng < -180 || lng > 180) {
+      toast?.error({
+        title: "Lỗi nhập liệu",
+        message: "Kinh độ phải nằm trong khoảng [-180, 180]",
+        duration: 3000,
+      });
+      return;
+    }
+
+    // Validate estimated_hours
+    const estHours = Number(overtimeInfo.estimated_hours);
+    if (isNaN(estHours) || estHours < 0 || estHours > 999.99) {
+      toast?.error({
+        title: "Lỗi nhập liệu",
+        message: "Giờ ước tính phải từ 0 đến 999.99",
+        duration: 3000,
+      });
+      return;
+    }
+
+    // Validate estimated_cost nếu có
+    if (overtimeInfo.estimated_cost && overtimeInfo.estimated_cost !== "") {
+      const estCost = Number(overtimeInfo.estimated_cost);
+      if (isNaN(estCost) || estCost < 0 || estCost > 9999999.99) {
+        toast?.error({
+          title: "Lỗi nhập liệu",
+          message: "Chi phí ước tính phải từ 0 đến 9999999.99",
+          duration: 3000,
+        });
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
-      // Tính toán giờ ước tính
+
+      console.log("Đang gửi yêu cầu tạo công việc với dữ liệu:", userInfo);
+      // Lấy thông tin người dùng từ storage
+      const createdByUserId = userInfo.id;
+      const salesPersonId = userInfo.id;
+
+      if (!createdByUserId || !salesPersonId) {
+        throw new Error("Không thể lấy thông tin người dùng");
+      }
+
+      // Tính toán giờ yêu cầu từ estimatedStartTime
       const [startHour, startMin] = overtimeInfo.estimatedStartTime.split(":").map(Number);
       const [endHour, endMin] = overtimeInfo.estimatedEndTime.split(":").map(Number);
       const startMinutes = startHour * 60 + startMin;
       const endMinutes = endHour * 60 + endMin;
       const durationMinutes = Math.max(0, endMinutes - startMinutes);
 
-      const workPayload = {
-        title: overtimeInfo.title,
-        description: overtimeInfo.content,
-        customer_id: overtimeInfo.customer_id,
-        work_category_id: overtimeInfo.work_category,
-        priority: overtimeInfo.priority,
-        scheduled_date: new Date(overtimeInfo.date).toISOString().split("T")[0],
-        start_time: overtimeInfo.estimatedStartTime,
-        end_time: overtimeInfo.estimatedEndTime,
-        estimated_hours: Number(overtimeInfo.estimated_hours) || durationMinutes / 60,
-        location: overtimeInfo.address,
-        location_lat: overtimeInfo.location_lat ? parseFloat(overtimeInfo.location_lat) : null,
-        location_lng: overtimeInfo.location_lng ? parseFloat(overtimeInfo.location_lng) : null,
-        notes: overtimeInfo.notes || null,
+      const generateWorkCode = () => {
+        const timestamp = Date.now().toString().slice(-6); // Lấy 6 chữ số cuối của timestamp
+        const randomNum = Math.floor(Math.random() * 100)
+          .toString()
+          .padStart(2, "0"); // Random 2 chữ số
+        return `WK${timestamp}${randomNum}`;
       };
+
+      const work_code = generateWorkCode();
+
+      // Chuẩn bị payload theo yêu cầu của createWorkService
+      const workPayload = {
+        // Trường bắt buộc
+        work_code: work_code,
+        title: String(overtimeInfo.title).trim(),
+        description: String(overtimeInfo.content).trim(),
+        category_id: Number(overtimeInfo.work_category),
+        created_by: createdByUserId,
+        created_by_sales_id: salesPersonId,
+        required_date: new Date(overtimeInfo.date).toISOString().split("T")[0],
+        location: String(overtimeInfo.address).trim(),
+        customer_name: String(overtimeInfo.customerName).trim(),
+        customer_phone: String(overtimeInfo.phoneNumber).trim(),
+        customer_address: String(overtimeInfo.address).trim(),
+        location_lat: lat,
+        location_lng: lng,
+        estimated_hours: estHours,
+        estimated_cost: overtimeInfo.estimated_cost ? Number(overtimeInfo.estimated_cost) : 0,
+        customer_id: overtimeInfo.customer_id || null,
+        priority: overtimeInfo.priority || "medium",
+        status: "pending",
+        notes: overtimeInfo.notes || null,
+        due_date: null,
+        required_time_hour: String(startHour).padStart(2, "0"),
+        required_time_minute: String(startMin).padStart(2, "0"),
+        timeSlot: startHour > 0 ? startHour : null,
+        project_id: overtimeInfo.project_id || null,
+        payment_status: "unpaid",
+        is_active: true,
+      };
+
+      console.log("Payload công việc gửi đi:", workPayload);
 
       const response = await creatNewWorkService(workPayload);
 
       if (response.success || response.status === "success") {
         toast?.success({
           title: "Thành công",
-          message: "Yêu cầu ca phát sinh đã được tạo!",
+          message: "Công việc đã được tạo thành công!",
           duration: 3000,
         });
         // Reset form
-        setOvertimeInfo({
-          date: new Date(),
-          customer_id: null,
-          company: "",
-          address: "",
-          content: "",
-          customerName: "",
-          phoneNumber: "",
-          notes: "",
-          estimatedStartTime: "17:00",
-          estimatedEndTime: "21:00",
-          title: "",
-          work_code: `WK${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 100)
-            .toString()
-            .padStart(2, "0")}`,
-          work_category: "",
-          priority: "medium",
-          estimated_hours: "",
-          location_lat: "",
-          location_lng: "",
-        });
+        setOvertimeInfo(resetFormData());
         setSelectedProjectId(null);
         setUseSystemCustomer(false);
         setUseManualCustomer(false);
@@ -454,73 +454,23 @@ function HomePage() {
 
   return (
     <Page className="bg-gray-50 min-h-screen pb-20">
-      <Header title="Theo Dõi Tiến Độ Báo Cáo" currentTime={currentTime} userInfo={userInfo} />
+      <Header title="Báo Cáo Công Việc" currentTime={currentTime} userInfo={userInfo} />
 
       <Box className="px-4 pt-4 pb-28">
-        {/* Statistics Cards */}
-        {/* <Box className="p-4 border-b  rounded-t-xl border-gray-200 bg-gradient-to-r from-green-50 to-green-100 flex items-center justify-between">
-          <Text className="font-bold text-gray-900 flex items-center capitalize">Thống Kê Công Việc</Text>
-        </Box>
-        <Box className="bg-white rounded-b-xl shadow-sm p-4 mb-4 border border-gray-100">
-          <Box className="grid grid-cols-2 gap-3 mb-3">
-            <Box className="bg-green-50 rounded-lg p-3 border border-green-200 text-center">
-              <Text className="text-2xl font-bold text-green-600">{totalAssignedToday}</Text>
-              <Text className="text-xs text-gray-600 mt-1">Công việc được phân bổ</Text>
-            </Box>
-            <Box className="bg-yellow-50 rounded-lg p-3 border border-yellow-200 text-center">
-              <Text className="text-2xl font-bold text-yellow-600">{totalAssignedPendingToday}</Text>
-              <Text className="text-xs text-gray-600 mt-1">Công việc chờ thực hiện</Text>
-            </Box>
-          </Box>
-
-          <Box className="grid grid-cols-2 gap-3">
-            <Box className="bg-green-50 rounded-lg- p-3 border border-green-200 text-center">
-              <Text className="text-2xl font-bold text-green-600">{totalAssignedCompletedToday}</Text>
-              <Text className="text-xs text-gray-600 mt-1">Công việc hoàn thành</Text>
-            </Box>
-            <Box
-              className="bg-orange-50 rounded-lg p-3 border border-orange-200 text-center cursor-pointer hover:bg-orange-100 transition-colors"
-              onClick={() => navigate("/overtime-request")}
-            >
-              <Text className="text-lg font-bold text-orange-600">Ca phát sinh</Text>
-              <Text className="text-xs text-gray-600 mt-1">Báo công việc phát sinh</Text>
-            </Box>
-          </Box>
-        </Box> */}
-
-        {/* Overtime Request Form - Optimized */}
-        <Box className="space-y-4">
-          {/* Form Header */}
-          <Box className="bg-gradient-to-r from-green-500 via-green-600 to-green-700 rounded-xl p-4 shadow-md">
-            <Text className="font-bold text-white text-lg mb-1 capitalize">Báo cáo công việc hôm nay</Text>
-            <Text className="text-green-100 text-xs">Điền thông tin chi tiết về công việc cần báo cáo của bạn</Text>
-          </Box>
-
+        {/* Overtime Request Form - Optimized Layout */}
+        <Box className="space-y-3">
           {/* Main Form Container */}
           <Box className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <Box className="p-4 space-y-4">
-              {/* Section 0: Work Information */}
+            <Box className="p-4 space-y-5">
+              {/* Section 1: Work Information */}
               <Box>
-                <Text className="font-semibold text-gray-900 text-sm mb-3">
-                  <Icon icon="zi-note" className="mb-0.5 mr-1 text-gray-600" size={16} />
+                <Text className="font-semibold text-gray-900 text-sm mb-3 flex items-center">
+                  <Icon icon="zi-note" className="mr-2 text-green-600" size={16} />
                   Thông Tin Công Việc
                 </Text>
-
-                <Box className="space-y-4">
-                  {/* Work Code (Read-only) */}
+                <Box className="space-y-3">
                   <Box>
-                    <Text className="text-xs text-gray-700 font-medium mb-1 px-1">Mã công việc</Text>
-                    <Input
-                      placeholder="Mã công việc"
-                      value={overtimeInfo.work_code}
-                      disabled={true}
-                      className="w-full bg-gray-50"
-                    />
-                  </Box>
-
-                  {/* Work Title */}
-                  <Box>
-                    <Text className="text-xs text-gray-700 font-medium mb-1 px-1">Tiêu đề công việc *</Text>
+                    <Text className="text-xs text-gray-700 font-medium mb-2">Tiêu đề công việc *</Text>
                     <Input
                       placeholder="Nhập tiêu đề công việc"
                       value={overtimeInfo.title}
@@ -528,72 +478,95 @@ function HomePage() {
                     />
                   </Box>
 
-                  {/* Section 3: Location & Description */}
-                  <Box className="space-y-3">
-                    <Box>
-                      <Text className="text-xs text-gray-700 font-medium mb-1 px-1">Nội dung công việc *</Text>
-                      <Input
-                        placeholder="Mô tả chi tiết công việc cần thực hiện"
-                        value={overtimeInfo.content}
-                        onChange={(e) => handleInputChange("content", e.target.value)}
-                        rows={3}
-                      />
-                    </Box>
+                  <Box>
+                    <Text className="text-xs text-gray-700 font-medium mb-2">Nội dung công việc *</Text>
+                    <Input
+                      placeholder="Mô tả chi tiết công việc cần thực hiện"
+                      value={overtimeInfo.content}
+                      onChange={(e) => handleInputChange("content", e.target.value)}
+                      rows={3}
+                    />
+                  </Box>
 
+                  <Box className="grid grid-cols-2 gap-3">
                     <Box>
-                      <Text className="text-xs text-gray-700 font-medium mb-1 px-1">Ghi chú thêm</Text>
-                      <Input
-                        placeholder="Thêm ghi chú nếu cần..."
-                        value={overtimeInfo.notes}
-                        onChange={(e) => handleInputChange("notes", e.target.value)}
-                        rows={2}
-                      />
+                      <Text className="text-xs text-gray-700 font-medium mb-2">Danh mục *</Text>
+                      <select
+                        value={overtimeInfo.work_category}
+                        onChange={(e) => handleInputChange("work_category", e.target.value)}
+                        className="w-full px-3 py-2 border bg-transparent border-gray-300 rounded-lg text-sm focus:outline-none focus:border-green-600 h-10"
+                        disabled={categoriesLoading}
+                      >
+                        <option value="">Chọn danh mục</option>
+                        {workCategories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                    </Box>
+                    <Box>
+                      <Text className="text-xs text-gray-700 font-medium mb-2">Mức độ ưu tiên</Text>
+                      <select
+                        value={overtimeInfo.priority}
+                        onChange={(e) => handleInputChange("priority", e.target.value)}
+                        className="w-full px-3 py-2 border bg-transparent border-gray-300 rounded-lg text-sm focus:outline-none focus:border-green-600 h-10"
+                      >
+                        <option value="low">Thấp</option>
+                        <option value="medium">Trung bình</option>
+                        <option value="high">Cao</option>
+                        <option value="urgent">Khẩn cấp</option>
+                      </select>
                     </Box>
                   </Box>
 
-                  {/* Work Category & Priority - Grid */}
+                  {/* <Box className="grid grid-cols-2 gap-3">
+                    <Box>
+                      <Text className="text-xs text-gray-700 font-medium mb-2">Giờ ước tính *</Text>
+                      <Input
+                        placeholder="0.00"
+                        type="number"
+                        value={overtimeInfo.estimated_hours}
+                        onChange={(e) => handleInputChange("estimated_hours", e.target.value)}
+                        step="0.01"
+                        min="0"
+                      />
+                    </Box>
+                    <Box>
+                      <Text className="text-xs text-gray-700 font-medium mb-2">Chi phí ước tính (VND)</Text>
+                      <Input
+                        placeholder="0"
+                        type="number"
+                        value={overtimeInfo.estimated_cost}
+                        onChange={(e) => handleInputChange("estimated_cost", e.target.value)}
+                        min="0"
+                      />
+                    </Box>
+                  </Box> */}
+
                   <Box>
-                    <Text className="text-xs text-gray-700 font-medium mb-1 px-1">Danh mục công việc *</Text>
-                    <select
-                      value={overtimeInfo.work_category}
-                      onChange={(e) => handleInputChange("work_category", e.target.value)}
-                      className="w-full bg-transparent px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-orange-600 h-[50px]"
-                      disabled={categoriesLoading}
-                    >
-                      {/* <option value="">Chọn danh mục công việc</option> */}
-                      {workCategories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                  </Box>
-                  <Box>
-                    <Text className="text-xs text-gray-700 font-medium mb-1 px-1">Mức độ ưu tiên</Text>
-                    <select
-                      value={overtimeInfo.priority}
-                      onChange={(e) => handleInputChange("priority", e.target.value)}
-                      className="w-full bg-transparent px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-orange-600 h-[50px]"
-                    >
-                      <option value="low">Thấp</option>
-                      <option value="medium">Trung bình</option>
-                      <option value="high">Cao</option>
-                      <option value="urgent">Khẩn cấp</option>
-                    </select>
+                    <Text className="text-xs text-gray-700 font-medium mb-2">Ghi chú thêm</Text>
+                    <Input
+                      placeholder="Thêm ghi chú nếu cần..."
+                      value={overtimeInfo.notes}
+                      onChange={(e) => handleInputChange("notes", e.target.value)}
+                      rows={2}
+                    />
                   </Box>
                 </Box>
               </Box>
 
-              {/* Section 1: Date & Time */}
-              <Box>
-                <Text className="font-semibold text-gray-900 text-sm mb-3">
-                  <Icon icon="zi-calendar" className="mb-0.5 mr-1 text-gray-600" size={16} />
-                  Thông Tin Ngày Giờ
-                </Text>
+              <Box className="border-t border-gray-100" />
 
+              {/* Section 2: Date & Time */}
+              <Box>
+                <Text className="font-semibold text-gray-900 text-sm mb-3 flex items-center">
+                  <Icon icon="zi-calendar" className="mr-2 text-green-600" size={16} />
+                  Thời Gian Thực Hiện
+                </Text>
                 <Box className="space-y-3">
-                  {/* Date Field */}
                   <Box>
+                    <Text className="text-xs text-gray-700 font-medium mb-2">Ngày thực hiện</Text>
                     <DatePicker
                       value={overtimeInfo.date}
                       onChange={(date) => handleInputChange("date", date)}
@@ -603,10 +576,9 @@ function HomePage() {
                     />
                   </Box>
 
-                  {/* Time Fields - Grid */}
-                  <Box className="grid grid-cols-2 gap-2">
+                  <Box className="grid grid-cols-2 gap-3">
                     <Box>
-                      <Text className="text-xs text-gray-600 mb-1 px-1 font-medium">Bắt đầu</Text>
+                      <Text className="text-xs text-gray-700 font-medium mb-2">Giờ bắt đầu</Text>
                       <Input
                         type="time"
                         value={overtimeInfo.estimatedStartTime}
@@ -615,7 +587,7 @@ function HomePage() {
                       />
                     </Box>
                     <Box>
-                      <Text className="text-xs text-gray-600 mb-1 px-1 font-medium">Kết thúc</Text>
+                      <Text className="text-xs text-gray-700 font-medium mb-2">Giờ kết thúc</Text>
                       <Input
                         type="time"
                         value={overtimeInfo.estimatedEndTime}
@@ -624,235 +596,127 @@ function HomePage() {
                       />
                     </Box>
                   </Box>
-                  <Text className="text-xs text-gray-500 mt-1 px-1">
-                    {formatDate(overtimeInfo.date)} - Từ {overtimeInfo.estimatedStartTime} đến{" "}
-                    {overtimeInfo.estimatedEndTime}{" "}
-                  </Text>
                 </Box>
               </Box>
 
-              {/* Section 2b: Project Selection */}
-              <Box>
-                <Text className="font-semibold text-gray-900 text-sm mb-3">
-                  <Icon icon="zi-home" className="mb-0.5 mr-1 text-gray-600" size={16} />
-                  Chọn dự án liên quan đến công việc nếu có
-                </Text>
+              <Box className="border-t border-gray-100" />
 
-                {selectedProjectId ? (
-                  <Box className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-3 border-2 border-orange-300 mb-3">
-                    <Box className="flex items-start justify-between gap-2">
-                      <Box className="flex-1 min-w-0">
-                        <Text className="font-semibold text-orange-900 text-sm truncate">
-                          {existingProjects.find((p) => p.id === selectedProjectId)?.name}
-                        </Text>
-                        <Text className="text-xs text-orange-700 mt-1 line-clamp-2">
-                          {existingProjects.find((p) => p.id === selectedProjectId)?.address}
-                        </Text>
-                      </Box>
+              {/* Section 3: Customer Information */}
+              <Box>
+                <Text className="font-semibold text-gray-900 text-sm mb-3 flex items-center">
+                  <Icon icon="zi-user" className="mr-2 text-green-600" size={16} />
+                  Thông Tin Khách Hàng & Địa điểm
+                </Text>
+                <Box className="space-y-3">
+                  {/* System Customer Mode */}
+                  {!useManualCustomer && (
+                    <Box className="space-y-3">
                       <button
-                        onClick={handleClearProject}
-                        className="text-orange-600 hover:text-orange-800 hover:bg-orange-100 p-2 rounded-full flex-shrink-0 transition-colors"
-                        title="Xóa chọn"
+                        onClick={() => setShowCustomerList(!showCustomerList)}
+                        className="w-full px-3 py-2.5 border border-green-400 text-green-600 rounded-lg font-semibold text-sm hover:bg-green-50 transition-colors"
+                        disabled={customersLoading}
                       >
-                        <Icon icon="zi-close" size={16} />
+                        {customersLoading ? "Đang tải..." : "Chọn khách hàng từ danh sách"}
                       </button>
-                    </Box>
-                  </Box>
-                ) : null}
 
-                {!selectedProjectId && (
-                  <Box className="space-y-2 mb-3">
-                    <button
-                      onClick={() => setShowProjectList(!showProjectList)}
-                      className="w-full px-3 py-3 border border-green-400 text-green-600 rounded-lg font-semibold hover:bg-green-50 active:bg-green-100 transition-colors flex items-center justify-center gap-2"
-                    >
-                      Chọn dự án có sẵn
-                    </button>
-
-                    {showProjectList && (
-                      <Box className="space-y-2 p-2 bg-gray-50 rounded-lg border border-gray-300 max-h-64 overflow-y-auto">
-                        {existingProjects.map((project) => (
-                          <button
-                            key={project.id}
-                            onClick={() => handleSelectProject(project)}
-                            className="w-full text-left p-3 rounded-lg border-2 border-gray-200 bg-white hover:border-orange-400 hover:bg-orange-50 transition-all active:bg-orange-100"
-                          >
-                            <Text className="font-semibold text-gray-900 text-sm">{project.company}</Text>
-                            <Text className="text-xs text-gray-600 mt-0.5 line-clamp-1">{project.name}</Text>
-                          </button>
-                        ))}
-                      </Box>
-                    )}
-                  </Box>
-                )}
-
-                {selectedProjectId && (
-                  <Box className="bg-orange-100 rounded-lg p-2.5 border border-orange-300">
-                    <Text className="text-xs text-orange-800 flex items-center font-medium">
-                      <Icon icon="zi-check-circle" className="mr-1.5" size={14} />
-                      Thông tin công trình đã được tự động điền
-                    </Text>
-                  </Box>
-                )}
-              </Box>
-
-              {/* Section 2: Customer Selection */}
-              <Box>
-                <Text className="font-semibold text-gray-900 text-sm mb-3">
-                  <Icon icon="zi-user" className="mb-0.5 mr-1 text-gray-600" size={16} />
-                  Thông Tin Khách Hàng *
-                </Text>
-
-                {/* Mode Toggle */}
-                <Box className="flex gap-2 mb-3">
-                  <button
-                    onClick={() => {
-                      if (useManualCustomer) {
-                        handleToggleManualCustomer();
-                      }
-                    }}
-                    className={`flex-1 px-3 py-2 rounded-lg text-sm transition-colors ${
-                      !useManualCustomer ? "bg-green-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    }`}
-                  >
-                    Chọn từ hệ thống
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (!useManualCustomer) {
-                        handleToggleManualCustomer();
-                      }
-                    }}
-                    className={`flex-1 px-3 py-2 rounded-lg text-sm transition-colors ${
-                      useManualCustomer ? "bg-green-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    }`}
-                  >
-                    Nhập thủ công
-                  </button>
-                </Box>
-
-                {/* System Customer Mode */}
-                {!useManualCustomer && (
-                  <Box className="space-y-2 mb-3">
-                    {useSystemCustomer && overtimeInfo.customer_id ? (
-                      <Box className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-3 border-2 border-orange-300 mb-3">
-                        <Box className="flex items-start justify-between gap-2">
-                          <Box className="flex-1 min-w-0">
-                            <Text className="font-semibold text-orange-900 text-sm truncate">
-                              {overtimeInfo.customerName}
+                      {showCustomerList && (
+                        <Box className="rounded-lg border border-gray-200 bg-white shadow-md overflow-hidden">
+                          <Box className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                            <Text className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                              {customers.length} khách hàng trong hệ thống
                             </Text>
-                            <Text className="text-xs text-orange-700 mt-1">{overtimeInfo.phoneNumber}</Text>
-                            <Text className="text-xs text-orange-700 mt-1 line-clamp-2">{overtimeInfo.address}</Text>
                           </Box>
-                          <button
-                            onClick={() => handleCustomerSelect(null)}
-                            className="text-orange-600 hover:text-orange-800 hover:bg-orange-100 p-2 rounded-full flex-shrink-0 transition-colors"
-                            title="Xóa chọn"
-                          >
-                            <Icon icon="zi-close" size={16} />
-                          </button>
-                        </Box>
-                      </Box>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => setShowCustomerList(!showCustomerList)}
-                          className="w-full px-3 py-3 border border-green-400 text-green-600 rounded-lg font-semibold hover:bg-green-50 active:bg-green-100 transition-colors flex items-center justify-center gap-2"
-                          disabled={customersLoading}
-                        >
-                          {customersLoading ? "Đang tải..." : "Chọn khách hàng"}
-                        </button>
-
-                        {showCustomerList && (
-                          <Box className="space-y-2 p-2 bg-gray-50 rounded-lg border border-gray-300 max-h-64 overflow-y-auto">
+                          <Box className="max-h-64 overflow-y-auto">
                             {customers.length > 0 ? (
                               customers.map((customer) => (
                                 <button
                                   key={customer.id}
                                   onClick={() => handleCustomerSelect(customer)}
-                                  className="w-full text-left p-3 rounded-lg border-2 border-gray-200 bg-white hover:border-orange-400 hover:bg-orange-50 transition-all active:bg-orange-100"
+                                  className="w-full text-left px-4 py-3 border-b border-gray-100 hover:bg-green-50 active:bg-green-100 transition-all group last:border-b-0"
                                 >
-                                  <Text className="font-semibold text-gray-900 text-sm">{customer.name}</Text>
-                                  <Text className="text-xs text-gray-600 mt-0.5">
-                                    {customer.phone || "Không có số điện thoại"}
-                                  </Text>
-                                  <Text className="text-xs text-gray-500 mt-1 line-clamp-1">
-                                    {customer.address || "Không có địa chỉ"}
-                                  </Text>
+                                  <Box className="flex items-start gap-3">
+                                    <Box className="flex-1 min-w-0">
+                                      <Text className="font-semibold text-gray-900 text-sm group-hover:text-green-600 transition-colors">
+                                        {customer.name}
+                                      </Text>
+                                      <Box className="flex items-center gap-2 mt-1">
+                                        <Text className="text-xs text-gray-600">{customer.phone || "N/A"}</Text>
+                                      </Box>
+                                      {customer.address && (
+                                        <Text className="text-xs text-gray-500 mt-1 line-clamp-1">
+                                          {customer.address}
+                                        </Text>
+                                      )}
+                                    </Box>
+                                    <Icon
+                                      icon="zi-chevron-right"
+                                      className="text-gray-300 group-hover:text-green-600 flex-shrink-0 mt-1"
+                                      size={16}
+                                    />
+                                  </Box>
                                 </button>
                               ))
                             ) : (
-                              <Text className="text-xs text-gray-500 p-3 text-center">Không có khách hàng nào</Text>
+                              <Box className="px-4 py-8 text-center">
+                                <Icon icon="zi-inbox" className="text-gray-300 mx-auto mb-2" size={32} />
+                                <Text className="text-xs text-gray-500">Chưa có khách hàng trong hệ thống</Text>
+                              </Box>
                             )}
                           </Box>
-                        )}
-                      </>
-                    )}
+                        </Box>
+                      )}
+                    </Box>
+                  )}
 
-                    {useSystemCustomer && (
-                      <Box className="bg-orange-100 rounded-lg p-2.5 border border-orange-300">
-                        <Text className="text-xs text-orange-800 flex items-center font-medium">
-                          <Icon icon="zi-check-circle" className="mr-1.5" size={14} />
-                          Thông tin khách hàng đã được tự động điền
-                        </Text>
+                  {/* Manual Customer Mode */}
+                  {useManualCustomer && (
+                    <Box>
+                      <Box className="border-l-3 border-blue-400 pt-3 text-xs text-blue-800">
+                        <Icon icon="zi-info-circle" className="mr-1 inline-block" size={14} />
+                        Thông tin sẽ được lưu tạm thời cho báo cáo này
                       </Box>
-                    )}
-                  </Box>
-                )}
-
-                {/* Manual Customer Mode */}
-                {useManualCustomer && (
-                  <Box>
-                    <Box>
-                      <Text className="text-xs text-gray-700 font-medium mb-1 px-1">Tên khách hàng *</Text>
-                      <Input
-                        placeholder="Nhập tên khách hàng"
-                        value={overtimeInfo.customerName}
-                        onChange={(e) => handleInputChange("customerName", e.target.value)}
-                      />
                     </Box>
-
-                    <Box>
-                      <Text className="text-xs text-gray-700 font-medium mb-1 px-1">Số điện thoại *</Text>
-                      <Input
-                        placeholder="Nhập số điện thoại"
-                        value={overtimeInfo.phoneNumber}
-                        onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
-                        type="tel"
-                      />
-                    </Box>
-                  </Box>
-                )}
+                  )}
+                </Box>
               </Box>
 
-              {/* Section 4: Contact Information */}
+              {/* Section 4: Location Information */}
               <Box>
-                <Text className="font-semibold text-gray-900 text-sm mb-3">
-                  <Icon icon="zi-location" className="mb-0.5 mr-1 text-gray-600" size={16} />
-                  Thông Tin Địa Chỉ
-                </Text>
-
                 <Box className="space-y-3">
                   <Box>
-                    <Text className="text-xs text-gray-700 font-medium mb-1 px-1">Địa chỉ *</Text>
+                    <Text className="text-xs text-gray-700 font-medium mb-2 mt-2">Tên khách hàng *</Text>
                     <Input
-                      placeholder="Nhập địa chỉ"
+                      placeholder="Ví dụ: Công ty ABC, Anh Sơn..."
+                      value={overtimeInfo.customerName}
+                      onChange={(e) => handleInputChange("customerName", e.target.value)}
+                      className="focus:ring-2 focus:ring-green-300"
+                    />
+                  </Box>
+                  <Box>
+                    <Text className="text-xs text-gray-700 font-medium mb-2">Số điện thoại *</Text>
+                    <Input
+                      placeholder="Ví dụ: 0901234567"
+                      value={overtimeInfo.phoneNumber}
+                      onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
+                      type="tel"
+                      className="focus:ring-2 focus:ring-green-300"
+                    />
+                  </Box>
+                  <Box>
+                    <Text className="text-xs text-gray-700 font-medium mb-2">Địa chỉ *</Text>
+                    <Input
+                      placeholder="Nhập địa chỉ công việc"
                       value={overtimeInfo.address}
                       onChange={(e) => handleInputChange("address", e.target.value)}
                       disabled={selectedProjectId !== null || (useSystemCustomer && !useManualCustomer)}
                       rows={2}
                     />
-                    {selectedProjectId && <Text className="text-xs text-gray-500 mt-1 px-1">Tự động từ dự án</Text>}
-                    {useSystemCustomer && !useManualCustomer && !selectedProjectId && (
-                      <Text className="text-xs text-gray-500 mt-1 px-1">Tự động từ khách hàng</Text>
-                    )}
                   </Box>
 
-                  {/* Coordinates Section */}
                   <Box>
-                    <Box className="grid grid-cols-2 gap-2">
+                    <Box className="grid grid-cols-2 gap-3">
                       <Box>
-                        <Text className="text-xs text-gray-600 mb-1 px-1">Vĩ độ</Text>
+                        <Text className="text-xs text-gray-600 mb-1">Vĩ độ</Text>
                         <Input
                           placeholder="10.7769"
                           value={overtimeInfo.location_lat}
@@ -861,7 +725,7 @@ function HomePage() {
                         />
                       </Box>
                       <Box>
-                        <Text className="text-xs text-gray-600 mb-1 px-1">Kinh độ</Text>
+                        <Text className="text-xs text-gray-600 mb-1">Kinh độ</Text>
                         <Input
                           placeholder="106.7009"
                           value={overtimeInfo.location_lng}
@@ -870,18 +734,63 @@ function HomePage() {
                         />
                       </Box>
                     </Box>
-                    {selectedProjectId && <Text className="text-xs text-gray-500 mt-1 px-1">Tự động từ dự án</Text>}
-                    {useSystemCustomer && !useManualCustomer && !selectedProjectId && (
-                      <Text className="text-xs text-gray-500 mt-1 px-1">Tự động từ khách hàng</Text>
-                    )}
-
-                    {/* <Text
-                      onClick={() => navigate("/coordinates-guide")}
-                      className="font-semibold text-right text-yellow-600 text-xs mt-3 cursor-pointer hover:text-yellow-700 hover:underline transition-colors"
-                    >
-                      Ấn để xem hướng dẫn lấy toạ độ
-                    </Text> */}
                   </Box>
+                </Box>
+              </Box>
+
+              <Box className="border-t border-gray-100" />
+
+              {/* Section 5: Project Selection */}
+              <Box>
+                <Text className="font-semibold text-gray-900 text-sm mb-3 flex items-center">
+                  <Icon icon="zi-home" className="mr-2 text-green-600" size={16} />
+                  Dự Án (Tùy Chọn)
+                </Text>
+                <Box className="space-y-3">
+                  {selectedProjectId ? (
+                    <Box className="bg-green-50 rounded-lg p-3 border-2 border-green-300">
+                      <Box className="flex items-start justify-between gap-2">
+                        <Box className="flex-1 min-w-0">
+                          <Text className="font-semibold text-green-900 text-sm">
+                            {PROJECTS_LIST.find((p) => p.id === selectedProjectId)?.name}
+                          </Text>
+                          <Text className="text-xs text-green-700 mt-1 line-clamp-1">
+                            {PROJECTS_LIST.find((p) => p.id === selectedProjectId)?.address}
+                          </Text>
+                        </Box>
+                        <button
+                          onClick={handleClearProject}
+                          className="text-green-600 hover:bg-green-100 p-1.5 rounded transition-colors"
+                        >
+                          <Icon icon="zi-close" size={16} />
+                        </button>
+                      </Box>
+                    </Box>
+                  ) : (
+                    <Box className="space-y-2">
+                      <button
+                        onClick={() => setShowProjectList(!showProjectList)}
+                        className="w-full px-3 py-2.5 border border-green-400 text-green-600 rounded-lg font-semibold text-sm hover:bg-green-50 transition-colors"
+                      >
+                        Chọn dự án đang thi công
+                      </button>
+
+                      {showProjectList && (
+                        <Box className="space-y-2 p-2 bg-gray-50 rounded-lg border border-gray-200 max-h-56 overflow-y-auto">
+                          {PROJECTS_LIST.map((project) => (
+                            <button
+                              key={project.id}
+                              onClick={() => handleSelectProject(project)}
+                              className="w-full text-left p-2.5 rounded-lg border border-gray-200 bg-white hover:border-green-400 hover:bg-green-50 transition-all text-sm"
+                            >
+                              <Text className="font-semibold text-gray-900">{project.company}</Text>
+                              <Text className="text-xs text-gray-600 mt-0.5 line-clamp-1">{project.address}</Text>
+                            </button>
+                          ))}
+                        </Box>
+                      )}
+                    </Box>
+                  )}
                 </Box>
               </Box>
             </Box>
@@ -891,34 +800,14 @@ function HomePage() {
           <Box className="flex gap-2">
             <Button
               onClick={() => {
-                setOvertimeInfo({
-                  date: new Date(),
-                  customer_id: null,
-                  company: "",
-                  address: "",
-                  content: "",
-                  customerName: "",
-                  phoneNumber: "",
-                  notes: "",
-                  estimatedStartTime: "17:00",
-                  estimatedEndTime: "21:00",
-                  title: "",
-                  work_code: `WK${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 100)
-                    .toString()
-                    .padStart(2, "0")}`,
-                  work_category: "",
-                  priority: "medium",
-                  estimated_hours: "",
-                  location_lat: "",
-                  location_lng: "",
-                });
+                setOvertimeInfo(resetFormData());
                 setSelectedProjectId(null);
                 setUseSystemCustomer(false);
                 setUseManualCustomer(false);
               }}
               fullWidth
               variant="secondary"
-              className="px-3 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-1 disabled:opacity-50"
+              className="px-3 py-3 bg-gray-400 hover:bg-gray-500 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
             >
               Hủy
             </Button>
@@ -926,16 +815,14 @@ function HomePage() {
               fullWidth
               onClick={handleSubmitOvertime}
               disabled={isSubmitting}
-              className="px-3 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-1 disabled:opacity-50"
+              className="px-3 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
             >
-              {isSubmitting ? "Đang gửi..." : "Báo cáo"}
+              {isSubmitting ? "Đang gửi..." : "Báo Cáo"}
             </Button>
           </Box>
         </Box>
       </Box>
 
-      {/* Work Detail Modal */}
-      <WorkDetailModal visible={showDetailModal} onClose={() => setShowDetailModal(false)} work={selectedWork} />
       <BottomNavigation />
     </Page>
   );
