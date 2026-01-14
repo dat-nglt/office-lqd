@@ -1,6 +1,7 @@
 import { Box, Page, Text, Button, Icon } from "zmp-ui";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import BottomNavigation from "../components/BottomNavigation";
+import CheckInHeader from "../components/checkin/CheckInHeader";
 
 // ============================================================================
 // GUIDE CONFIGURATION - THÊM HƯỚNG DẪN MỚI TẠI ĐÂY
@@ -275,14 +276,9 @@ function GuideSelector() {
 
   return (
     <Page className="bg-gray-50 min-h-screen pb-20">
+      <CheckInHeader title={"Trợ Giúp & Hướng Dẫn"} />
       <Box className="px-4 py-10">
         {/* Header */}
-        <Box className="text-center mb-8">
-          <Text.Title size="large" className="font-bold text-gray-900 mb-2">
-            Trợ Giúp & Hướng Dẫn
-          </Text.Title>
-          <Text className="text-gray-600 text-sm">Chọn chủ đề bạn cần tìm hiểu để xem hướng dẫn chi tiết</Text>
-        </Box>
 
         {/* Guide List */}
         <Box className="space-y-3 mb-8">
@@ -316,10 +312,10 @@ function GuideDetailView({ guide, guideType }) {
   return (
     <Page className="bg-gray-50 min-h-screen pb-20">
       <Box className="px-4 pt-6 pb-10">
-        {/* Header */}
-        <Box className={`bg-gradient-to-r ${colorGradient} rounded-xl p-4 shadow-md mb-6`}>
-          <Text className="font-bold text-white text-lg mb-1">{guide.title}</Text>
-          <Text className="text-white/90 text-xs">{guide.subtitle}</Text>
+        {/* Header (styled like Attendance) */}
+        <CheckInHeader title={guide.title} />
+        <Box className="px-4 pt-3 pb-2">
+          <Text className="text-gray-600 text-sm">{guide.subtitle}</Text>
         </Box>
 
         {/* Custom Rules Section */}

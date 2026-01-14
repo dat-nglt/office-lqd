@@ -55,6 +55,7 @@ const API_ENDPOINTS = {
     REQUEST_OVERTIME: "/overtime-requests",
     GET_ALL_TECHNICIANS: "/works/technicians-list-to-assign",
     GET_ALL_WORK_CATEGORIES: "/work-categories",
+    GET_ALL_WORKS_GROUP_BY_USER_ID: (userId) => `/works/all-works-group-by-user/${userId}`,
   },
 
   // ============================================

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import BottomNavigation from "../components/BottomNavigation";
 import WorkDetailModal from "../components/WorkDetailModal";
 import { ToastContext } from "../components/layout";
-import { miniAppGetListOfWorkAssignmentsByID } from "../services/user.service";
+import { getAllWorkGroupByUserIdService } from "../services/work-management.service";
 import {
   getEndOfMonth,
   getEndOfWeek,
@@ -14,6 +14,7 @@ import {
 } from "../hooks/useValidationDate";
 import JobListItem from "../components/JobListItem";
 import { clearTokens, getTokens, getUserInfoInStorage } from "../config/axiosConfig";
+import { miniAppGetProfileInfoByID } from "../services/user.service";
 
 function WorkList() {
   const navigate = useNavigate();
@@ -25,6 +26,17 @@ function WorkList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [userInfo, setUserInfo] = useState({
+    id: null,
+    name: "",
+    employee_id: "",
+    position: {},
+    avatar_url: null,
+    email: null,
+    phone: null,
+    zalo_id: "",
+  });
+
   // Fetch user info và work assignments từ API
   useEffect(() => {
     const currentToken = getTokens();
@@ -35,53 +47,94 @@ function WorkList() {
         try {
           setLoading(true);
           setError(null);
-          const userInfo = getUserInfoInStorage();
-          const ZAID = userInfo.id;
+          const userInfoStorage = getUserInfoInStorage();
+          const ZAID = userInfoStorage.id;
+          const userInfoResp = await miniAppGetProfileInfoByID(ZAID);
 
-          // Gọi API để lấy danh sách work assignments
-          const response = await miniAppGetListOfWorkAssignmentsByID(ZAID);
-          if (response && response.success && response.data) {
+          if (userInfoResp.success) {
+            setUserInfo(userInfoResp.data);
+          }
+
+          const response = await getAllWorkGroupByUserIdService(userInfoResp.data.id);
+          console.log("Work list response:", response);
+          if (response && response.success && Array.isArray(response.data)) {
             // Transform dữ liệu từ API sang format của workList
-            const transformedWorkList = response.data.map((assignment) => ({
-              id: assignment.id,
-              workName: assignment.work?.title || "Công việc không có tên",
-              equipment: assignment.work?.category?.name || "",
-              title: assignment.work?.title || "Công việc không có tên",
-              required_date: assignment.work?.required_date
-                ? new Date(assignment.work.required_date).toLocaleDateString("vi-VN")
-                : "Không xác định",
-              scheduledDate: assignment.work?.required_date
-                ? new Date(assignment.work.required_date).toLocaleDateString("vi-VN")
-                : "Không xác định",
-              scheduledTime: `${assignment.work?.required_time_hour || "00"}:${String(
-                assignment.work?.required_time_minute || 0
-              ).padStart(2, "0")}`,
-              status: assignment.work.status?.toLowerCase() || "pending",
-              assignedStatus: assignment.assigned_status?.toLowerCase() || "pending",
-              priority: assignment.work?.priority?.toLowerCase() || "medium",
-              service: assignment.work?.service_type?.toLowerCase() || "Không xác định",
-              serviceType: assignment.work?.service_type || "Không xác định",
-              progress:
-                assignment.work?.status === "completed" ? 100 : assignment.work?.status === "in_progress" ? 50 : 0,
-              customerName: assignment.work?.customer_name || "Không xác định",
-              phoneNumber: assignment.work?.customer_phone || "",
-              location: assignment.work?.location || "Không xác định",
-              address: assignment.work?.customer_address || "Không xác định",
-              coordinates: {
-                lat: assignment.work?.location_lat || 0,
-                lng: assignment.work?.location_lng || 0,
-              },
-              content: assignment.work?.description || "",
-              notes: assignment.work?.notes || "Không có ghi chú nào",
-              technicians: [
-                {
-                  name: userInfo?.name || "Kỹ thuật viên",
-                  phone: userInfo?.phone || "",
-                  specialization: assignment.work?.category?.name || "Không xác định",
-                },
-              ],
-            }));
+            // response.data contains Work objects with nested category, project, salesPerson, and assignments
+            const transformedWorkList = response.data.map((work) => {
+              // Parse required date safely
+              const requiredDateObj = work.required_date ? new Date(work.required_date) : null;
+              const requiredDateStr = requiredDateObj ? requiredDateObj.toLocaleDateString("vi-VN") : "Không xác định";
 
+              // Parse completed date safely
+              const completedDateObj = work.completed_date ? new Date(work.completed_date) : null;
+              const completedDateStr = completedDateObj ? completedDateObj.toLocaleDateString("vi-VN") : null;
+
+              // Extract technician list from assignments or show unassigned status
+              const techniciansList =
+                Array.isArray(work.assignments) && work.assignments.length > 0
+                  ? work.assignments
+                      .filter((a) => a.technician) // Only include assignments with technician info
+                      .map((assignment) => ({
+                        id: assignment.technician.id,
+                        name: assignment.technician.name || "Kỹ thuật viên",
+                        phone: assignment.technician.phone || "",
+                        email: assignment.technician.email || "",
+                        specialization: work.category?.name || "Không xác định",
+                        assignmentStatus: assignment.assigned_status || "pending",
+                        assignedAt: assignment.assignment_date
+                          ? new Date(assignment.assignment_date).toLocaleDateString("vi-VN")
+                          : null,
+                      }))
+                  : [];
+
+              return {
+                id: work.id,
+                workCode: work.work_code || "",
+                workName: work.title || "Công việc không có tên",
+                equipment: work.category?.name || "",
+                title: work.title || "Công việc không có tên",
+                description: work.description || "",
+                required_date: requiredDateStr,
+                scheduledDate: requiredDateStr,
+                scheduledTime: `${work.required_time_hour || "00"}:${String(work.required_time_minute || 0).padStart(
+                  2,
+                  "0"
+                )}`,
+                status: (work.status || "pending").toLowerCase(),
+                assignedStatus: (work.status || "pending").toLowerCase(),
+                priority: (work.priority || "medium").toLowerCase(),
+                service: (work.service_type || "Không xác định").toLowerCase(),
+                serviceType: work.service_type || "Không xác định",
+                progress: work.status === "completed" ? 100 : work.status === "in_progress" ? 50 : 0,
+                customerName: work.customer_name || "Không xác định",
+                customerId: work.customer_id || null,
+                phoneNumber: work.customer_phone || "",
+                location: work.location || "Không xác định",
+                address: work.customer_address || "Không xác định",
+                coordinates: {
+                  lat: parseFloat(work.location_lat) || 0,
+                  lng: parseFloat(work.location_lng) || 0,
+                },
+                content: work.description || "",
+                notes: work.notes || "Không có ghi chú nào",
+                actualHours: work.actual_hours || 0,
+                estimatedHours: work.estimated_hours || 0,
+                actualCost: work.actual_cost || 0,
+                estimatedCost: work.estimated_cost || 0,
+                paymentStatus: work.payment_status || "unpaid",
+                completedDate: completedDateStr,
+                projectId: work.project_id || null,
+                projectName: work.project?.name || "",
+                categoryId: work.category_id || null,
+                categoryName: work.category?.name || "",
+                createdBy: work.created_by || null,
+                salesPersonId: work.salesPerson?.id || null,
+                salesPersonName: work.salesPerson?.name || "",
+                technicians: techniciansList,
+              };
+            });
+
+            console.log("Transformed work list:", transformedWorkList);
             setWorkList(transformedWorkList);
           }
         } catch (err) {

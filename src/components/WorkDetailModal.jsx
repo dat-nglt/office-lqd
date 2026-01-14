@@ -5,6 +5,8 @@ import { ToastContext } from "./layout";
 function WorkDetailModal({ visible, onClose, work }) {
   const toast = useContext(ToastContext);
 
+  console.log("WorkDetailModal work:", work);
+
   if (!work) return null;
 
   const getStatusColor = (status) => {
@@ -120,7 +122,6 @@ function WorkDetailModal({ visible, onClose, work }) {
             )}
           </Box>
         </Box>
-
         {/* Basic Info Section */}
         <Box>
           <Text className="text-xs text-gray-500 uppercase font-bold mb-2 block">Thông Tin Cơ Bản</Text>
@@ -128,43 +129,41 @@ function WorkDetailModal({ visible, onClose, work }) {
             {(work.serviceType || work.service) && (
               <Box className="p-2 bg-gray-50 rounded-lg border border-gray-200">
                 <Text className="text-xs text-gray-600 font-semibold mb-0.5">Phân loại công việc</Text>
-                <Text className="text-xs font-semibold text-gray-900">{work.serviceType || "Không xác định"}</Text>
+                <Text className="text-xs text-gray-600">{work.serviceType || "Không xác định"}</Text>
               </Box>
             )}
             {work.equipment && (
               <Box className="p-2 bg-gray-50 rounded-lg border border-gray-200">
                 <Text className="text-xs text-gray-600 font-semibold mb-0.5">Hạng mục công việc</Text>
-                <Text className="text-xs font-semibold text-gray-900">{work.equipment}</Text>
+                <Text className="text-xs text-gray-600">{work.equipment}</Text>
               </Box>
             )}
             {work.priority && (
               <Box className="p-2 bg-gray-50 rounded-lg border border-gray-200">
                 <Text className="text-xs text-gray-600 font-semibold mb-0.5">Mức độ ưu Tiên</Text>
-                <Text className="text-xs font-semibold text-gray-900">
+                <Text className="text-xs text-gray-600">
                   {work.priority === "high" ? "Cao" : work.priority === "medium" ? "Trung bình" : "Thấp"}
                 </Text>
               </Box>
             )}
           </Box>
         </Box>
-
         {/* Schedule Section */}
         {work.scheduledTime && (
           <Box>
             <Text className="text-xs text-gray-500 uppercase font-bold mb-2 block">Lịch Trình</Text>
             <Box className="p-2 bg-gray-50 rounded-lg border border-gray-200">
               <Text className="text-xs text-gray-600 font-semibold mb-0.5">Giờ</Text>
-              <Text className="text-xs font-semibold text-gray-900">{work.scheduledTime}</Text>
+              <Text className="text-xs text-gray-600">{work.scheduledTime}</Text>
             </Box>
           </Box>
         )}
-
         {/* Technician Section */}
-        {work.technicians && work.technicians.length > 0 && (
-          <Box>
-            <Text className="text-xs text-gray-500 uppercase font-bold mb-2 block">
-              Danh sách kỹ thuật viên ({work.technicians.length})
-            </Text>
+        <Box>
+          <Text className="text-xs text-gray-500 uppercase font-bold mb-2 block">
+            Danh sách kỹ thuật viên ({work.technicians.length})
+          </Text>
+          {work.technicians && work.technicians.length > 0 ? (
             <Box className="space-y-2">
               {work.technicians.slice(0, 2).map((tech, index) => (
                 <Box
@@ -188,31 +187,33 @@ function WorkDetailModal({ visible, onClose, work }) {
                 <Text className="text-xs text-gray-600 p-2 text-center">+{work.technicians.length - 2} KTV khác</Text>
               )}
             </Box>
-          </Box>
-        )}
-
+          ) : (
+            <Box className="flex items-center justify-between p-2 bg-yellow-50 rounded-lg border border-yellow-200">
+              <Text className="text-xs text-gray-600">Chưa có kỹ thuật viên được phân công</Text>
+            </Box>
+          )}
+        </Box>
         {/* Customer Section */}
         <Box>
           <Text className="text-xs text-gray-500 uppercase font-bold mb-2 block">Khách Hàng</Text>
           <Box className="space-y-2">
             {work.customerName && (
-              <Box className="p-2 bg-blue-50 rounded-lg border border-blue-200">
+              <Box className="p-2 bg-gray-50 rounded-lg border border-gray-200">
                 <Text className="text-xs text-gray-600 font-semibold mb-0.5">Tên</Text>
-                <Text className="text-xs font-semibold text-blue-600">{work.customerName}</Text>
+                <Text className="text-xs text-gray-600">{work.customerName}</Text>
               </Box>
             )}
             {work.phoneNumber && (
               <Box
-                className="p-2 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
+                className="p-2 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
                 onClick={() => handleCallTechnician(work.phoneNumber)}
               >
                 <Text className="text-xs text-gray-600 font-semibold mb-0.5">Số Điện Thoại</Text>
-                <Text className="text-xs font-semibold text-blue-600">{work.phoneNumber}</Text>
+                <Text className="text-xs text-gray-600">{work.phoneNumber}</Text>
               </Box>
             )}
           </Box>
         </Box>
-
         {/* Location Section */}
         <Box>
           <Text className="text-xs text-gray-500 uppercase font-bold mb-2 block">Địa Điểm</Text>
@@ -220,11 +221,8 @@ function WorkDetailModal({ visible, onClose, work }) {
             {/* Address */}
             {(work.address || work.location) && (
               <Box className="p-2 bg-gray-50 rounded-lg border border-gray-200">
-                <Text className="text-xs text-gray-600 font-semibold mb-1">Địa Chỉ</Text>
-                <Box className="flex items-start justify-between gap-2">
-                  <Text className="text-xs font-semibold text-gray-900 flex-1 line-clamp-3">
-                    {work.address || work.location}
-                  </Text>
+                <Box className="flex items-center justify-between gap-2">
+                  <Text className="text-xs text-gray-900 flex-1 line-clamp-3">{work.address || work.location}</Text>
                   <button
                     onClick={handleCopyAddress}
                     className="text-blue-600 hover:text-blue-800 p-1 flex-shrink-0 hover:bg-blue-50 rounded transition-colors"
@@ -239,10 +237,9 @@ function WorkDetailModal({ visible, onClose, work }) {
             {/* Coordinates */}
             {work.coordinates && (
               <Box className="p-2 bg-gray-50 rounded-lg border border-gray-200">
-                <Text className="text-xs text-gray-600 font-semibold mb-1">Tọa Độ</Text>
                 <Box className="flex items-center justify-between gap-2">
                   <Box className="flex-1 min-w-0">
-                    <Text className="text-xs font-semibold text-gray-900 font-mono truncate">
+                    <Text className="text-xs text-gray-900 truncate">
                       {work.coordinates.lat}, {work.coordinates.lng}
                     </Text>
                     <Text className="text-xs text-gray-500 mt-0.5">Sao chép để dán vào Google Maps</Text>
@@ -259,7 +256,6 @@ function WorkDetailModal({ visible, onClose, work }) {
             )}
           </Box>
         </Box>
-
         {/* Work Details Section */}
         {work.content && (
           <Box>
@@ -269,17 +265,15 @@ function WorkDetailModal({ visible, onClose, work }) {
             </Box>
           </Box>
         )}
-
         {/* Notes Section */}
         {work.notes && (
           <Box>
             <Text className="text-xs text-gray-500 uppercase font-bold mb-2 block">Ghi Chú</Text>
             <Box className="p-2 bg-yellow-50 rounded-lg border border-yellow-200">
-              <Text className="text-xs leading-relaxed text-yel-800 whitespace-pre-wrap">{work.notes}</Text>
+              <Text className="text-xs leading-relaxed text-gray-600x whitespace-pre-wrap">{work.notes}</Text>
             </Box>
           </Box>
         )}
-
         {/* Action Button */}
         <Box className="pt-2">
           <button

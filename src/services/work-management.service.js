@@ -69,6 +69,16 @@ export const getAllWorkCategoriesService = async () => {
   }
 };
 
+export const getAllWorkGroupByUserIdService = async (userId) => {
+  try {
+    console.log("Fetching works for userId:", userId);
+    const response = await axiosInstance.get(API_ENDPOINTS.WORK_MANAGEMENT.GET_ALL_WORKS_GROUP_BY_USER_ID(userId));
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 export const creatNewWorkService = async (workData) => {
   try {
     const response = await axiosInstance.post(API_ENDPOINTS.WORK_MANAGEMENT.CREATE_NEW_WORK, workData);

@@ -35,7 +35,7 @@ function BottomNavigation() {
         label: "Khách hàng",
         icon: "zi-members",
         path: "/customers",
-        badge: 2,
+        badge: null,
       },
       {
         id: "profile",

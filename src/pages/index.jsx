@@ -317,7 +317,6 @@ function HomePage() {
     setIsSubmitting(true);
 
     try {
-
       console.log("Đang gửi yêu cầu tạo công việc với dữ liệu:", userInfo);
       // Lấy thông tin người dùng từ storage
       const createdByUserId = userInfo.id;

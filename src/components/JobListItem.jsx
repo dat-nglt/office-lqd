@@ -2,7 +2,6 @@ import { Box, Button, Icon, Text } from "zmp-ui";
 import { getPriorityColor, getPriorityLabel, getStatusColor, getStatusLabel } from "../hooks/useLabelColor";
 
 function JobListItem({ job, onStartWork, onProgressReport, onShowDetail, sx = "" }) {
-  console.log("Rendering JobListItem for job:", job);
   return (
     <Box className={`p-4 hover:bg-gray-50 transition-colors ${sx}`}>
       {/* Job Header */}
@@ -13,7 +12,9 @@ function JobListItem({ job, onStartWork, onProgressReport, onShowDetail, sx = ""
           </Box>
           <Text className="text-xs text-gray-600">{job.company}</Text>
         </Box>
-        <Box className={`text-xs font-semibold ${getStatusColor(job.assignedStatus)}`}>{getStatusLabel(job.assignedStatus)}</Box>
+        <Box className={`text-xs font-semibold ${getStatusColor(job.assignedStatus)}`}>
+          {getStatusLabel(job.assignedStatus)}
+        </Box>
       </Box>
 
       {/* Service & Equipment Info */}
@@ -65,7 +66,7 @@ function JobListItem({ job, onStartWork, onProgressReport, onShowDetail, sx = ""
       )}
 
       {/* Action Buttons */}
-      <Box className="flex gap-2 flex-col">
+      {/* <Box className="flex gap-2 flex-col">
         <Box className="flex gap-2 mt-3">
           {job.assignedStatus === "pending" && (
             <Button
@@ -101,16 +102,17 @@ function JobListItem({ job, onStartWork, onProgressReport, onShowDetail, sx = ""
               </Button>
             </>
           )}
-          <Button
-            size="small"
-            className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-xs"
-            onClick={() => onShowDetail(job)}
-          >
-            <Icon icon="zi-info-circle" size={12} className="mr-1" />
-            Chi tiết
-          </Button>
         </Box>
-      </Box>
+      </Box> */}
+      <Button
+        fullWidth
+        size="small"
+        className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-xs"
+        onClick={() => onShowDetail(job)}
+      >
+        <Icon icon="zi-info-circle" size={12} className="mr-1" />
+        Chi tiết
+      </Button>
     </Box>
   );
 }
