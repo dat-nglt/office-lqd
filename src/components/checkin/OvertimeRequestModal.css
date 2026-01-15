@@ -1,0 +1,22 @@
+.overtime-request-modal {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.overtime-request-modal::-webkit-scrollbar {
+    width: 6px;
+}
+
+.overtime-request-modal::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.overtime-request-modal::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.overtime-request-modal::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

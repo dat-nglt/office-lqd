@@ -1,14 +1,14 @@
 import { Box, Text, Icon } from "zmp-ui";
 import { useEffect, useState } from "react";
 
-function Toast({ 
-    type = "info", 
-    title = "", 
-    message = "", 
-    duration = 3000, 
+function Toast({
+    type = "info",
+    title = "",
+    message = "",
+    duration = 3000,
     onClose = null,
     action = null,
-    visible = true 
+    visible = true,
 }) {
     const [isVisible, setIsVisible] = useState(visible);
     const [isAnimating, setIsAnimating] = useState(false);
@@ -98,30 +98,20 @@ function Toast({
     return (
         <Box
             className={`fixed top-20 left-4 right-4 z-1000000 transition-all duration-300 transform ${
-                isAnimating
-                    ? "translate-y-0 opacity-100"
-                    : "translate-y-full opacity-0"
+                isAnimating ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
             }`}
         >
-            <Box
-                className={`rounded-2xl border-2 p-4 shadow-2xl backdrop-blur-sm ${config.bgColor}`}
-            >
+            <Box className={`rounded-2xl border-2 p-4 shadow-2xl backdrop-blur-sm ${config.bgColor}`}>
                 <Box className="flex items-start gap-3">
                     {/* Icon */}
-                    <Box className={`flex-shrink-0 p-2 rounded-xl ${config.accentBg}`}>
+                    {/* <Box className={`flex-shrink-0 p-2 rounded-xl ${config.accentBg}`}>
                         <Icon icon={config.icon} className={config.iconColor} size={24} />
-                    </Box>
+                    </Box> */}
 
                     {/* Content */}
                     <Box className="flex-1 min-w-0">
-                        {title && (
-                            <Text className={`font-bold text-sm mb-1 ${config.titleColor}`}>
-                                {title}
-                            </Text>
-                        )}
-                        <Text className={`text-sm leading-relaxed ${config.messageColor}`}>
-                            {message}
-                        </Text>
+                        {title && <Text className={`font-bold text-sm mb-1 ${config.titleColor}`}>{title}</Text>}
+                        <Text className={`text-sm leading-relaxed ${config.messageColor}`}>{message}</Text>
 
                         {/* Action Button */}
                         {action && (

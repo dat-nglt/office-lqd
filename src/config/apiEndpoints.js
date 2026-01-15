@@ -63,7 +63,9 @@ const API_ENDPOINTS = {
   // ============================================
   ATTENDANCE: {
     SUBMIT_CHECKIN: "/attendance/check-in",
+    SUBMIT_CHECKIN_OFFICE: "/attendance/office/check-in",
     SUBMIT_CHECKOUT: "/attendance/check-out",
+    SUBMIT_CHECKOUT_OFFICE: "/attendance/office/check-out",
     GET_HISTORY: "/attendance/check-in/history",
     GET_TODAY_HISTORY: "/attendance/user/today",
     GET_MONTH_HISTORY: "/attendance/user/month",

@@ -109,6 +109,15 @@ export const submitCheckIn = async (checkInData) => {
   }
 };
 
+export const submitCheckInOfffice = async (checkInData) => {
+  try {
+    const response = await axiosInstance.post(API_ENDPOINTS.ATTENDANCE.SUBMIT_CHECKIN_OFFICE, checkInData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 export const submitCheckOut = async (checkOutData) => {
   try {
     const response = await axiosInstance.post(API_ENDPOINTS.ATTENDANCE.SUBMIT_CHECKOUT, checkOutData);
@@ -120,6 +129,15 @@ export const submitCheckOut = async (checkOutData) => {
     return response.data;
   } catch (error) {
     console.error("Error submitting check-in:", error);
+    throw error.response?.data || error;
+  }
+};
+
+export const submitCheckOutOfffice = async (checkOutData) => {
+  try {
+    const response = await axiosInstance.post(API_ENDPOINTS.ATTENDANCE.SUBMIT_CHECKOUT_OFFICE, checkOutData);
+    return response.data;
+  } catch (error) {
     throw error.response?.data || error;
   }
 };

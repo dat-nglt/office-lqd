@@ -4,12 +4,19 @@ import { formatDistance } from "../../utils/helpers";
 function LocationSelector({
   currentLocation,
   checkInLocations,
+  defaultLocations,
   selectedCheckInLocation: selectedAttendanceLocation,
   onSelectLocation,
   isWithinLocation,
   getDistanceToLocation,
 }) {
   if (!currentLocation) return null;
+
+  // Combine work assignments and default locations
+  const allLocations = [
+    ...(checkInLocations || []),
+    ...(defaultLocations || [])
+  ];
 
   return (
     <Box className="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -20,7 +27,7 @@ function LocationSelector({
       </Box>
 
       <Box className="space-y-2 p-4">
-        {checkInLocations.map((location) => {
+        {allLocations.map((location) => {
           const isWithin = isWithinLocation(location);
           const distance = getDistanceToLocation(location);
           const isSelected = selectedAttendanceLocation?.id === location.id;

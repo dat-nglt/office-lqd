@@ -37,7 +37,7 @@ function HomePage() {
   };
 
   // Overtime Request State
-  const [overtimeInfo, setOvertimeInfo] = useState({
+  const [newDailyReport, setNewDailyReport] = useState({
     date: new Date(),
     customer_id: null,
     company: "",
@@ -50,7 +50,7 @@ function HomePage() {
     estimatedEndTime: "21:00",
     title: "Công việc mới",
     work_category: null,
-    priority: "medium",
+    priority: "high",
     estimated_hours: "",
     estimated_cost: "",
     location_lat: "",
@@ -96,7 +96,7 @@ function HomePage() {
 
   const handleSelectProject = (project) => {
     setSelectedProjectId(project.id);
-    setOvertimeInfo((prev) => ({
+    setNewDailyReport((prev) => ({
       ...prev,
       company: project.company,
       address: project.address,
@@ -113,7 +113,7 @@ function HomePage() {
 
   const handleClearProject = () => {
     setSelectedProjectId(null);
-    setOvertimeInfo((prev) => ({
+    setNewDailyReport((prev) => ({
       ...prev,
       company: "",
       address: "",
@@ -124,7 +124,7 @@ function HomePage() {
 
   const handleCustomerSelect = (customer) => {
     if (!customer) {
-      setOvertimeInfo((prev) => ({
+      setNewDailyReport((prev) => ({
         ...prev,
         customer_id: null,
         customerName: "",
@@ -139,7 +139,7 @@ function HomePage() {
     }
 
     // Auto-fill customer information
-    setOvertimeInfo((prev) => ({
+    setNewDailyReport((prev) => ({
       ...prev,
       customer_id: customer.id,
       customerName: customer.name || "",
@@ -166,14 +166,14 @@ function HomePage() {
       setUseSystemCustomer(false);
       setShowCustomerList(false);
       // Clear customer_id but keep manually entered data
-      setOvertimeInfo((prev) => ({
+      setNewDailyReport((prev) => ({
         ...prev,
         customer_id: null,
       }));
     } else {
       // Switching back to system mode
       setUseManualCustomer(false);
-      setOvertimeInfo((prev) => ({
+      setNewDailyReport((prev) => ({
         ...prev,
         customer_id: null,
         customerName: "",
@@ -187,14 +187,14 @@ function HomePage() {
   };
 
   const handleInputChange = (field, value) => {
-    setOvertimeInfo((prev) => ({
+    setNewDailyReport((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
   const handleMapConfirm = (mapData) => {
-    setOvertimeInfo((prev) => ({
+    setNewDailyReport((prev) => ({
       ...prev,
       address: mapData.address,
       location_lat: mapData.latitude,
@@ -246,7 +246,7 @@ function HomePage() {
 
     const missingFields = requiredFields
       .filter(({ field }) => {
-        const value = overtimeInfo[field];
+        const value = newDailyReport[field];
         return !value || (typeof value === "string" && value.trim() === "");
       })
       .map(({ label }) => label);
@@ -261,7 +261,7 @@ function HomePage() {
     }
 
     // Validate số điện thoại
-    if (overtimeInfo.phoneNumber.length > 20) {
+    if (newDailyReport.phoneNumber.length > 20) {
       toast?.error({
         title: "Lỗi nhập liệu",
         message: "Số điện thoại tối đa 20 ký tự",
@@ -271,8 +271,8 @@ function HomePage() {
     }
 
     // Validate GPS coordinates
-    const lat = parseFloat(overtimeInfo.location_lat);
-    const lng = parseFloat(overtimeInfo.location_lng);
+    const lat = parseFloat(newDailyReport.location_lat);
+    const lng = parseFloat(newDailyReport.location_lng);
     if (isNaN(lat) || lat < -90 || lat > 90) {
       toast?.error({
         title: "Lỗi nhập liệu",
@@ -291,7 +291,7 @@ function HomePage() {
     }
 
     // Validate estimated_hours
-    const estHours = Number(overtimeInfo.estimated_hours);
+    const estHours = Number(newDailyReport.estimated_hours);
     if (isNaN(estHours) || estHours < 0 || estHours > 999.99) {
       toast?.error({
         title: "Lỗi nhập liệu",
@@ -302,8 +302,8 @@ function HomePage() {
     }
 
     // Validate estimated_cost nếu có
-    if (overtimeInfo.estimated_cost && overtimeInfo.estimated_cost !== "") {
-      const estCost = Number(overtimeInfo.estimated_cost);
+    if (newDailyReport.estimated_cost && newDailyReport.estimated_cost !== "") {
+      const estCost = Number(newDailyReport.estimated_cost);
       if (isNaN(estCost) || estCost < 0 || estCost > 9999999.99) {
         toast?.error({
           title: "Lỗi nhập liệu",
@@ -327,8 +327,8 @@ function HomePage() {
       }
 
       // Tính toán giờ yêu cầu từ estimatedStartTime
-      const [startHour, startMin] = overtimeInfo.estimatedStartTime.split(":").map(Number);
-      const [endHour, endMin] = overtimeInfo.estimatedEndTime.split(":").map(Number);
+      const [startHour, startMin] = newDailyReport.estimatedStartTime.split(":").map(Number);
+      const [endHour, endMin] = newDailyReport.estimatedEndTime.split(":").map(Number);
       const startMinutes = startHour * 60 + startMin;
       const endMinutes = endHour * 60 + endMin;
       const durationMinutes = Math.max(0, endMinutes - startMinutes);
@@ -347,29 +347,29 @@ function HomePage() {
       const workPayload = {
         // Trường bắt buộc
         work_code: work_code,
-        title: String(overtimeInfo.title).trim(),
-        description: String(overtimeInfo.content).trim(),
-        category_id: Number(overtimeInfo.work_category),
+        title: String(newDailyReport.title).trim(),
+        description: String(newDailyReport.content).trim(),
+        category_id: Number(newDailyReport.work_category),
         created_by: createdByUserId,
         created_by_sales_id: salesPersonId,
-        required_date: new Date(overtimeInfo.date).toISOString().split("T")[0],
-        location: String(overtimeInfo.address).trim(),
-        customer_name: String(overtimeInfo.customerName).trim(),
-        customer_phone: String(overtimeInfo.phoneNumber).trim(),
-        customer_address: String(overtimeInfo.address).trim(),
+        required_date: new Date(newDailyReport.date).toISOString().split("T")[0],
+        location: String(newDailyReport.address).trim(),
+        customer_name: String(newDailyReport.customerName).trim(),
+        customer_phone: String(newDailyReport.phoneNumber).trim(),
+        customer_address: String(newDailyReport.address).trim(),
         location_lat: lat,
         location_lng: lng,
         estimated_hours: estHours,
-        estimated_cost: overtimeInfo.estimated_cost ? Number(overtimeInfo.estimated_cost) : 0,
-        customer_id: overtimeInfo.customer_id || null,
-        priority: overtimeInfo.priority || "medium",
+        estimated_cost: newDailyReport.estimated_cost ? Number(newDailyReport.estimated_cost) : 0,
+        customer_id: newDailyReport.customer_id || null,
+        priority: newDailyReport.priority || "medium",
         status: "pending",
-        notes: overtimeInfo.notes || null,
+        notes: newDailyReport.notes || null,
         due_date: null,
         required_time_hour: String(startHour).padStart(2, "0"),
         required_time_minute: String(startMin).padStart(2, "0"),
         timeSlot: startHour > 0 ? startHour : null,
-        project_id: overtimeInfo.project_id || null,
+        project_id: newDailyReport.project_id || null,
         payment_status: "unpaid",
         is_active: true,
       };
@@ -385,7 +385,7 @@ function HomePage() {
           duration: 3000,
         });
         // Reset form
-        setOvertimeInfo(resetFormData());
+        setNewDailyReport(resetFormData());
         setSelectedProjectId(null);
         setUseSystemCustomer(false);
         setUseManualCustomer(false);
@@ -472,7 +472,7 @@ function HomePage() {
                     <Text className="text-xs text-gray-700 font-medium mb-2">Tiêu đề công việc *</Text>
                     <Input
                       placeholder="Nhập tiêu đề công việc"
-                      value={overtimeInfo.title}
+                      value={newDailyReport.title}
                       onChange={(e) => handleInputChange("title", e.target.value)}
                     />
                   </Box>
@@ -481,7 +481,7 @@ function HomePage() {
                     <Text className="text-xs text-gray-700 font-medium mb-2">Nội dung công việc *</Text>
                     <Input
                       placeholder="Mô tả chi tiết công việc cần thực hiện"
-                      value={overtimeInfo.content}
+                      value={newDailyReport.content}
                       onChange={(e) => handleInputChange("content", e.target.value)}
                       rows={3}
                     />
@@ -491,7 +491,7 @@ function HomePage() {
                     <Box>
                       <Text className="text-xs text-gray-700 font-medium mb-2">Danh mục *</Text>
                       <select
-                        value={overtimeInfo.work_category}
+                        value={newDailyReport.work_category}
                         onChange={(e) => handleInputChange("work_category", e.target.value)}
                         className="w-full px-3 py-2 border bg-transparent border-gray-300 rounded-lg text-sm focus:outline-none focus:border-green-600 h-10"
                         disabled={categoriesLoading}
@@ -507,7 +507,7 @@ function HomePage() {
                     <Box>
                       <Text className="text-xs text-gray-700 font-medium mb-2">Mức độ ưu tiên</Text>
                       <select
-                        value={overtimeInfo.priority}
+                        value={newDailyReport.priority}
                         onChange={(e) => handleInputChange("priority", e.target.value)}
                         className="w-full px-3 py-2 border bg-transparent border-gray-300 rounded-lg text-sm focus:outline-none focus:border-green-600 h-10"
                       >
@@ -525,7 +525,7 @@ function HomePage() {
                       <Input
                         placeholder="0.00"
                         type="number"
-                        value={overtimeInfo.estimated_hours}
+                        value={newDailyReport.estimated_hours}
                         onChange={(e) => handleInputChange("estimated_hours", e.target.value)}
                         step="0.01"
                         min="0"
@@ -536,7 +536,7 @@ function HomePage() {
                       <Input
                         placeholder="0"
                         type="number"
-                        value={overtimeInfo.estimated_cost}
+                        value={newDailyReport.estimated_cost}
                         onChange={(e) => handleInputChange("estimated_cost", e.target.value)}
                         min="0"
                       />
@@ -547,7 +547,7 @@ function HomePage() {
                     <Text className="text-xs text-gray-700 font-medium mb-2">Ghi chú thêm</Text>
                     <Input
                       placeholder="Thêm ghi chú nếu cần..."
-                      value={overtimeInfo.notes}
+                      value={newDailyReport.notes}
                       onChange={(e) => handleInputChange("notes", e.target.value)}
                       rows={2}
                     />
@@ -567,7 +567,7 @@ function HomePage() {
                   <Box>
                     <Text className="text-xs text-gray-700 font-medium mb-2">Ngày thực hiện</Text>
                     <DatePicker
-                      value={overtimeInfo.date}
+                      value={newDailyReport.date}
                       onChange={(date) => handleInputChange("date", date)}
                       placeholder="Chọn ngày"
                       className="w-full"
@@ -580,7 +580,7 @@ function HomePage() {
                       <Text className="text-xs text-gray-700 font-medium mb-2">Giờ bắt đầu</Text>
                       <Input
                         type="time"
-                        value={overtimeInfo.estimatedStartTime}
+                        value={newDailyReport.estimatedStartTime}
                         onChange={(e) => handleInputChange("estimatedStartTime", e.target.value)}
                         className="w-full"
                       />
@@ -589,7 +589,7 @@ function HomePage() {
                       <Text className="text-xs text-gray-700 font-medium mb-2">Giờ kết thúc</Text>
                       <Input
                         type="time"
-                        value={overtimeInfo.estimatedEndTime}
+                        value={newDailyReport.estimatedEndTime}
                         onChange={(e) => handleInputChange("estimatedEndTime", e.target.value)}
                         className="w-full"
                       />
@@ -686,7 +686,7 @@ function HomePage() {
                     <Text className="text-xs text-gray-700 font-medium mb-2 mt-2">Tên khách hàng *</Text>
                     <Input
                       placeholder="Ví dụ: Công ty ABC, Anh Sơn..."
-                      value={overtimeInfo.customerName}
+                      value={newDailyReport.customerName}
                       onChange={(e) => handleInputChange("customerName", e.target.value)}
                       className="focus:ring-2 focus:ring-green-300"
                     />
@@ -695,7 +695,7 @@ function HomePage() {
                     <Text className="text-xs text-gray-700 font-medium mb-2">Số điện thoại *</Text>
                     <Input
                       placeholder="Ví dụ: 0901234567"
-                      value={overtimeInfo.phoneNumber}
+                      value={newDailyReport.phoneNumber}
                       onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
                       type="tel"
                       className="focus:ring-2 focus:ring-green-300"
@@ -705,7 +705,7 @@ function HomePage() {
                     <Text className="text-xs text-gray-700 font-medium mb-2">Địa chỉ *</Text>
                     <Input
                       placeholder="Nhập địa chỉ công việc"
-                      value={overtimeInfo.address}
+                      value={newDailyReport.address}
                       onChange={(e) => handleInputChange("address", e.target.value)}
                       disabled={selectedProjectId !== null || (useSystemCustomer && !useManualCustomer)}
                       rows={2}
@@ -718,7 +718,7 @@ function HomePage() {
                         <Text className="text-xs text-gray-600 mb-1">Vĩ độ</Text>
                         <Input
                           placeholder="10.7769"
-                          value={overtimeInfo.location_lat}
+                          value={newDailyReport.location_lat}
                           onChange={(e) => handleInputChange("location_lat", e.target.value)}
                           disabled={selectedProjectId !== null || (useSystemCustomer && !useManualCustomer)}
                         />
@@ -727,7 +727,7 @@ function HomePage() {
                         <Text className="text-xs text-gray-600 mb-1">Kinh độ</Text>
                         <Input
                           placeholder="106.7009"
-                          value={overtimeInfo.location_lng}
+                          value={newDailyReport.location_lng}
                           onChange={(e) => handleInputChange("location_lng", e.target.value)}
                           disabled={selectedProjectId !== null || (useSystemCustomer && !useManualCustomer)}
                         />
@@ -799,7 +799,7 @@ function HomePage() {
           <Box className="flex gap-2">
             <Button
               onClick={() => {
-                setOvertimeInfo(resetFormData());
+                setNewDailyReport(resetFormData());
                 setSelectedProjectId(null);
                 setUseSystemCustomer(false);
                 setUseManualCustomer(false);

@@ -214,7 +214,7 @@ function WorkList() {
           {/* Title */}
           <Box className="flex items-center justify-between mb-4">
             <Text.Title className="text-white font-bold" size="large">
-              Lịch Công Việc
+              Danh sách công việc
             </Text.Title>
             <Box className="flex items-center space-x-2 text-sm text-green-100">
               <Icon icon="zi-clock-1" size={16} />
@@ -237,7 +237,12 @@ function WorkList() {
               <Text className="text-xs text-green-100/70">Hoàn thành</Text>
             </Box>
           </Box>
+        </Box>
+      </Box>
 
+      <Box className="p-4 pb-20">
+        {/* Work Cards Grid */}
+        <Box className="space-y-3">
           <Box className="flex space-x-2">
             {periodOptions.map((option) => (
               <Button
@@ -245,7 +250,7 @@ function WorkList() {
                 size="small"
                 variant={selectedPeriod === option.value ? "primary" : "secondary"}
                 className={`flex-1 rounded-lg text-xs ${
-                  selectedPeriod === option.value ? "bg-white text-green-600" : "bg-white/20 text-white"
+                  selectedPeriod === option.value ? "bg-green-600 text-white" : "border border-gray-200 bg-transparent text-green-600"
                 }`}
                 onClick={() => setSelectedPeriod(option.value)}
               >
@@ -253,12 +258,6 @@ function WorkList() {
               </Button>
             ))}
           </Box>
-        </Box>
-      </Box>
-
-      <Box className="p-4 pb-20">
-        {/* Work Cards Grid */}
-        <Box className="space-y-3">
           {loading ? (
             <Box className="text-center py-12">
               <Icon icon="zi-spinner" className="text-green-600 text-5xl mb-4 animate-spin" />

@@ -1,14 +1,14 @@
 /*
  * Dữ liệu cần thiết cho trang OvertimeRequest:
  * - existingProjects: Mảng các đối tượng công trình với id, name, company, address, coordinates. Được sử dụng để chọn công trình có sẵn.
- * - overtimeInfo: Đối tượng với date (Date), company (chuỗi), address (chuỗi), content (chuỗi), customerName (chuỗi), phoneNumber (chuỗi), notes (chuỗi), estimatedStartTime (chuỗi HH:MM), estimatedEndTime (chuỗi HH:MM). Được sử dụng để lưu thông tin yêu cầu ca phát sinh.
+ * - newDailyReport: Đối tượng với date (Date), company (chuỗi), address (chuỗi), content (chuỗi), customerName (chuỗi), phoneNumber (chuỗi), notes (chuỗi), estimatedStartTime (chuỗi HH:MM), estimatedEndTime (chuỗi HH:MM). Được sử dụng để lưu thông tin yêu cầu ca phát sinh.
  * - selectedProjectId: Chuỗi ID công trình được chọn. Được sử dụng để tự động điền thông tin.
  * - showProjectList: Boolean để hiển thị danh sách công trình. Được sử dụng cho dropdown.
  * - isSubmitting: Boolean cho trạng thái gửi yêu cầu. Được sử dụng để disable nút và hiển thị loading.
  *
  * API cần thiết (đề xuất thực hiện):
  * - fetchExistingProjects(employeeId): API để lấy danh sách công trình có sẵn từ backend dựa trên ID nhân viên. Ví dụ: GET /api/projects?employeeId=123. Trả về mảng existingProjects.
- * - submitOvertimeRequest(employeeId, data): API để gửi yêu cầu ca phát sinh lên server, bao gồm thông tin overtimeInfo. Ví dụ: POST /api/overtime-request/submit với body {employeeId, date, company, address, content, customerName, phoneNumber, notes, startTime, endTime}. Trả về trạng thái thành công.
+ * - submitOvertimeRequest(employeeId, data): API để gửi yêu cầu ca phát sinh lên server, bao gồm thông tin newDailyReport. Ví dụ: POST /api/overtime-request/submit với body {employeeId, date, company, address, content, customerName, phoneNumber, notes, startTime, endTime}. Trả về trạng thái thành công.
  * - Cải tiến tiềm năng: Tích hợp useEffect để gọi fetchExistingProjects khi component mount; thêm xử lý lỗi và validation phía server; sử dụng Axios hoặc Fetch cho các API backend.
  * - API hiện tại: POST /api/overtime-request/send để gửi tin nhắn yêu cầu (có thể thay bằng submitOvertimeRequest để lưu vào DB).
  */
@@ -51,7 +51,7 @@ function OvertimeRequest() {
     },
   ]);
 
-  const [overtimeInfo, setOvertimeInfo] = useState({
+  const [newDailyReport, setNewDailyReport] = useState({
     date: new Date(),
     company: "",
     address: "",
@@ -69,7 +69,7 @@ function OvertimeRequest() {
 
   const handleSelectProject = (project) => {
     setSelectedProjectId(project.id);
-    setOvertimeInfo((prev) => ({
+    setNewDailyReport((prev) => ({
       ...prev,
       company: project.company,
       address: project.address,
@@ -84,7 +84,7 @@ function OvertimeRequest() {
 
   const handleClearProject = () => {
     setSelectedProjectId(null);
-    setOvertimeInfo((prev) => ({
+    setNewDailyReport((prev) => ({
       ...prev,
       company: "",
       address: "",
@@ -92,14 +92,14 @@ function OvertimeRequest() {
   };
 
   const handleInputChange = (field, value) => {
-    setOvertimeInfo((prev) => ({
+    setNewDailyReport((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
   const validateForm = () => {
-    return validateFormFields(overtimeInfo, ["company", "address", "content", "customerName", "phoneNumber"]);
+    return validateFormFields(newDailyReport, ["company", "address", "content", "customerName", "phoneNumber"]);
   };
 
   const handleSubmit = async () => {
@@ -119,15 +119,15 @@ function OvertimeRequest() {
     try {
       const messageText = `
 YÊU CẦU CA PHÁT SINH:
-- Ngày: ${new Date(overtimeInfo.date).toLocaleDateString("vi-VN")}
-- Công ty: ${overtimeInfo.company}
-- Địa chỉ: ${overtimeInfo.address}
-- Nội dung: ${overtimeInfo.content}
-- Khách hàng: ${overtimeInfo.customerName}
-- SĐT: ${overtimeInfo.phoneNumber}
-- Giờ bắt đầu: ${overtimeInfo.estimatedStartTime}
-- Giờ kết thúc: ${overtimeInfo.estimatedEndTime}
-- Ghi chú: ${overtimeInfo.notes || "Không có"}
+- Ngày: ${new Date(newDailyReport.date).toLocaleDateString("vi-VN")}
+- Công ty: ${newDailyReport.company}
+- Địa chỉ: ${newDailyReport.address}
+- Nội dung: ${newDailyReport.content}
+- Khách hàng: ${newDailyReport.customerName}
+- SĐT: ${newDailyReport.phoneNumber}
+- Giờ bắt đầu: ${newDailyReport.estimatedStartTime}
+- Giờ kết thúc: ${newDailyReport.estimatedEndTime}
+- Ghi chú: ${newDailyReport.notes || "Không có"}
       `;
 
       const response = await fetch("https://lamquangdai.vn/api/overtime-request/send", {
@@ -147,7 +147,7 @@ YÊU CẦU CA PHÁT SINH:
           duration: 3000,
         });
         // Reset form
-        setOvertimeInfo({
+        setNewDailyReport({
           date: new Date(),
           company: "",
           address: "",
@@ -175,7 +175,7 @@ YÊU CẦU CA PHÁT SINH:
   };
 
   // Memoize work hours calculation
-  const workHoursInfo = calculateWorkHours(overtimeInfo.estimatedStartTime, overtimeInfo.estimatedEndTime);
+  const workHoursInfo = calculateWorkHours(newDailyReport.estimatedStartTime, newDailyReport.estimatedEndTime);
 
   return (
     <Page className="bg-gray-50 min-h-screen">
@@ -211,13 +211,13 @@ YÊU CẦU CA PHÁT SINH:
               Ngày ca phát sinh
             </Text>
             <DatePicker
-              value={overtimeInfo.date}
+              value={newDailyReport.date}
               onChange={(date) => handleInputChange("date", date)}
               placeholder="Chọn ngày ca phát sinh"
               className="w-full"
               dateFormat="dd/mm/yyyy"
             />
-            <Text className="text-xs text-gray-500 mt-2">{formatDate(overtimeInfo.date)}</Text>
+            <Text className="text-xs text-gray-500 mt-2">{formatDate(newDailyReport.date)}</Text>
           </Box>
 
           {/* Time Fields - Optimized */}
@@ -231,7 +231,7 @@ YÊU CẦU CA PHÁT SINH:
                 <Text className="text-xs text-gray-600 mb-1">Bắt đầu</Text>
                 <Input
                   type="time"
-                  value={overtimeInfo.estimatedStartTime}
+                  value={newDailyReport.estimatedStartTime}
                   onChange={(e) => handleInputChange("estimatedStartTime", e.target.value)}
                   className="w-full rounded-lg"
                 />
@@ -240,7 +240,7 @@ YÊU CẦU CA PHÁT SINH:
                 <Text className="text-xs text-gray-600 mb-1">Kết thúc</Text>
                 <Input
                   type="time"
-                  value={overtimeInfo.estimatedEndTime}
+                  value={newDailyReport.estimatedEndTime}
                   onChange={(e) => handleInputChange("estimatedEndTime", e.target.value)}
                   className="w-full rounded-lg"
                 />
@@ -320,7 +320,7 @@ YÊU CẦU CA PHÁT SINH:
                 <Text className="text-xs text-gray-500 text-center my-3">Hoặc nhập thủ công</Text>
                 <Input
                   placeholder="Nhập tên công ty"
-                  value={overtimeInfo.company}
+                  value={newDailyReport.company}
                   onChange={(e) => handleInputChange("company", e.target.value)}
                   className="w-full rounded-lg"
                 />
@@ -345,7 +345,7 @@ YÊU CẦU CA PHÁT SINH:
             </Text>
             <Input
               placeholder="Nhập địa chỉ"
-              value={overtimeInfo.address}
+              value={newDailyReport.address}
               onChange={(e) => handleInputChange("address", e.target.value)}
               className="w-full rounded-lg"
               rows={3}
@@ -364,7 +364,7 @@ YÊU CẦU CA PHÁT SINH:
             </Text>
             <Input
               placeholder="Nhập nội dung công việc"
-              value={overtimeInfo.content}
+              value={newDailyReport.content}
               onChange={(e) => handleInputChange("content", e.target.value)}
               className="w-full rounded-lg"
               rows={4}
@@ -379,7 +379,7 @@ YÊU CẦU CA PHÁT SINH:
             </Text>
             <Input
               placeholder="Nhập tên khách hàng"
-              value={overtimeInfo.customerName}
+              value={newDailyReport.customerName}
               onChange={(e) => handleInputChange("customerName", e.target.value)}
               className="w-full rounded-lg"
             />
@@ -393,7 +393,7 @@ YÊU CẦU CA PHÁT SINH:
             </Text>
             <Input
               placeholder="Nhập số điện thoại"
-              value={overtimeInfo.phoneNumber}
+              value={newDailyReport.phoneNumber}
               onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
               className="w-full rounded-lg"
               type="tel"
@@ -408,7 +408,7 @@ YÊU CẦU CA PHÁT SINH:
             </Text>
             <Input
               placeholder="Nhập ghi chú nếu cần..."
-              value={overtimeInfo.notes}
+              value={newDailyReport.notes}
               onChange={(e) => handleInputChange("notes", e.target.value)}
               className="w-full rounded-lg"
               rows={3}
