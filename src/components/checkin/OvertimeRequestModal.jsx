@@ -1,4 +1,4 @@
-import { Modal, Box, Button, Text, Icon, Input } from "zmp-ui";
+import { Modal, Box, Button, Text, Icon, Input, DatePicker } from "zmp-ui";
 import { useState } from "react";
 import "./OvertimeRequestModal.css";
 
@@ -24,10 +24,10 @@ function OvertimeRequestModal({ visible, onClose, onSubmit, loading = false }) {
     const [formData, setFormData] = useState({
         overtime_category: "administrative_work",
         priority: "medium",
-        requested_date: new Date().toISOString().split("T")[0],
+        requested_date: new Date(),
         start_time: "18:00",
         end_time: "20:00",
-        reason: "",
+        reason: "Tăng ca hoàn thành công việc được giao",
         notes: "",
     });
 
@@ -83,7 +83,7 @@ function OvertimeRequestModal({ visible, onClose, onSubmit, loading = false }) {
             setFormData({
                 overtime_category: "administrative_work",
                 priority: "medium",
-                requested_date: new Date().toISOString().split("T")[0],
+                requested_date: new Date(),
                 start_time: "18:00",
                 end_time: "20:00",
                 reason: "",
@@ -96,7 +96,7 @@ function OvertimeRequestModal({ visible, onClose, onSubmit, loading = false }) {
         setFormData({
             overtime_category: "administrative_work",
             priority: "medium",
-            requested_date: new Date().toISOString().split("T")[0],
+            requested_date: new Date(),
             start_time: "18:00",
             end_time: "20:00",
             reason: "",
@@ -116,7 +116,7 @@ function OvertimeRequestModal({ visible, onClose, onSubmit, loading = false }) {
                 {/* Section 1: Phân loại & Ưu tiên */}
                 <Box>
                     <Text className="font-semibold text-gray-900 text-sm mb-3 flex items-center">
-                        <Icon icon="zi-note" className="mr-2 text-blue-600" size={16} />
+                        <Icon icon="zi-note" className="mr-1 text-blue-600" size={16} />
                         Phân Loại Tăng Ca
                     </Text>
                     <Box className="space-y-3">
@@ -163,7 +163,7 @@ function OvertimeRequestModal({ visible, onClose, onSubmit, loading = false }) {
                 {/* Section 2: Thời Gian */}
                 <Box>
                     <Text className="font-semibold text-gray-900 text-sm mb-3 flex items-center">
-                        <Icon icon="zi-calendar" className="mr-2 text-blue-600" size={16} />
+                        <Icon icon="zi-calendar" className="mr-1 text-blue-600" size={16} />
                         Thời Gian Tăng Ca
                     </Text>
                     <Box className="space-y-3">
@@ -171,12 +171,11 @@ function OvertimeRequestModal({ visible, onClose, onSubmit, loading = false }) {
                             <Text className="text-xs text-gray-700 font-medium mb-2">
                                 Ngày tăng ca <span className="text-red-500">*</span>
                             </Text>
-                            <input
-                                type="date"
+                            <DatePicker
                                 name="requested_date"
+                                dateFormat="dd/mm/yyyy"
                                 value={formData.requested_date}
-                                onChange={handleInputChange}
-                                min={new Date().toISOString().split("T")[0]}
+                                onChange={(date) => handleInputChange("requested_date", date)}
                                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 text-sm ${
                                     errors.requested_date
                                         ? "border-red-500 focus:ring-red-500"
@@ -195,12 +194,12 @@ function OvertimeRequestModal({ visible, onClose, onSubmit, loading = false }) {
                                 <Text className="text-xs text-gray-700 font-medium mb-2">
                                     Giờ bắt đầu <span className="text-red-500">*</span>
                                 </Text>
-                                <input
+                                <Input
                                     type="time"
                                     name="start_time"
                                     value={formData.start_time}
                                     onChange={handleInputChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 text-sm ${
+                                    className={`w-full border rounded-lg focus:outline-none focus:ring-1 text-sm ${
                                         errors.start_time
                                             ? "border-red-500 focus:ring-red-500"
                                             : "border-gray-300 focus:ring-blue-500"
@@ -217,12 +216,12 @@ function OvertimeRequestModal({ visible, onClose, onSubmit, loading = false }) {
                                 <Text className="text-xs text-gray-700 font-medium mb-2">
                                     Giờ kết thúc <span className="text-red-500">*</span>
                                 </Text>
-                                <input
+                                <Input
                                     type="time"
                                     name="end_time"
                                     value={formData.end_time}
                                     onChange={handleInputChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 text-sm ${
+                                    className={`w-full border rounded-lg focus:outline-none focus:ring-1 text-sm ${
                                         errors.end_time
                                             ? "border-red-500 focus:ring-red-500"
                                             : "border-gray-300 focus:ring-blue-500"
@@ -243,7 +242,7 @@ function OvertimeRequestModal({ visible, onClose, onSubmit, loading = false }) {
                 {/* Section 3: Nội dung & Ghi chú */}
                 <Box>
                     <Text className="font-semibold text-gray-900 text-sm mb-3 flex items-center">
-                        <Icon icon="zi-comment" className="mr-2 text-blue-600" size={16} />
+                        <Icon icon="zi-drag-indicator-solid" className="mr-1 text-blue-600" size={16} />
                         Chi Tiết Yêu Cầu
                     </Text>
                     <Box className="space-y-3">

@@ -8,16 +8,16 @@ import API_ENDPOINTS from "../config/apiEndpoints";
 
 export const submitOvertimeRequest = async (data) => {
     try {
-        const response = await axiosInstance.post("/overtime-requests", data);
+        const response = await axiosInstance.post("/overtime-requests/office", data);
         return response.data;
     } catch (error) {
         throw error.response?.data || error;
     }
 };
 
-export const getOvertimeRequestHistory = async (params) => {
+export const getOvertimeRequestHistory = async (UID) => {
     try {
-        const response = await axiosInstance.get("/overtime-requests", { params });
+        const response = await axiosInstance.get(`/overtime-requests/user/${UID}`);
         return response.data;
     } catch (error) {
         throw error.response?.data || error;

@@ -11,7 +11,7 @@ const EmployeeProfile = lazy(() => import("../pages/EmployeeProfile"));
 const CheckIn = lazy(() => import("../pages/Attendance"));
 const ProgressReport = lazy(() => import("../pages/ProgressReport"));
 const OvertimeRequest = lazy(() => import("../pages/OvertimeRequest"));
-const WorkReportList = lazy(() => import("../pages/WorkReportList"));
+const OvertimeList = lazy(() => import("../pages/OvertimeList"));
 const WorkReportDetail = lazy(() => import("../pages/WorkReportDetail"));
 const AttendanceHistory = lazy(() => import("../pages/AttendanceHistory"));
 const CoordinatesGuide = lazy(() => import("../pages/CoordinatesGuide"));
@@ -69,7 +69,7 @@ export const routes = [
   },
   {
     path: "/work-reports",
-    component: WorkReportList,
+    component: OvertimeList,
     protected: true,
   },
   {

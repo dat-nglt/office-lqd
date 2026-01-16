@@ -772,7 +772,7 @@ function CheckIn() {
         try {
             const overtimePayload = {
                 user_id: userDataInSystem?.id,
-                department_id: userDataInSystem?.department_id,
+                department_id: userDataInSystem?.profile?.department_id,
                 overtime_category: formData.overtime_category,
                 priority: formData.priority,
                 requested_date: formData.requested_date,
@@ -788,13 +788,14 @@ function CheckIn() {
             const response = await submitOvertimeRequest(overtimePayload);
 
             if (response?.success || response?.data?.id) {
+                setOvertimeModalVisible(false);
                 toast?.success({
                     title: "Gửi yêu cầu thành công",
                     message: "Phiếu tăng ca của bạn đã được gửi đi",
                     duration: 3000,
                 });
-                setOvertimeModalVisible(false);
             } else {
+                setOvertimeModalVisible(false);
                 toast?.error({
                     title: "Gửi yêu cầu thất bại",
                     message: response?.message || "Không thể gửi phiếu tăng ca",
