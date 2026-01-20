@@ -63,6 +63,11 @@ function WorkManagement() {
     const todayWorkList = workList.filter((w) => w.scheduledDate === today);
 
     const handleReschedule = (work) => {
+        toast?.warn({
+            title: "Tính năng đang phát triển",
+            message: `Tính năng thay đổi lịch công việc đang được phát triển và sẽ sớm ra mắt trong các phiên bản tiếp theo.`,
+            duration: 2000,
+        });
         setSelectedWork(work);
         if (work.scheduledDate && work.scheduledDate.includes("/")) {
             const dateParts = work.scheduledDate.split("/");
@@ -114,8 +119,8 @@ function WorkManagement() {
                               scheduledTime: `${newTime} - ${parseInt(newTime) + 3}:00`,
                               status: "pending",
                           }
-                        : w
-                )
+                        : w,
+                ),
             );
             toast?.success({
                 title: "Cập nhật thành công",
@@ -168,8 +173,8 @@ function WorkManagement() {
                         overtimeRequest.type === "overtime_lunch"
                             ? "tăng ca trưa"
                             : overtimeRequest.type === "overtime_night"
-                            ? "tăng ca tối"
-                            : "tăng ca"
+                              ? "tăng ca tối"
+                              : "tăng ca"
                     } ${hours} giờ cho ${technicianNames} đã được gửi!`,
                     duration: 2500,
                 });
@@ -231,7 +236,7 @@ function WorkManagement() {
                             ? new Date(assignment.work.required_date).toLocaleDateString("vi-VN")
                             : "Không xác định",
                         scheduledTime: `${assignment.work?.required_time_hour || "00"}:${String(
-                            assignment.work?.required_time_minute || 0
+                            assignment.work?.required_time_minute || 0,
                         ).padStart(2, "0")}`,
                         status: assignment.work?.status?.toLowerCase() || "pending",
                         priority: assignment.work?.priority?.toLowerCase() || "medium",
@@ -354,7 +359,7 @@ function WorkManagement() {
                                         </Box>
                                         <Box
                                             className={`text-xs font-semibold  whitespace-nowrap flex-shrink-0 ${getStatusColor(
-                                                work.assignedStatus
+                                                work.assignedStatus,
                                             )}`}
                                         >
                                             {getStatusLabel(work.assignedStatus)}
@@ -378,7 +383,7 @@ function WorkManagement() {
                                             <Text className="text-xs font-medium">{work.scheduledTime}</Text>
                                             <Box
                                                 className={`text-xs p-1 rounded font-medium ${getPriorityColor(
-                                                    work.priority
+                                                    work.priority,
                                                 )}`}
                                             >
                                                 Ưu tiên: {getPriorityLabel(work.priority)}
